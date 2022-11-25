@@ -1,0 +1,4 @@
+int16 wvcu_turn_rlamp_stat 0
+int16 wvcu_turn_llamp_stat 0
+int16 adu_body_status_roll_cnt 0
+int16 adu_body_status_check_sum 0

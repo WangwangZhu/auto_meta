@@ -1,0 +1,9 @@
+float32 wvcu_brk_stoke_stat 0
+float32 wvcu_brk_ped_stat 0
+float32 wvcu_gas_stoke_stat 0
+float32 wvcu_gas_ped_stat 0
+float32 wvcu_veh_spd 0
+int16 wvcu_lgt_stat_roll_cnt 0
+int16 wvcu_gear_stat 0
+bool wvcu_lgt_dsbl_stat 0
+int16 wvcu_lgt_stat_check_sum 0

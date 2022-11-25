@@ -1,0 +1,295 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: WVCU PC EPS EHB ADU
+
+
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ ADU_BrakeLamp : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUADU_CANFlt : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ WVCUEPS_StrFltCod : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ WVCU_ResetSwitch1 : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_SelfLockSwitch1 : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 850 WVCU_VehSphLim: 8 Vector__XXX
+ SG_ WVCU_ADULimGasSpd : 0|4@1+ (5,0) [0|75] "kph" Vector__XXX
+
+BO_ 857 WVCU_FltCod: 8 Vector__XXX
+ SG_ WVCU_FltCod_CheckSum : 56|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ WVCU_FltCod_RollCnt : 48|4@1+ (1,0) [0|15] "" Vector__XXX
+ SG_ WVCUEPS_InhibitCode : 22|3@1+ (1,0) [0|7] "" Vector__XXX
+ SG_ WVCUEHB_USplyLowLv2 : 21|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_USplyLowLv1 : 20|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_USplyHighLv2 : 19|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_USplyHighLv1 : 18|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PwrSwtFlt : 17|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PwrDrvrFlt : 16|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PSnsrFlt : 15|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PFolwFltLv2 : 14|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PFolwFltLv1 : 13|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PedlSnsrFltSingle : 12|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PedlSnsrFltBoth : 11|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PCtrlVibLv2 : 10|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_PCtrlVibLv1 : 9|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_OverTempWarn : 8|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_OverIFlt : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_NTCFltLv2 : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_NTCFltLv1 : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_MotPosnFlt : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_LoadMismatchFlt : 3|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_ISnsrFlt : 2|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_CANBusOff : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCUEHB_BrkReqWarn : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 880 WVCU_BodyStatus: 8 WVCU
+ SG_ ADU_BodyStatus_CheckSum : 56|8@1+ (1,0) [0|255] ""  PC
+ SG_ ADU_BodyStatus_RollCnt : 48|4@1+ (1,0) [0|15] ""  PC
+ SG_ WVCU_TurnLLampStat : 13|1@1+ (1,0) [0|1] ""  PC,ADU
+ SG_ WVCU_TurnRLampStat : 12|1@1+ (1,0) [0|1] ""  PC,ADU
+
+BO_ 849 WVCU_HorizontalStatus: 8 WVCU
+ SG_ WVCU_ManlGearIntv : 36|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_ManlExitADUSwIntv : 37|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_ManlDrvPedIntv : 39|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_ManlBrkPedIntv : 38|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_EPSExitFlt : 47|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ WVCU_HozlStat_CheckSum : 56|8@1+ (1,0) [0|255] ""  PC,ADU
+ SG_ WVCU_HozlDsblStat : 55|1@1+ (1,0) [0|1] ""  PC,ADU
+ SG_ WVCU_HozlStat_RollCnt : 48|4@1+ (1,0) [0|15] ""  PC,ADU
+ SG_ WVCU_IntvStrWhlStat : 46|1@1+ (1,0) [0|1] ""  PC,ADU
+ SG_ WVCU_ReqShakeSwStat : 44|2@1+ (1,0) [0|3] ""  PC,ADU
+ SG_ WVCU_ADUCANStat : 42|2@1+ (1,0) [0|3] ""  PC,ADU
+ SG_ WVCU_ShakeStat : 40|2@1+ (1,0) [0|3] ""  PC,ADU
+ SG_ WVCU_StrWhlTq : 12|12@1- (0.1,0) [-120|120] "Nm"  PC,ADU
+ SG_ WVCU_StrWhlAngStat : 0|12@1- (1,0) [-500|500] "deg"  PC,ADU
+
+BO_ 848 WVCU_LongitudinalStatus: 8 WVCU
+ SG_ WVCU_LgtStat_CheckSum : 56|8@1+ (1,0) [0|255] ""  PC,ADU
+ SG_ WVCU_LgtDsblStat : 55|1@1+ (1,0) [0|1] ""  PC,ADU
+ SG_ WVCU_GearStat : 52|2@1+ (1,0) [0|3] ""  PC,ADU
+ SG_ WVCU_LgtStat_RollCnt : 48|4@1+ (1,0) [0|15] ""  PC,ADU
+ SG_ WVCU_VehSpd : 32|16@1+ (0.1,0) [0|6553.5] "km/h"  PC,ADU
+ SG_ WVCU_GasPedStat : 24|8@1+ (1,0) [0|100] "%"  PC,ADU
+ SG_ WVCU_GasStokeStat : 16|8@1+ (1,0) [0|100] "%"  PC,ADU
+ SG_ WVCU_BrkPedStat : 8|8@1+ (1,0) [0|100] "%"  PC,ADU
+ SG_ WVCU_BrkStokeStat : 0|8@1+ (1,0) [0|100] "%"  PC,ADU
+
+BO_ 864 ADU_BodyCmd: 8 ADU
+ SG_ ADU_BodyCmd_CheckSum : 56|8@1+ (1,0) [0|255] ""  WVCU,PC
+ SG_ ADU_BodyCmd_RollCnt : 52|4@1+ (1,0) [0|15] ""  WVCU,PC
+ SG_ ADU_DblFlashLamp : 14|1@1+ (1,0) [0|1] ""  WVCU,PC
+ SG_ ADU_TurnLLamp : 13|1@1+ (1,0) [0|1] ""  WVCU,PC
+ SG_ ADU_TurnRLamp : 12|1@1+ (1,0) [0|1] ""  WVCU,PC
+ SG_ ADU_Horn : 9|1@1+ (1,0) [0|1] ""  WVCU,PC
+
+BO_ 832 ADU_DriveCmd: 8 ADU
+ SG_ ADU_LimGasSpd : 24|4@1+ (5,0) [0|40] "kph" Vector__XXX
+ SG_ ADU_DrvCmd_CheckSum : 56|8@1+ (1,0) [0|255] ""  WVCU,PC
+ SG_ ADU_DrvCmd_RollCnt : 52|4@1+ (1,0) [0|15] ""  WVCU,PC
+ SG_ ADU_StrWhlAngReq : 40|12@1- (1,0) [-500|500] "deg"  WVCU,PC
+ SG_ ADU_GasStokeReq : 16|8@1+ (1,0) [0|100] "%"  WVCU,PC
+ SG_ ADU_BrkStokeReq : 8|8@1+ (1,0) [0|100] "%"  WVCU,PC
+ SG_ ADU_GearReq : 6|2@1+ (1,0) [0|3] ""  WVCU,PC
+ SG_ ADU_LgtDsbl : 3|1@1+ (1,0) [0|1] ""  WVCU,PC
+ SG_ ADU_HozlDsbl : 2|1@1+ (1,0) [0|1] ""  WVCU,PC
+ SG_ ADU_ShakeReq : 0|2@1+ (1,0) [0|3] ""  WVCU,PC
+
+
+
+CM_ BO_ 3221225472 "This is a message for not used signals, created by Vector CANdb++ DBC OLE DB Provider.";
+CM_ SG_ 3221225472 ADU_BrakeLamp "制动灯控制";
+CM_ SG_ 3221225472 WVCUADU_CANFlt "ADU握手故障";
+CM_ SG_ 3221225472 WVCUEPS_StrFltCod "EPS握手故障";
+CM_ SG_ 3221225472 WVCU_ResetSwitch1 "预留复位开关1";
+CM_ SG_ 3221225472 WVCU_SelfLockSwitch1 "预留自锁开关1";
+CM_ SG_ 850 WVCU_ADULimGasSpd "限制的速度反馈值";
+CM_ SG_ 857 WVCUEPS_InhibitCode "EPS无法响应的原因";
+CM_ SG_ 857 WVCUEHB_USplyLowLv2 "供电电压过低故障";
+CM_ SG_ 857 WVCUEHB_USplyLowLv1 "供电电压过低异常";
+CM_ SG_ 857 WVCUEHB_USplyHighLv2 "供电电压过高故障";
+CM_ SG_ 857 WVCUEHB_USplyHighLv1 "供电电压过高异常";
+CM_ SG_ 857 WVCUEHB_PwrSwtFlt "功率开关故障";
+CM_ SG_ 857 WVCUEHB_PwrDrvrFlt "预驱故障";
+CM_ SG_ 857 WVCUEHB_PSnsrFlt "液压力传感器故障";
+CM_ SG_ 857 WVCUEHB_PFolwFltLv2 "EHB液压力跟随严重异常";
+CM_ SG_ 857 WVCUEHB_PFolwFltLv1 "EHB液压力跟随轻微异常";
+CM_ SG_ 857 WVCUEHB_PedlSnsrFltSingle "踏板位移传感器单路故障";
+CM_ SG_ 857 WVCUEHB_PedlSnsrFltBoth "踏板位移传感器双路故障";
+CM_ SG_ 857 WVCUEHB_PCtrlVibLv2 "EHB液压力严重震荡";
+CM_ SG_ 857 WVCUEHB_PCtrlVibLv1 "EHB液压力轻微震荡";
+CM_ SG_ 857 WVCUEHB_OverTempWarn "控制器温度过高";
+CM_ SG_ 857 WVCUEHB_OverIFlt "EHB过流故障";
+CM_ SG_ 857 WVCUEHB_NTCFltLv2 "温度传感器完全故障";
+CM_ SG_ 857 WVCUEHB_NTCFltLv1 "温度传感器部分故障";
+CM_ SG_ 857 WVCUEHB_MotPosnFlt "EHB电机位置失效";
+CM_ SG_ 857 WVCUEHB_LoadMismatchFlt "负载失配故障";
+CM_ SG_ 857 WVCUEHB_ISnsrFlt "电流传感器故障";
+CM_ SG_ 857 WVCUEHB_CANBusOff "CAN通信故障";
+CM_ SG_ 857 WVCUEHB_BrkReqWarn "制动指令异常";
+CM_ SG_ 880 WVCU_TurnLLampStat "左转灯开启状态";
+CM_ SG_ 880 WVCU_TurnRLampStat "右转灯开启状态";
+CM_ SG_ 849 WVCU_ManlGearIntv "人工干预档位旋钮";
+CM_ SG_ 849 WVCU_ManlExitADUSwIntv "人工退智驾";
+CM_ SG_ 849 WVCU_ManlDrvPedIntv "人工干预油门踏板";
+CM_ SG_ 849 WVCU_ManlBrkPedIntv "人工干预制动踏板";
+CM_ SG_ 849 WVCU_EPSExitFlt "EPS退出故障状态";
+CM_ SG_ 849 WVCU_HozlDsblStat "横向失能状态";
+CM_ SG_ 849 WVCU_IntvStrWhlStat "人工干预方向盘状态";
+CM_ SG_ 849 WVCU_ReqShakeSwStat "请求握手开关状态";
+CM_ SG_ 849 WVCU_ADUCANStat "ADU通讯状态";
+CM_ SG_ 849 WVCU_ShakeStat "ADU握手状态";
+CM_ SG_ 849 WVCU_StrWhlTq "方向盘扭矩";
+CM_ SG_ 849 WVCU_StrWhlAngStat "方向盘转角";
+CM_ SG_ 848 WVCU_LgtDsblStat "纵向失能状态";
+CM_ SG_ 848 WVCU_GearStat "档位状态";
+CM_ SG_ 848 WVCU_VehSpd "车速";
+CM_ SG_ 848 WVCU_GasPedStat "油门踏板状态（人工）";
+CM_ SG_ 848 WVCU_GasStokeStat "油门行程状态";
+CM_ SG_ 848 WVCU_BrkPedStat "制动踏板状态（人工）";
+CM_ SG_ 848 WVCU_BrkStokeStat "制动行程状态";
+CM_ SG_ 864 ADU_DblFlashLamp "双闪灯开关";
+CM_ SG_ 864 ADU_TurnLLamp "左转向灯控制";
+CM_ SG_ 864 ADU_TurnRLamp "右转向灯控制";
+CM_ SG_ 864 ADU_Horn "喇叭控制";
+CM_ SG_ 832 ADU_LimGasSpd "限制的速度";
+CM_ SG_ 832 ADU_StrWhlAngReq "方向盘转角请求";
+CM_ SG_ 832 ADU_GasStokeReq "油门行程请求";
+CM_ SG_ 832 ADU_BrkStokeReq "ADU制动行程请求";
+CM_ SG_ 832 ADU_GearReq "ADU档位请求";
+CM_ SG_ 832 ADU_LgtDsbl "纵向失能";
+CM_ SG_ 832 ADU_HozlDsbl "横向失能";
+CM_ SG_ 832 ADU_ShakeReq "ADU握手请求";
+BA_DEF_ SG_  "SignalType" STRING ;
+BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
+BA_DEF_DEF_  "SignalType" "";
+BA_DEF_DEF_  "GenMsgCycleTime" 0;
+BA_ "GenMsgCycleTime" BO_ 850 100;
+BA_ "GenMsgCycleTime" BO_ 857 100;
+BA_ "GenMsgCycleTime" BO_ 880 100;
+BA_ "GenMsgCycleTime" BO_ 849 20;
+BA_ "GenMsgCycleTime" BO_ 848 20;
+BA_ "GenMsgCycleTime" BO_ 864 100;
+BA_ "GenMsgCycleTime" BO_ 832 20;
+BA_ "SignalType" SG_ 3221225472 ADU_BrakeLamp "ENM";
+BA_ "SignalType" SG_ 3221225472 WVCUADU_CANFlt "ENM";
+BA_ "SignalType" SG_ 3221225472 WVCUEPS_StrFltCod "ENM";
+BA_ "SignalType" SG_ 857 WVCUEPS_InhibitCode "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_USplyLowLv2 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_USplyLowLv1 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_USplyHighLv2 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_USplyHighLv1 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PwrSwtFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PwrDrvrFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PSnsrFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PFolwFltLv2 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PFolwFltLv1 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PedlSnsrFltSingle "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PedlSnsrFltBoth "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PCtrlVibLv2 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_PCtrlVibLv1 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_OverTempWarn "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_OverIFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_NTCFltLv2 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_NTCFltLv1 "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_MotPosnFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_LoadMismatchFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_ISnsrFlt "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_CANBusOff "ENM";
+BA_ "SignalType" SG_ 857 WVCUEHB_BrkReqWarn "ENM";
+BA_ "SignalType" SG_ 880 WVCU_TurnLLampStat "ENM";
+BA_ "SignalType" SG_ 880 WVCU_TurnRLampStat "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ManlGearIntv "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ManlExitADUSwIntv "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ManlDrvPedIntv "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ManlBrkPedIntv "ENM";
+BA_ "SignalType" SG_ 849 WVCU_EPSExitFlt "ENM";
+BA_ "SignalType" SG_ 849 WVCU_HozlDsblStat "ENM";
+BA_ "SignalType" SG_ 849 WVCU_IntvStrWhlStat "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ReqShakeSwStat "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ADUCANStat "ENM";
+BA_ "SignalType" SG_ 849 WVCU_ShakeStat "ENM";
+BA_ "SignalType" SG_ 848 WVCU_LgtDsblStat "ENM";
+BA_ "SignalType" SG_ 848 WVCU_GearStat "ENM";
+BA_ "SignalType" SG_ 864 ADU_DblFlashLamp "ENM";
+BA_ "SignalType" SG_ 864 ADU_TurnLLamp "ENM";
+BA_ "SignalType" SG_ 864 ADU_TurnRLamp "ENM";
+BA_ "SignalType" SG_ 864 ADU_Horn "ENM";
+BA_ "SignalType" SG_ 832 ADU_GearReq "ENM";
+BA_ "SignalType" SG_ 832 ADU_LgtDsbl "ENM";
+BA_ "SignalType" SG_ 832 ADU_HozlDsbl "ENM";
+BA_ "SignalType" SG_ 832 ADU_ShakeReq "ENM";
+VAL_ 3221225472 WVCUADU_CANFlt 2 "CANBusOffFlt" 1 "StandBy" 0 "Normal" ;
+VAL_ 3221225472 WVCUEPS_StrFltCod 3 "ActiveFault" 2 "EnableFault" 1 "StandbyFault" 0 "Normal" ;
+VAL_ 857 WVCUEPS_InhibitCode 5 "Reserved1" 4 "ExcessAngleDeviation" 3 "AbnormalCANCommunication" 2 "DriverInterference" 1 "OverSpeed" 0 "Normal" ;
+VAL_ 857 WVCUEHB_USplyLowLv2 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_USplyLowLv1 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_USplyHighLv2 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_USplyHighLv1 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PwrSwtFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PwrDrvrFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PSnsrFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PFolwFltLv2 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PFolwFltLv1 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PedlSnsrFltSingle 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PedlSnsrFltBoth 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PCtrlVibLv2 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_PCtrlVibLv1 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_OverTempWarn 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_OverIFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_NTCFltLv2 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_NTCFltLv1 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_MotPosnFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_LoadMismatchFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_ISnsrFlt 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_CANBusOff 1 "Fault" 0 "Normal" ;
+VAL_ 857 WVCUEHB_BrkReqWarn 1 "Fault" 0 "Normal" ;
+VAL_ 880 WVCU_TurnLLampStat 1 "点亮" 0 "关闭" ;
+VAL_ 880 WVCU_TurnRLampStat 1 "点亮" 0 "关闭" ;
+VAL_ 849 WVCU_HozlDsblStat 1 "Disable" 0 "Enable" ;
+VAL_ 849 WVCU_IntvStrWhlStat 1 "人工干预方向盘" 0 "无人工干预" ;
+VAL_ 849 WVCU_ReqShakeSwStat 1 "按下" 0 "弹开" ;
+VAL_ 849 WVCU_ADUCANStat 2 "触发断联保护" 1 "通讯丢失" 0 "通讯正常" ;
+VAL_ 849 WVCU_ShakeStat 1 "Shakestatus" 0 "无请求" ;
+VAL_ 848 WVCU_LgtDsblStat 1 "Disable" 0 "Enable" ;
+VAL_ 848 WVCU_GearStat 3 "D" 2 "R" 1 "N" 0 "P" ;
+VAL_ 864 ADU_DblFlashLamp 1 "切换" 0 "关闭" ;
+VAL_ 864 ADU_TurnLLamp 1 "点亮" 0 "关闭" ;
+VAL_ 864 ADU_TurnRLamp 1 "点亮" 0 "关闭" ;
+VAL_ 864 ADU_Horn 1 "工作" 0 "关闭" ;
+VAL_ 832 ADU_GearReq 0 "P" 3 "D" 2 "R" 1 "N" ;
+VAL_ 832 ADU_LgtDsbl 1 "Disable" 0 "Enable" ;
+VAL_ 832 ADU_HozlDsbl 1 "Disable" 0 "Enable" ;
+VAL_ 832 ADU_ShakeReq 2 "Shake Request" 0 "无请求" ;
+

@@ -1,0 +1,10 @@
+int16 adu_shake_req 0
+int16 adu_hozl_dsbl 1
+int16 adu_lgt_dsbl 1
+int16 adu_gear_req 1
+float32 adu_brk_stoke_req 0
+float32 adu_gas_stoke_req 0
+float32 adu_lim_gas_spd 20
+float32 adu_str_whl_ang_req 0
+int16 adu_drv_cmd_roll_cnt 0
+int16 adu_drv_cmd_check_sum 0
