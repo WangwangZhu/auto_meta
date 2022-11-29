@@ -26,7 +26,7 @@ class ChassisCommunicationReceive(Node):
                  openFlags=canlib.canOPEN_ACCEPT_VIRTUAL,
                  bitrate=canlib.canBITRATE_500K,
                  bitrateFlags=canlib.canDRIVER_NORMAL,
-                 dbc_filename='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/auto_meta/src/chassis_communication/chassis_communication/JY_OGF_NETA_ADU_CCM_V1.01.dbc'):
+                 dbc_filename='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/auto_meta/src/chasis_modules/chassis_communication/chassis_communication/nezha.dbc'):
         super().__init__('chassis_communication_receive')
         
         self.maximum_velocity_limitation = 30 # 车辆允许最大速度限制
@@ -81,7 +81,7 @@ class ChassisCommunicationReceive(Node):
         self.timer_adu_drive_control = self.create_timer(self.timer_period_adu_drive_control, self.timer_callback_adu_drive_control)
 
         self.timer_period_adu_body_control = 0.1
-        self.timer_adu_body_control = self.create_timer(self.timer_period__adu_body_control, self.timer_callback_adu_body_control)
+        self.timer_adu_body_control = self.create_timer(self.timer_period_adu_body_control, self.timer_callback_adu_body_control)
 
         self.ch = self.open_channel()
 
@@ -135,15 +135,17 @@ class ChassisCommunicationReceive(Node):
             self.shake_flag_count -= 1
 
         check_sum = (self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.raw) + \
-                    (self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.raw >> 4) + \
+                    (self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.raw << 4) + \
                     (self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.raw & 0xff) + \
-                    ((self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.raw >> 4) & 0xff) + \
+                    ((self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.raw >> 8) & 0xff) + \
                     (self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.raw) + \
                     (self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.raw) + \
-                    (self.adu_drive_cmd_frame_msg.ADU_GearReq.raw) >> 6 + \
-                    (self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.raw) >> 3 + \
-                    (self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.raw) >> 2 + \
+                    (self.adu_drive_cmd_frame_msg.ADU_GearReq.raw << 6) + \
+                    (self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.raw << 3) + \
+                    (self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.raw << 2) + \
                     (self.adu_drive_cmd_frame_msg.ADU_ShakeReq.raw)
+        print(check_sum)
+        print(self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.phys)
         self.adu_drive_cmd_frame_msg.ADU_DrvCmd_CheckSum.raw = check_sum ^ 0xff
         
         self.rolling_counter_adu_drive_cmd += 1
@@ -152,7 +154,7 @@ class ChassisCommunicationReceive(Node):
 
         self.ch.write(self.adu_drive_cmd_frame_msg._frame)
         
-        self.get_logger().info("Steer: {}, Brake: {}, Acce {}:".format(self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys, 
+        self.get_logger().info("Steer: {}, Brake: {}, Acce {}.".format(self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys, 
                                                                        self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys, 
                                                                        self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys))
 
@@ -176,7 +178,7 @@ class ChassisCommunicationReceive(Node):
         self.adu_body_cmd_frame_msg.ADU_TurnRLamp.phys = self.adu_body_cmd_msg.adu_turn_rlamp
         self.adu_body_cmd_frame_msg.ADU_TurnLLamp.phys = self.adu_body_cmd_msg.adu_turn_llamp
         self.adu_body_cmd_frame_msg.ADU_DblFlashLamp.phys = self.adu_body_cmd_msg.adu_dbl_flash_lamp
-        self.adu_body_cmd_frame_msg.ADU_BodyCmd_RollCnt.phys = self.self.rolling_counter_adu_body_cmd
+        self.adu_body_cmd_frame_msg.ADU_BodyCmd_RollCnt.phys = self.rolling_counter_adu_body_cmd
 
         check_sum = (self.adu_body_cmd_frame_msg.ADU_Horn.raw << 1) + \
                     (self.adu_body_cmd_frame_msg.ADU_TurnRLamp.raw << 4) + \
@@ -187,9 +189,9 @@ class ChassisCommunicationReceive(Node):
 
         self.ch.write(self.adu_body_cmd_frame_msg._frame)
 
-        self.self.rolling_counter_adu_body_cmd += 1
-        if self.self.rolling_counter_adu_body_cmd == 16:
-            self.self.rolling_counter_adu_body_cmd = 0
+        self.rolling_counter_adu_body_cmd += 1
+        if self.rolling_counter_adu_body_cmd == 16:
+            self.rolling_counter_adu_body_cmd = 0
 
     def open_channel(self):
         '''**************************************************************************************

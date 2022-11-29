@@ -119,17 +119,17 @@ class ins_d_data_parse(ins_data_parse_base_class.InsDataCollection):
                     
                     self._odom_msgs_publisher.publish(self._odom_msgs)
                     # self.get_logger().info("ins data send out => velocity(/m/s): " + str(self.gps_time))
-                    self.get_logger().info("ins data send out => longitudinal velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.x))
-                    self.get_logger().info("ins data send out => lateral velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.y))
+                    # self.get_logger().info("ins data send out => longitudinal velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.x))
+                    # self.get_logger().info("ins data send out => lateral velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.y))
 
-                    self.get_logger().info("ins data send out => longitudinal acc(/m/s^2): " + str(self.accY))
-                    self.get_logger().info("ins data send out => lateral acc(/m/s^2): " + str(self.accX))
+                    # self.get_logger().info("ins data send out => longitudinal acc(/m/s^2): " + str(self.accY))
+                    # self.get_logger().info("ins data send out => lateral acc(/m/s^2): " + str(self.accX))
 
-                    self.get_logger().info("ins data send out => longitudinal : " + str(self.local_x))
-                    self.get_logger().info("ins data send out => latitude: " + str(self.local_y))
-                    self.get_logger().info("ins data send out => pitch: " + str(self.pitch_radians))
-                    self.get_logger().info("ins data send out => roll: " + str(self.roll_radians))
-                    self.get_logger().info("ins data send out =>  yaw rate rad/s: " + str(self._odom_msgs.twist.twist.angular.z))
+                    # self.get_logger().info("ins data send out => longitudinal(m) : " + str(self.local_x))
+                    # self.get_logger().info("ins data send out => latitude(m): " + str(self.local_y))
+                    # self.get_logger().info("ins data send out => pitch: " + str(self.pitch_radians))
+                    # self.get_logger().info("ins data send out => roll: " + str(self.roll_radians))
+                    # self.get_logger().info("ins data send out =>  yaw rate rad/s: " + str(self._odom_msgs.twist.twist.angular.z))
                     self.get_logger().info("ins data send out =>  heading degree: " + str(self._odom_msgs.pose.covariance[1]*57))
 
 '''*****************************************************************************************************

@@ -33,7 +33,7 @@ class ChassisCommunicationSend(Node):
                  openFlags=canlib.canOPEN_ACCEPT_VIRTUAL, 
                  bitrate=canlib.canBITRATE_500K,
                  bitrateFlags=canlib.canDRIVER_NORMAL, 
-                 dbc_filename='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/auto_meta/src/chassis_communication/chassis_communication/JY_OGF_NETA_ADU_CCM_V1.01.dbc'):
+                 dbc_filename='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/auto_meta/src/chasis_modules/chassis_communication/chassis_communication/nezha.dbc'):
         super().__init__('chassis_communication_send')
 
         timer_period = 1/2000  # seconds
@@ -57,14 +57,16 @@ class ChassisCommunicationSend(Node):
         self.openFlags = openFlags
         self.bitrate = bitrate
         self.bitrateFlags = bitrateFlags
+        
+        print(dbc_filename)
 
         self.database_dbc = kvadblib.Dbc(filename=dbc_filename)
         # 从数据库提取要用的报文 创建和dbc绑定的帧对象
         self.wvcu_longitudinal_status_frame = self.database_dbc.get_message_by_name('WVCU_LongitudinalStatus')
         self.wvcu_horizontal_status_frame = self.database_dbc.get_message_by_name('WVCU_HorizontalStatus')
         self.wvcu_body_status_frame = self.database_dbc.get_message_by_name('WVCU_BodyStatus')
-        self.wvcu_flt_cod_frame = self.database_dbc.get_message_by_name('VCU_Speed_Feedback')
-        self.wvcu_veh_sph_lim_frame = self.database_dbc.get_message_by_name('VCU_Speed_Feedback')
+        self.wvcu_flt_cod_frame = self.database_dbc.get_message_by_name('WVCU_FltCod')
+        self.wvcu_veh_sph_lim_frame = self.database_dbc.get_message_by_name('WVCU_VehSphLim')
 
         self.ch = self.open_channel_kavser()
 
@@ -151,7 +153,7 @@ class ChassisCommunicationSend(Node):
 
                 self.publisher_wvcu_horizontal_status_feedback.publish(self.wvcu_horizontal_status_msg)
                 
-                self.get_logger().info("Steering angle: %s" % self.eps_feedback_bmsg.StrAng.phys)
+                self.get_logger().info("Steering angle: %s" % self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat)
                 self.eps_feedback_csv_logger.info(self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat)  # 记录到csv里面的日志文档 ("{},{}".format(11,12)
                 
             elif raw_frame.id == 0x370:  # WVCU_BodyStatus
@@ -163,7 +165,7 @@ class ChassisCommunicationSend(Node):
                 
                 self.publisher_wvcu_body_status_feedback.publish(self.wvcu_body_status_msg)
 
-            elif raw_frame.id == 770:  # VCU_Speed_Feedback
+            elif raw_frame.id == 0x359:  # VCU_Speed_Feedback
                 
                 self.wvcu_flt_cod_frame_msg = self.wvcu_flt_cod_frame.bind(raw_frame)
                 self.wvcu_flt_cod_msg.wvcuehb_brk_req_warn = int(self.wvcu_flt_cod_frame_msg.WVCUEHB_BrkReqWarn.phys)
@@ -201,16 +203,15 @@ class ChassisCommunicationSend(Node):
                                     self.wvcu_flt_cod_msg.wvcuehb_pedl_snsr_flt_single + self.wvcu_flt_cod_msg.wvcuehb_p_folw_flt_lv1 + self.wvcu_flt_cod_msg.wvcuehb_p_folw_flt_lv2 + \
                                         self.wvcu_flt_cod_msg.wvcuehb_p_snsr_flt + self.wvcu_flt_cod_msg.wvcuehb_pwr_drvr_flt + self.wvcu_flt_cod_msg.wvcuehb_pwr_swt_flt +\
                                             self.wvcu_flt_cod_msg.wvcuehb_u_sply_high_lv_1 + self.wvcu_flt_cod_msg.wvcuehb_u_sply_high_lv_2 + self.wvcu_flt_cod_msg.wvcuehb_u_sply_low_lv_1+\
-                                                self.wvcu_flt_cod_msg.wvcuehb_u_sply_low_lv_2 + self.wvcu_flt_cod_msg.wvcueps_inhibit_code + self.wvcu_flt_cod_msg.wvcu_flt_cod_roll_cnt + \
-                                                    self.wvcu_flt_cod_msg.wvcu_flt_cod_check_sum > 0:
+                                                self.wvcu_flt_cod_msg.wvcuehb_u_sply_low_lv_2 + self.wvcu_flt_cod_msg.wvcueps_inhibit_code > 0:
                     self.get_logger().error("Find chassis error!!!!!!")
 
             elif raw_frame.id == 0x352:  # WVCU_VehSphLim
                 self.wvcu_veh_sph_lim_frame_msg = self.wvcu_veh_sph_lim_frame.bind(raw_frame)
-                self.wvcu_veh_sph_lim_msg.wvcu_adu_lim_gas_spd = float(self.wvcu_body_status_frame_msg.WVCU_ADULimGasSpd.phys)
+                self.wvcu_veh_sph_lim_msg.wvcu_adu_lim_gas_spd = float(self.wvcu_veh_sph_lim_frame_msg.WVCU_ADULimGasSpd.phys)
                 
                 self.publisher_wvcu_veh_sph_lim_feedback.publish(self.wvcu_veh_sph_lim_msg)
-
+                
     def closeChannel_kavser(self, ch):
         '''**************************************************************************************
         - FunctionName: closeChannel_kavser()

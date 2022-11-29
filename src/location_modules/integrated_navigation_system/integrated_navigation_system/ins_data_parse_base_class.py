@@ -34,7 +34,7 @@ class InsDataCollection(Node):
                 #  device='/dev/ttyUSB0',
                  baud_rate=115200,
                  timeout=0.5,
-                 data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/' + 'auto_meta/src/integrated_navigation_system/integrated_navigation_system_python/data_collection/',
+                 data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',
                  origin_longitude=121.4415488,
                  origin_latitude=31.0282838,
                  origin_utm_x=351256.08,
