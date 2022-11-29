@@ -9,7 +9,7 @@
     <color rgba="0.0 0.0 0.0 1.0"/>
   </material>
   <material name="RRBOT/blue">
-    <color rgba="0.0 0.0 0.8 1.0"/>
+    <color rgba="0.255 0.4112 0.8823 1.0"/>
   </material>
   <material name="RRBOT/green">
     <color rgba="0.0 0.8 0.0 1.0"/>
@@ -46,7 +46,7 @@
       <geometry>
         <mesh filename="package://visualization/urdf/nezha.STL" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="RRBOT/red"/>
+      <material name="RRBOT/blue"/>
     </visual>
   </link>
 
