@@ -1,7 +1,7 @@
 /*'''*****************************************************************************************************
 # FileName    : 
 # FileFunction: 产生控制信号发送到 ROS 网络上。
-# Comments    : `throttle` (float) - The current throttle value [-1, 1].
+# Comments    : 
 *****************************************************************************************************'''*/
 
 #include "mpc_trajectory_tracking_dynamics_coupled/helpers.h"
@@ -28,22 +28,13 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
     vehicle_control_msg.adu_gas_stoke_req = 0;
     vehicle_control_msg.adu_str_whl_ang_req = 0;
 
-    // steering_control_msg.steering_angle = 0;
-    // speed_control_msg.vehicle_velocity = 0;
-    // shift_control_msg.vehicle_shift = 1;
-    // parking_control_msg.park_brake_request = 0;           // 1 enable 0 disable 
-    // brake_pressure_control_msg.brake_pressure_target = 0; // 0~120
-
     int qos_ = 2; // 定义消息队列大小为2，若超过2，则最先进入的消息将被舍弃，发布与订阅均有队列
 
     old_steer_value = 0;
     old_throttle_value = 0;
 
     // 定义广播器，主题的名字和转发节点里面的主题名字对应。
-    /* 控制信号 */
     mpc_control_signals_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals", qos_);
-
-    /* vcu 控制信号 速度信号 档位信号 */
 
     // mpc 求解出来的未来一段时间的路径，以及mpc使用的未来一段时间的参考轨迹点
     mpc_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_reference_path", qos_);
@@ -247,7 +238,6 @@ void MpcTrajectoryTrackingPublisher::ins_data_receive_callback(nav_msgs::msg::Od
 
             psi = heading_current;
         }
-        // cout << "***ins_ data::: " << "a_lateral: " << a_lateral << ", v_lateral: " << v_lateral << ", yaw_rate: " << yaw_rate << ", psi: " << psi << ", px:" << px << ", py" << py << endl;
 
         is_ins_data_received = true;
 
@@ -312,19 +302,6 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
     if (rclcpp::ok())
     // if (0) // 失能跟踪功能，测试控制信号是否起效
     {
-        // 当需要进行演示任务时,下面的代码,可以配置全局期望速度,实现变速
-        // if (abs(former_point_of_current_position - 180) < 3)
-        // {
-        //     target_v = 36;
-        // }
-        // if (former_point_of_current_position == 600)
-        // {
-        //     brake_pressure_control_msg.brake_pressure_target = 6; // 0~120
-        //     target_v = 0;
-        // }
-
-        // 0.6 是地图里面的点的距离 + 2 补偿一下,低速时 拟合参考路径时可用点太少的问题.
-        
         this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * v_longitudinal) + 1, 4.0);
 
         // RCLCPP_INFO(this->get_logger(), "reference_path_length: %d", reference_path_length);
@@ -361,8 +338,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
 
             VectorXd coeffs;
             double cte;
-            // ****************************** 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用
-            // ) ******************************
+            // 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用 
             if (with_planner_flag == 0)
             {
                 for (size_t i = 0; i < global_path_x.size() - 1; i++)
