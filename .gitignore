@@ -27,8 +27,8 @@ build/*
 run_log/
 run_log/*
 
-drivers/
-drivers/*
+# drivers/
+# drivers/*
 
 install/
 install/*

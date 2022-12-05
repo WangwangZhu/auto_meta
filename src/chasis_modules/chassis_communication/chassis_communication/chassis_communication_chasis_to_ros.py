@@ -153,21 +153,19 @@ class ChassisCommunicationSend(Node):
 
                 self.publisher_wvcu_horizontal_status_feedback.publish(self.wvcu_horizontal_status_msg)
                 
-                check_sum_calculated = self.wvcu_horizontal_status_msg_frame_msg._data[0] ^ self.wvcu_horizontal_status_msg_frame_msg._data[1] ^ self.wvcu_horizontal_status_msg_frame_msg._data[2] ^ self.wvcu_horizontal_status_msg_frame_msg._data[3] ^ self.wvcu_horizontal_status_msg_frame_msg._data[4] ^ self.wvcu_horizontal_status_msg_frame_msg._data[5] ^ self.wvcu_horizontal_status_msg_frame_msg._data[6]
-                # check_sum_calculated = self.wvcu_horizontal_status_msg_frame_msg._data[0] ^ self.wvcu_horizontal_status_msg_frame_msg._data[1] ^ self.wvcu_horizontal_status_msg_frame_msg._data[2] ^ self.wvcu_horizontal_status_msg_frame_msg._data[3] ^ self.wvcu_horizontal_status_msg_frame_msg._data[4] ^ self.wvcu_horizontal_status_msg_frame_msg._data[5] ^ self.wvcu_horizontal_status_msg_frame_msg._data[6] ^ self.wvcu_horizontal_status_msg_frame_msg._data[7]
+                # check_sum_calculated = self.wvcu_horizontal_status_msg_frame_msg._data[0] ^ self.wvcu_horizontal_status_msg_frame_msg._data[1] ^ self.wvcu_horizontal_status_msg_frame_msg._data[2] ^ self.wvcu_horizontal_status_msg_frame_msg._data[3] ^ self.wvcu_horizontal_status_msg_frame_msg._data[4] ^ self.wvcu_horizontal_status_msg_frame_msg._data[5] ^ self.wvcu_horizontal_status_msg_frame_msg._data[6]
+                # check_sum_from_chassis = self.wvcu_horizontal_status_msg.wvcu_hozl_stat_check_sum
                 
-                check_sum_from_chassis = self.wvcu_horizontal_status_msg.wvcu_hozl_stat_check_sum
-                
-                print("wvcu_horizontal_status_msg_frame_msg:")
-                for i in range(8):
-                    print(self.wvcu_horizontal_status_msg_frame_msg._data[i],end="; ")
-                print()
-                print(check_sum_calculated)
-                print(check_sum_from_chassis)
-                if check_sum_from_chassis == check_sum_calculated:
-                    self.get_logger().error("same")
-                else:
-                    self.get_logger().error("different")
+                # print("wvcu_horizontal_status_msg_frame_msg:")
+                # for i in range(8):
+                #     print(self.wvcu_horizontal_status_msg_frame_msg._data[i],end="; ")
+                # print()
+                # print(check_sum_calculated)
+                # print(check_sum_from_chassis)
+                # if check_sum_from_chassis == check_sum_calculated:
+                #     self.get_logger().error("same")
+                # else:
+                #     self.get_logger().error("different")
                 
                 self.get_logger().info("Steering angle: %s" % self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat)
                 self.eps_feedback_csv_logger.info(self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat)  # 记录到csv里面的日志文档 ("{},{}".format(11,12)
