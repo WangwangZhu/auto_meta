@@ -49,7 +49,7 @@ class ChassisCommunicationReceive(Node):
         self.bitrate = bitrate
         self.bitrateFlags = bitrateFlags
         
-        self.shake_flag_count = 40
+        self.shake_flag_count = 50
         
         self.flash_count = 100
         
@@ -124,28 +124,28 @@ class ChassisCommunicationReceive(Node):
         **************************************************************************************'''
         self.adu_drive_cmd_frame_msg = self.adu_drive_cmd_frame.bind()
         
-        # self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
-        self.drive_count -= 1
-        if self.drive_count > 0:
-            self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
-            self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 36
-            self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 0
+        self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
+        # self.drive_count -= 1
+        # if self.drive_count > 0:
+        #     self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
+        #     self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 36
+        #     self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 0
             
-        else:
-            self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
-            self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 0
-            self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 20
+        # else:
+        #     self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
+        #     self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 0
+        #     self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 20
             
             
-        # self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
-        self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = 0
-        # self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
+        self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = -self.adu_drive_cmd_msg.adu_gas_stoke_req
+        # self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = 0
+        self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
         
-        # self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
-        self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = 0
-        # self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = self.adu_drive_cmd_msg.adu_lgt_dsbl
-        self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = 0
-        # self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = self.adu_drive_cmd_msg.adu_gear_req
+        self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
+        # self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = 0
+        self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = self.adu_drive_cmd_msg.adu_lgt_dsbl
+        # self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = 0
+        self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = self.adu_drive_cmd_msg.adu_gear_req
         
         self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.phys = self.maximum_velocity_limitation
         
@@ -186,11 +186,11 @@ class ChassisCommunicationReceive(Node):
 
         self.ch.write(self.adu_drive_cmd_frame_msg._frame)
         
-        print("adu drive cmd data:")
-        for i in range(8):
-            print(self.adu_drive_cmd_frame_msg._data[i],end="; ")
-        print()
-        print(check_sum)    
+        # print("adu drive cmd data:")
+        # for i in range(8):
+        #     print(self.adu_drive_cmd_frame_msg._data[i],end="; ")
+        # print()
+        # print(check_sum)    
         
         self.get_logger().info("Steer: {}, Brake: {}, Acce {}.".format(self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys, 
                                                                        self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys, 
@@ -207,14 +207,14 @@ class ChassisCommunicationReceive(Node):
         self.adu_body_cmd_frame_msg = self.adu_body_cmd_frame.bind()
         
         # TEMP testing...
-        self.adu_body_cmd_msg.adu_horn = 0
-        self.adu_body_cmd_msg.adu_turn_rlamp = 0
-        self.adu_body_cmd_msg.adu_turn_llamp = 0
-        self.flash_count -= 1
-        if self.flash_count > 0:
-            self.adu_body_cmd_msg.adu_dbl_flash_lamp = 1
-        else:
-            self.adu_body_cmd_msg.adu_dbl_flash_lamp = 0
+        # self.adu_body_cmd_msg.adu_horn = 0
+        # self.adu_body_cmd_msg.adu_turn_rlamp = 0
+        # self.adu_body_cmd_msg.adu_turn_llamp = 0
+        # self.flash_count -= 1
+        # if self.flash_count > 0:
+        #     self.adu_body_cmd_msg.adu_dbl_flash_lamp = 1
+        # else:
+        #     self.adu_body_cmd_msg.adu_dbl_flash_lamp = 0
         
         self.adu_body_cmd_frame_msg.ADU_Horn.raw = self.adu_body_cmd_msg.adu_horn
         self.adu_body_cmd_frame_msg.ADU_TurnRLamp.phys = self.adu_body_cmd_msg.adu_turn_rlamp

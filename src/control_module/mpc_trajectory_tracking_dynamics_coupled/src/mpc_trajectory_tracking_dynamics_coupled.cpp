@@ -291,7 +291,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
 {
     // 直接发控制信号给底盘，测试底盘是否正常
     vehicle_control_msg.adu_gear_req = 3;
-    vehicle_control_msg.adu_brk_stoke_req = 0;
+    vehicle_control_msg.adu_brk_stoke_req = 30;
     vehicle_control_msg.adu_gas_stoke_req = 0;
     vehicle_control_msg.adu_str_whl_ang_req = 0;
 
@@ -299,8 +299,9 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
     rclcpp::Time end_mpc;
     start_mpc = this->now();
     double iteration_time_length;
-    if (rclcpp::ok())
-    // if (0) // 失能跟踪功能，测试控制信号是否起效
+    
+    // if (rclcpp::ok())
+    if (0) // 失能跟踪功能，测试控制信号是否起效
     {
         this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * v_longitudinal) + 1, 4.0);
 
@@ -643,6 +644,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
             }
         }
     }
+    
     mpc_reference_path_publisher->publish(reference_path);
     mpc_output_path_publisher->publish(mpc_output_path);
     mpc_control_signals_publisher->publish(vehicle_control_msg);

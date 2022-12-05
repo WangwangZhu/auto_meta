@@ -1,3 +1,3 @@
 global_path_visualization:
   ros__parameters:
-    global_map_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/2021_09_30_13_27_28_ins_data_map_after_preprocess.csv"
+    global_map_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/2022_12_05_18_29_16_ins_data_map_after_preprocess.csv"
