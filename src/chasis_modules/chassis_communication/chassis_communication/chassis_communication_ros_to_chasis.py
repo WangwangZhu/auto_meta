@@ -66,14 +66,21 @@ class ChassisCommunicationReceive(Node):
             10)
         self.subscription_vehicle_control_mode
         
-        # 订阅器将 ROS 2 网络上的控制信号收下来，接收控制信号
-        self.subscription_vehicle_control_signals = self.create_subscription(
+        self.subscription_vehicle_control_signals_gear = self.create_subscription(
             ADUDriveCmd,
-            'vehicle_control_signals',
-            self.listener_callback_vehicle_control_signals,
+            'vehicle_control_signals_gear',
+            self.listener_callback_vehicle_control_signals_gear,
+            10
+        )
+        
+        # 订阅器将 ROS 2 网络上的控制信号收下来，接收控制信号
+        self.subscription_vehicle_control_signals_gas_brake_steer = self.create_subscription(
+            ADUDriveCmd,
+            'vehicle_control_signals_gas_brake_steer',
+            self.listener_callback_vehicle_control_signals_gas_brake_steer,
             10)
         # prevent unused variable warning
-        self.subscription_vehicle_control_signals
+        self.subscription_vehicle_control_signals_gas_brake_steer
         
         """"""""""""""""""""""""
         '''ADU_BodyCmd'''
@@ -101,10 +108,15 @@ class ChassisCommunicationReceive(Node):
     - Comments    : None
     **************************************************************************************'''
 
-    def listener_callback_vehicle_control_signals(self, msg):
+    def listener_callback_vehicle_control_signals_gas_brake_steer(self, msg):
         self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
         self.adu_drive_cmd_msg.adu_gas_stoke_req = msg.adu_gas_stoke_req
         self.adu_drive_cmd_msg.adu_str_whl_ang_req = msg.adu_str_whl_ang_req
+        # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
+        # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
+    
+    def listener_callback_vehicle_control_signals_gear(self, msg):
+        self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
         self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
         # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
 
@@ -125,26 +137,12 @@ class ChassisCommunicationReceive(Node):
         self.adu_drive_cmd_frame_msg = self.adu_drive_cmd_frame.bind()
         
         self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
-        # self.drive_count -= 1
-        # if self.drive_count > 0:
-        #     self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
-        #     self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 36
-        #     self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 0
-            
-        # else:
-        #     self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = 2
-        #     self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 0
-        #     self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = 20
-            
-            
         self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = -self.adu_drive_cmd_msg.adu_gas_stoke_req
-        # self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = 0
         self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
         
         self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
-        # self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = 0
         self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = self.adu_drive_cmd_msg.adu_lgt_dsbl
-        # self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = 0
+        
         self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = self.adu_drive_cmd_msg.adu_gear_req
         
         self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.phys = self.maximum_velocity_limitation
@@ -152,37 +150,17 @@ class ChassisCommunicationReceive(Node):
         self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.phys = self.rolling_counter_adu_drive_cmd
         
         if self.shake_flag_count <= 0:
-            # self.adu_drive_cmd_frame_msg.ADU_ShakeReq.phys = 0
             self.adu_drive_cmd_frame_msg.ADU_ShakeReq.phys = 2
         else:
             self.adu_drive_cmd_frame_msg.ADU_ShakeReq.phys = 0
             self.shake_flag_count -= 1
-            
-        # print(self.shake_flag_count)
-        # print(self.adu_drive_cmd_frame_msg.ADU_ShakeReq.phys)
-        
-        # check_sum_part_1 = self.adu_drive_cmd_frame_msg.ADU_ShakeReq.raw | \
-        #                     (self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.raw << 2) | \
-        #                         (self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.raw << 3) | \
-        #                             (self.adu_drive_cmd_frame_msg.ADU_GearReq.raw << 6)
-        # check_sum_part_2 = self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.raw
-        # check_sum_part_3 = self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.raw
-        # check_sum_part_4 = self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.raw
-        # check_sum_part_5 = 0
-        # check_sum_part_6 = self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.raw & 0xff
-        # check_sum_part_7 = (self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.raw >> 8) | (self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.raw << 4)
-
-        # check_sum = check_sum_part_1 ^ check_sum_part_2 ^ check_sum_part_3 ^ check_sum_part_4 ^ check_sum_part_5 ^ check_sum_part_6 ^ check_sum_part_7
         
         check_sum = self.adu_drive_cmd_frame_msg._data[0] ^ self.adu_drive_cmd_frame_msg._data[1] ^ self.adu_drive_cmd_frame_msg._data[2] ^ self.adu_drive_cmd_frame_msg._data[3] ^ self.adu_drive_cmd_frame_msg._data[4] ^ self.adu_drive_cmd_frame_msg._data[5] ^ self.adu_drive_cmd_frame_msg._data[6]
-        # print(check_sum)
-        # print(self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.phys)
         self.adu_drive_cmd_frame_msg.ADU_DrvCmd_CheckSum.raw = check_sum
         
         self.rolling_counter_adu_drive_cmd += 1
         if self.rolling_counter_adu_drive_cmd == 16:
             self.rolling_counter_adu_drive_cmd = 0
-        # print(self.rolling_counter_adu_drive_cmd)
 
         self.ch.write(self.adu_drive_cmd_frame_msg._frame)
         
@@ -206,32 +184,13 @@ class ChassisCommunicationReceive(Node):
         **************************************************************************************'''
         self.adu_body_cmd_frame_msg = self.adu_body_cmd_frame.bind()
         
-        # TEMP testing...
-        # self.adu_body_cmd_msg.adu_horn = 0
-        # self.adu_body_cmd_msg.adu_turn_rlamp = 0
-        # self.adu_body_cmd_msg.adu_turn_llamp = 0
-        # self.flash_count -= 1
-        # if self.flash_count > 0:
-        #     self.adu_body_cmd_msg.adu_dbl_flash_lamp = 1
-        # else:
-        #     self.adu_body_cmd_msg.adu_dbl_flash_lamp = 0
-        
         self.adu_body_cmd_frame_msg.ADU_Horn.raw = self.adu_body_cmd_msg.adu_horn
         self.adu_body_cmd_frame_msg.ADU_TurnRLamp.phys = self.adu_body_cmd_msg.adu_turn_rlamp
-        # self.adu_body_cmd_frame_msg.ADU_TurnRLamp.phys = 1
         self.adu_body_cmd_frame_msg.ADU_TurnLLamp.phys = self.adu_body_cmd_msg.adu_turn_llamp
         self.adu_body_cmd_frame_msg.ADU_DblFlashLamp.phys = self.adu_body_cmd_msg.adu_dbl_flash_lamp
         self.adu_body_cmd_frame_msg.ADU_BodyCmd_RollCnt.phys = self.rolling_counter_adu_body_cmd
         
-        # check_sum_part_2 = (self.adu_body_cmd_frame_msg.ADU_Horn.raw << 1) | \
-        #                     (self.adu_body_cmd_frame_msg.ADU_TurnRLamp.raw << 4) | \
-        #                             (self.adu_body_cmd_frame_msg.ADU_TurnLLamp.raw << 5) | \
-        #                                 (self.adu_body_cmd_frame_msg.ADU_DblFlashLamp.raw << 6)
-        # check_sum_part_7 = self.adu_body_cmd_frame_msg.ADU_BodyCmd_RollCnt.raw << 4
-        
         check_sum = self.adu_body_cmd_frame_msg._data[0] ^ self.adu_body_cmd_frame_msg._data[1] ^ self.adu_body_cmd_frame_msg._data[2] ^ self.adu_body_cmd_frame_msg._data[3] ^ self.adu_body_cmd_frame_msg._data[4] ^ self.adu_body_cmd_frame_msg._data[5] ^ self.adu_body_cmd_frame_msg._data[6]
-        
-        # check_sum =  check_sum_part_2 ^ check_sum_part_7
         self.adu_body_cmd_frame_msg.ADU_BodyCmd_CheckSum.raw = check_sum
 
         self.ch.write(self.adu_body_cmd_frame_msg._frame)

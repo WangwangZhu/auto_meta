@@ -70,7 +70,6 @@ class KeyBoardMonitor(Node):
         if event.Key == 'e' or event.Key == 'ee':
             self.adu_drive_cmd_msg.adu_hozl_dsbl = 0
             self.adu_drive_cmd_msg.adu_lgt_dsbl = 0
-            # self.adu_drive_cmd_msg.adu_gear_req = 1
             self.get_logger().info("Autonomous Mode Enabled!!!")
             self.publisher_vehicle_control_mode.publish(self.adu_drive_cmd_msg)
             time.sleep(0.02)

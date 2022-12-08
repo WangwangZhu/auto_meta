@@ -23,10 +23,12 @@ double inline max_mpc(double a, double b) { return (a > b) ? a : b; }
 **************************************************************************************'''*/
 MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_trajectory_tracking_publisher") // 使用初始化列表来初始化字段
 {
-    vehicle_control_msg.adu_gear_req = 1;
-    vehicle_control_msg.adu_brk_stoke_req = 0;
-    vehicle_control_msg.adu_gas_stoke_req = 0;
-    vehicle_control_msg.adu_str_whl_ang_req = 0;
+    // vehicle_control_gas_brake_steer_msg.adu_gear_req = 1;
+    vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
+    vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
+    vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
+
+    vehicle_control_gear_msg.gear_request = 1;
 
     int qos_ = 2; // 定义消息队列大小为2，若超过2，则最先进入的消息将被舍弃，发布与订阅均有队列
 
@@ -34,7 +36,10 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
     old_throttle_value = 0;
 
     // 定义广播器，主题的名字和转发节点里面的主题名字对应。
-    mpc_control_signals_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals", qos_);
+    mpc_control_signals_gas_brake_steer_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals_gas_brake_steer", qos_);
+
+    mpc_control_signals_gear_publisher = this->create_publisher<chassis_msg::msg::ADUGearRequest>("vehicle_control_signals_gear_request", qos_);
+    
 
     // mpc 求解出来的未来一段时间的路径，以及mpc使用的未来一段时间的参考轨迹点
     mpc_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_reference_path", qos_);
@@ -290,10 +295,11 @@ void MpcTrajectoryTrackingPublisher::eps_feedback_callback(chassis_msg::msg::WVC
 void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
 {
     // 直接发控制信号给底盘，测试底盘是否正常
-    vehicle_control_msg.adu_gear_req = 3;
-    vehicle_control_msg.adu_brk_stoke_req = 30;
-    vehicle_control_msg.adu_gas_stoke_req = 0;
-    vehicle_control_msg.adu_str_whl_ang_req = 0;
+    // vehicle_control_gas_brake_steer_msg.adu_gear_req = 3;
+    // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 30;
+    // vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
+    // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
+    vehicle_control_gear_msg.gear_request = 3;
 
     rclcpp::Time start_mpc;
     rclcpp::Time end_mpc;
@@ -339,7 +345,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
 
             VectorXd coeffs;
             double cte;
-            // 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用 
+            // 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用)
             if (with_planner_flag == 0)
             {
                 for (size_t i = 0; i < global_path_x.size() - 1; i++)
@@ -467,8 +473,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
 
             /* Before reference system change:
             doubel epsi = psi - atan(coeffs[1] + 2 * px * coeffs[2] + 3 * coeffs[3* * pow(px,2) where px =0
-            在车辆坐标系下，px为车辆当前时刻的纵向向坐标，经过坐标变换后，值为0，而且在新的坐标系下，psi也为0
-            当前状态点的航向偏差为实际航向减去期望航向，期望航向为期望轨迹的导数在该点的反正切值*/
+            在车辆坐标系下，px为车辆当前时刻的纵向向坐标，经过坐标变换后，值为0，而且在新的坐标系下，psi也为0, 当前状态点的航向偏差为实际航向减去期望航向，期望航向为期望轨迹的导数在该点的反正切值*/
             double epsi = -atan(coeffs[1]);
 
             /*Latency for predicting time at actuation*/
@@ -522,33 +527,33 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
             {
                 steer_value = steering_damp * rad2deg((vars[0] / 1)); 
             }
-            vehicle_control_msg.adu_str_whl_ang_req = steer_value;
+            vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = steer_value;
 
             /* ----------------------------------------------------------------------------- 纵向控制信号 ----------------------------------------------------------------------------- */
             // determining if brake or throttle
             throttle_value = vars[1];
             if (throttle_value <= -0.02) // 刹车
             {
-                vehicle_control_msg.adu_gas_stoke_req = 0;
-                vehicle_control_msg.adu_brk_stoke_req = min_mpc(100, -throttle_value * 60);
+                vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
+                vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = max_mpc(0, min_mpc(100, -9.03 * throttle_value - 9.548));
             }
             else if (throttle_value > -0.02 && throttle_value <=0 ) // 滑行
             {
-                vehicle_control_msg.adu_gas_stoke_req = 0;
-                vehicle_control_msg.adu_brk_stoke_req = 0;
+                vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
+                vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
             }
             else if (throttle_value > 0) // 加油
             {
-                vehicle_control_msg.adu_gas_stoke_req = min_mpc(2, throttle_value * 20); // throttle_value;
-                vehicle_control_msg.adu_brk_stoke_req = 0;                     // 0~120
+                vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = max_mpc(0, min_mpc(100, -0.00208291341652652 * v_longitudinal * v_longitudinal - 0.17134578234501768 * v_longitudinal * throttle_value + 1.035345901656135 * throttle_value * throttle_value + 0.7720091370971741 * v_longitudinal + 26.614571054897834 * throttle_value - 1.2802321021287273));
+                vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;                    
             }
             
-            if (target_v <= 0.02) // TODO：超过这个速度极限，MPC就不工作了，直接停车
-            {
-                vehicle_control_msg.adu_gas_stoke_req = 0;
-                vehicle_control_msg.adu_brk_stoke_req = 20;
-            }
-            cout << "Steer:" << std::setprecision(4) << vehicle_control_msg.adu_str_whl_ang_req << " Throttle:" << throttle_value << " Accelerate:" << vehicle_control_msg.adu_gas_stoke_req << " Brake:" << vehicle_control_msg.adu_brk_stoke_req << endl;
+            // if (target_v <= 0.02) // TODO：超过这个速度极限，MPC就不工作了，直接停车
+            // {
+            //     vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
+            //     vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 20;
+            // }
+            cout << "Steer:" << std::setprecision(4) << vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req << " Throttle:" << throttle_value << " Accelerate:" << vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req << " Brake:" << vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req << endl;
 
             /* 这里的路径和全局路径可视化是重合的，消息发出来，但是不一定要用的 */
             /* Display the waypoints reference line. */
@@ -647,7 +652,8 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
     
     mpc_reference_path_publisher->publish(reference_path);
     mpc_output_path_publisher->publish(mpc_output_path);
-    mpc_control_signals_publisher->publish(vehicle_control_msg);
+    mpc_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
+    mpc_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
     // mpc_speed_control_publisher->publish(speed_control_msg);
     // mpc_shift_control_publisher->publish(shift_control_msg);
     // mpc_parking_control_publisher->publish(parking_control_msg);

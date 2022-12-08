@@ -36,6 +36,7 @@ set(msg_files
   "msg/WVCUHorizontalStatus.msg"
   "msg/WVCULongitudinalStatus.msg"
   "msg/WVCUVehSphLim.msg"
+  "msg/ADUGearRequest.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME} ${msg_files} DEPENDENCIES builtin_interfaces std_msgs ADD_LINTER_TESTS)

@@ -28,6 +28,7 @@
 
 #include "chassis_msg/msg/adu_drive_cmd.hpp"
 #include "chassis_msg/msg/adu_body_cmd.hpp"
+#include "chassis_msg/msg/adu_gear_request.hpp"
 #include "chassis_msg/msg/wvcu_body_status.hpp"
 #include "chassis_msg/msg/wvcu_flt_cod.hpp"
 #include "chassis_msg/msg/wvcu_horizontal_status.hpp"
@@ -238,7 +239,12 @@ public:
     void palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg);
 
 public:
-    rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr mpc_control_signals_publisher;
+    rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr mpc_control_signals_gas_brake_steer_publisher;
+    int working_mode;
+    chassis_msg::msg::ADUDriveCmd vehicle_control_gas_brake_steer_msg = chassis_msg::msg::ADUDriveCmd();
+
+    rclcpp::Publisher<chassis_msg::msg::ADUGearRequest>::SharedPtr mpc_control_signals_gear_publisher;
+    chassis_msg::msg::ADUGearRequest vehicle_control_gear_msg;
 
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mpc_iteration_time_publisher;
 
@@ -328,8 +334,7 @@ public:
     int points_number_of_reference_line_visualization;     /* how many point "int the future" to be plotted. */
     bool mpc_enable_signal = true;
 
-    int working_mode;
-    chassis_msg::msg::ADUDriveCmd vehicle_control_msg = chassis_msg::msg::ADUDriveCmd();
+    
 
 private:
     double steer_value;
