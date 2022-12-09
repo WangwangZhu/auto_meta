@@ -12,7 +12,7 @@ import ament_index_python.packages
 
 def generate_launch_description():
     
-    mpc_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/launch_manager/config', 'mpc_parameters_configuration_dynamics_coupled.yaml')
+    mpc_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/auxiliar_tools/launch_manager/config', 'mpc_parameters_configuration_dynamics_coupled.yaml')
     
     return LaunchDescription([
         DeclareLaunchArgument(

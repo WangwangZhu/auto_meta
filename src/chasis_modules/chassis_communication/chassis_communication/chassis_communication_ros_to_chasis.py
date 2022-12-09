@@ -123,7 +123,7 @@ class ChassisCommunicationReceive(Node):
     def listener_callback_vehicle_control_mode(self, msg):
         self.adu_drive_cmd_msg.adu_hozl_dsbl = msg.adu_hozl_dsbl
         self.adu_drive_cmd_msg.adu_lgt_dsbl = msg.adu_lgt_dsbl
-        self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
+        # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
         # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
 
     def timer_callback_adu_drive_control(self):

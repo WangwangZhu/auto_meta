@@ -8,15 +8,16 @@
 
 1. ros2 run chassis_communication chassis_communication_ros_to_chasis
 2. ros2 run chassis_communication chassis_communication_chasis_to_ros
-3. ros2 run safety_mechanism safety_mechanism
-4. source command
-5. ros2 run integrated_navigation_system_python ins_d_data_parse
-6. ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
-7. rqt
-8. ros2 run key_board_monitor key_board_monitor
-9. ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
-10. ros2 launch launch_manager highway_path_planning_with_prediction_launch.py
-11. ros2 run sensor_fusion sensor_fusion_node
+3. ros2 run gear_control gear_controller
+4. ros2 run safety_mechanism safety_mechanism
+5. source command
+6. ros2 run integrated_navigation_system_python ins_d_data_parse
+7. ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+8. rqt
+9. ros2 run key_board_monitor key_board_monitor
+10. ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+11. ros2 launch launch_manager highway_path_planning_with_prediction_launch.py
+12. ros2 run sensor_fusion sensor_fusion_node
 
 # 联合仿真代码启动流程（基于ROS galactic neotic)
 

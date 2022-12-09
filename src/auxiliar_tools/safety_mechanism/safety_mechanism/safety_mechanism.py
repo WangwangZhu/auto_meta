@@ -32,11 +32,11 @@ class SafetyMechanism(Node):
         self.eps_steering_control_msg = ADUDriveCmd()
 
     def emergency_callback(self, msg):
-        if msg.steering_torque > 7.0:
+        if msg.wvcu_str_whl_tq > 5.0:
             self.get_logger().info("Manual Mode")
             self.eps_steering_control_msg.adu_hozl_dsbl = 1
             self.eps_steering_control_msg.adu_lgt_dsbl = 1
-            self.eps_steering_control_msg.adu_gear_req = 1
+            # self.eps_steering_control_msg.adu_gear_req = 1
             self.publisher_.publish(self.eps_steering_control_msg)
 
 def main(args = None):

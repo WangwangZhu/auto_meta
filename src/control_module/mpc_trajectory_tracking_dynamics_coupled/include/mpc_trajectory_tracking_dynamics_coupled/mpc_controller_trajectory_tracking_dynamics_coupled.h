@@ -257,6 +257,10 @@ public:
     rclcpp::Subscription<chassis_msg::msg::WVCUHorizontalStatus>::SharedPtr eps_feedback_subscription;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_subscription;
 
+    rclcpp::Subscription<chassis_msg::msg::WVCULongitudinalStatus>::SharedPtr vehicle_longitudinal_status_feedback;
+    void vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg);
+    chassis_msg::msg::WVCULongitudinalStatus::SharedPtr vehicle_longitudinal_feedback_msg;
+
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr mpc_planner_frenet_path_subscription;
     rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr mpc_planner_cartesian_path_subscription;
 
@@ -359,6 +363,8 @@ private:
     bool is_ins_data_received = false;
     bool is_planner_frenet_path_received = false;
     bool is_planner_cartesian_path_received = false;
+    bool is_vehicle_longitudinal_received = false;
+    bool is_vehicle_horizontal_received = false;
 
     double max_cte = 0;
     double min_cte = 0;

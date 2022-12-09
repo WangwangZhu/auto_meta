@@ -5,6 +5,7 @@
 # Comments    :
 *****************************************************************************************************'''
 # import sys
+import time
 import rclpy
 # from canlib import kvadblib
 # from canlib import Frame
@@ -32,17 +33,19 @@ class GearController(Node):
 
         # 订阅控制器的档位请求
         self.adu_gear_request = ADUGearRequest
-        self.gear_request_subscription = self.create_subscription(ADUGearRequest, "vehicle_control_signals_gear_request", self.listener_callback_vehicle_gear_request)
+        self.gear_request_subscription = self.create_subscription(ADUGearRequest, "vehicle_control_signals_gear_request", self.listener_callback_vehicle_gear_request, 1)
         self.gear_request_subscription
         
         # 订阅车辆当前的速度、档位状态
         self.wvcu_longitudinal_status_msg = WVCULongitudinalStatus()
-        self.wvcu_longitudinal_status_subscription = self.create_subscription(WVCULongitudinalStatus, "wvcu_longitudinal_status", self.listener_callback_vehicle_longitudinal_status)
+        self.wvcu_longitudinal_status_subscription = self.create_subscription(WVCULongitudinalStatus, "wvcu_longitudinal_status", self.listener_callback_vehicle_longitudinal_status, 1)
         self.wvcu_longitudinal_status_subscription
         
         # 广播档位的控制逻辑
         self.adu_drive_cmd_msg = ADUDriveCmd()
-        self.adu_drive_cmd_gear_publisher = self.create_publisher(ADUDriveCmd, 'vehicle_control_signals_gear', 10)
+        self.adu_drive_cmd_gear_publisher = self.create_publisher(ADUDriveCmd, 'vehicle_control_signals_gear', 1)
+        
+        self.receive_count = 2
         
     '''**************************************************************************************
     - FunctionName: 
@@ -56,24 +59,21 @@ class GearController(Node):
             return
         else:
             self.gear_request_acting_flag = 1
-            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35.0
             self.adu_drive_cmd_msg.adu_gear_req = 0
             self.adu_drive_cmd_gear_publisher.publish(self.adu_drive_cmd_msg)
-            while self.wvcu_longitudinal_status_msg.wvcu_gear_stat != 0:
-                self.get_logger().warning("Change to P!!!")
+            self.get_logger().warning("Changeing to P!!!")
             self.gear_request_acting_flag = 0
             
-        
     def gear_request_N(self):
         if self.wvcu_longitudinal_status_msg.wvcu_gear_stat == 1: # 当前已经是 N 档位了，不需要再发控制指令
             return
         else:
             self.gear_request_acting_flag = 1
-            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35.0
             self.adu_drive_cmd_msg.adu_gear_req = 1
             self.adu_drive_cmd_gear_publisher.publish(self.adu_drive_cmd_msg)
-            while self.wvcu_longitudinal_status_msg.wvcu_gear_stat != 0:
-                self.get_logger().warning("Change to P!!!")
+            self.get_logger().warning("Changeing to N!!!")
             self.gear_request_acting_flag = 0
         
     def gear_request_R(self):
@@ -81,11 +81,10 @@ class GearController(Node):
             return
         else:
             self.gear_request_acting_flag = 1
-            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35.0
             self.adu_drive_cmd_msg.adu_gear_req = 2
             self.adu_drive_cmd_gear_publisher.publish(self.adu_drive_cmd_msg)
-            while self.wvcu_longitudinal_status_msg.wvcu_gear_stat != 0:
-                self.get_logger().warning("Change to P!!!")
+            self.get_logger().warning("Changeing to R!!!")
             self.gear_request_acting_flag = 0
         
     def gear_request_D(self):
@@ -93,14 +92,12 @@ class GearController(Node):
             return
         else:
             self.gear_request_acting_flag = 1
-            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = 35.0
             self.adu_drive_cmd_msg.adu_gear_req = 3
             self.adu_drive_cmd_gear_publisher.publish(self.adu_drive_cmd_msg)
-            while self.wvcu_longitudinal_status_msg.wvcu_gear_stat != 0:
-                self.get_logger().warning("Change to P!!!")
+            self.get_logger().warning("Changeing to D!!!")
             self.gear_request_acting_flag = 0
-
-    
+        
     def listener_callback_vehicle_gear_request(self, msg):
         ''' **************************************************************************************
         - FunctionName: 
@@ -109,31 +106,37 @@ class GearController(Node):
         - Outputs     : None
         - Comments    : None
         ************************************************************************************** '''
-        self.adu_gear_request.gear_request = msg.gear_request
+        self.adu_gear_request = msg
         
-        # 档位请求与当前的实际档位状态相同，不需要向底盘发送切换档位的命令
-        if self.adu_gear_request.gear_request == self.wvcu_longitudinal_status_msg.wvcu_gear_stat:
-            return 
-        else:
-            if self.wvcu_longitudinal_status_msg.wvcu_veh_spd != 0:
-                self.get_logger().error("Current velocity is not equal to 0km/h, no response to gear_request!!!")
+        # self.receive_count -= 1
+        
+        if self.receive_count > 0:
+        
+            # 档位请求与当前的实际档位状态相同，不需要向底盘发送切换档位的命令
+            print("Current gear: {}, Gear request: {}".format( self.wvcu_longitudinal_status_msg.wvcu_gear_stat, self.adu_gear_request.gear_request))
+            if self.adu_gear_request.gear_request == self.wvcu_longitudinal_status_msg.wvcu_gear_stat:
+                pass
             else:
-                if self.gear_request_acting_flag == 0: 
-                    if self.adu_gear_request.gear_request == 0:
-                        self.gear_request_P()
-                        self.get_logger().info('Gear Request: P')
-                    elif self.adu_gear_request.gear_request == 1:
-                        self.gear_request_N()
-                        self.get_logger().info('Gear Request: N')
-                    elif self.adu_gear_request.gear_request == 2:
-                        self.gear_request_R()
-                        self.get_logger().info('Gear Request: R')
-                    elif self.adu_gear_request.gear_request == 3:
-                        self.gear_request_D()
-                        self.get_logger().info('Gear Request: D')
-                    else:
-                        self.get_logger().warning("Wrong Gear Request!!!")
-            
+                if self.wvcu_longitudinal_status_msg.wvcu_veh_spd != 0:
+                    self.get_logger().error("Current velocity is not equal to 0km/h, no response to gear_request!!!")
+                else: 
+                    if self.gear_request_acting_flag == 0: 
+                        if self.adu_gear_request.gear_request == 0:
+                            self.gear_request_P()
+                            self.get_logger().info('Gear Request: P')
+                        elif self.adu_gear_request.gear_request == 1:
+                            self.gear_request_N()
+                            self.get_logger().info('Gear Request: N')
+                        elif self.adu_gear_request.gear_request == 2:
+                            self.gear_request_R()
+                            self.get_logger().info('Gear Request: R')
+                        elif self.adu_gear_request.gear_request == 3:
+                            self.get_logger().info('Gear Request: D')
+                            self.gear_request_D()
+                            self.get_logger().info('Gear Request: D DONE')
+                        else:
+                            self.get_logger().warning("Wrong Gear Request!!!")
+                    
     '''**************************************************************************************
     - FunctionName: 
     - Function    : 将 ROS 2 网络上的数据取下来放到成员变量里面
@@ -143,6 +146,7 @@ class GearController(Node):
     **************************************************************************************'''
     def listener_callback_vehicle_longitudinal_status(self, msg):
         self.wvcu_longitudinal_status_msg = msg
+        print("Chassis Response Gear: {}".format(self.wvcu_longitudinal_status_msg.wvcu_gear_stat))
         # if self.wvcu_longitudinal_status_msg.wvcu_veh_spd != 0:
         #     self.get_logger().warning("Current velocity is not equal to 0km/h, no response to gear_request!!!")
 

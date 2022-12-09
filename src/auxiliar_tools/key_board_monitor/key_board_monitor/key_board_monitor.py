@@ -62,7 +62,7 @@ class KeyBoardMonitor(Node):
         if event.Key == 'q' or event.Key == 'qq':
             self.adu_drive_cmd_msg.adu_hozl_dsbl = 1
             self.adu_drive_cmd_msg.adu_lgt_dsbl = 1
-            self.adu_drive_cmd_msg.adu_gear_req = 1
+            # self.adu_drive_cmd_msg.adu_gear_req = 1
             self.get_logger().info("Autonomous Mode Disabled!!!")
             self.publisher_vehicle_control_mode.publish(self.adu_drive_cmd_msg)
             time.sleep(0.02)
