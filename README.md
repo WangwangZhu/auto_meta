@@ -7,14 +7,23 @@
 # 实车代码启动流程：
 
 ros2 run chassis_communication chassis_communication_chasis_to_ros
+
 ros2 run chassis_communication chassis_communication_ros_to_chasis
+
 ros2 run gear_control gear_controller
+
 ros2 run integrated_navigation_system ins_d_data_parse
+
 ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+
 rqt
+
 ros2 run key_board_monitor key_board_monitor
+
 ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+
 ros2 launch launch_manager highway_path_planning_with_prediction_launch.py
+
 ros2 run sensor_fusion sensor_fusion_node
 
 # 联合仿真代码启动流程（基于ROS galactic neotic)
