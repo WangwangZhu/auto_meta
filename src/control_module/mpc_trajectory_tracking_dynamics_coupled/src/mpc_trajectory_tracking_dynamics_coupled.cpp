@@ -329,9 +329,9 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
         if (rclcpp::ok())
         // if (0) // 失能跟踪功能，测试控制信号是否起效
         {
-            this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * this->v_longitudinal) + 1, 4.0);
+            this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * this->v_longitudinal) + 1, 20.0);
 
-            RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
+            // RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
 
             // if (is_eps_received && is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received)
             if (is_eps_received && is_global_path_received && is_ins_data_received)
@@ -355,7 +355,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
                 }
                 /* 全局坐标系下的定位信息延时补偿 */
                 psi = psi + yaw_rate * ins_delay;
-                cout << "v_longitudinal: " << v_longitudinal << ", ins_delay:" << ins_delay << ", v_lateral:" << v_lateral << ", psi:" << psi*57.296 << endl; 
+                // cout << "v_longitudinal: " << v_longitudinal << ", ins_delay:" << ins_delay << ", v_lateral:" << v_lateral << ", psi:" << psi*57.296 << endl; 
                 px = px + v_longitudinal * cos(psi) * ins_delay - v_lateral * sin(psi) * ins_delay;
                 py = py + v_longitudinal * sin(psi) * ins_delay + v_lateral * cos(psi) * ins_delay;
 
@@ -512,7 +512,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
                 double pred_omega = yaw_rate;
                 double pred_cte = cte + v_longitudinal * tan(epsi) * 0;
                 double pred_epsi = epsi - v_longitudinal * delta / Lf * 0;
-                cout << pred_v_longitudinal <<" *********** v_longitudinal" << target_v <<"target_v" << endl;
+                // cout << pred_v_longitudinal <<" *********** v_longitudinal" << target_v <<"target_v" << endl;
                 /* Feed in the predicted state values.  这里传入的是车辆坐标系下的控制器时延模型*/
                 Eigen::VectorXd state(8);
                 state << pred_px, pred_py, pred_psi, pred_v_longitudinal, pred_v_lateral, pred_omega, pred_cte, pred_epsi;
@@ -520,7 +520,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
                 {
                     target_v = 0.02;
                 }
-                cout << "here" << endl;
+                // cout << "here" << endl;
                 auto vars = mpc.Solve(state,
                                     coeffs,
                                     target_v, // m/s
@@ -540,7 +540,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
                                     steering_ratio);
                 old_steer_value = vars[0];
                 old_throttle_value = vars[1];
-                cout << "mpc solve done ~~~~" << endl;
+                // cout << "mpc solve done ~~~~" << endl;
                 /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
                 if (vars[0] < 0)
                 {
@@ -550,7 +550,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
                 {
                     steer_value = steering_damp * rad2deg((vars[0] / 1)); 
                 }
-                vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = steer_value;
+                vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
 
                 /* ----------------------------------------------------------------------------- 纵向控制信号 ----------------------------------------------------------------------------- */
                 // determining if brake or throttle
@@ -677,11 +677,11 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback()
         mpc_output_path_publisher->publish(mpc_output_path);
         if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
             mpc_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
-            RCLCPP_INFO(this->get_logger(), "RUNNING");
+            // RCLCPP_INFO(this->get_logger(), "RUNNING");
         }
         else{
             mpc_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
-            RCLCPP_INFO(this->get_logger(), "Applying Gear DD!!!!!!!!!!!!!!!!!!!");
+            // RCLCPP_INFO(this->get_logger(), "Applying Gear DD!!!!!!!!!!!!!!!!!!!");
 
         }
         // mpc_speed_control_publisher->publish(speed_control_msg);

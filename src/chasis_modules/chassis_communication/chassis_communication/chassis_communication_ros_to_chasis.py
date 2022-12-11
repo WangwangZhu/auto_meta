@@ -137,7 +137,7 @@ class ChassisCommunicationReceive(Node):
         self.adu_drive_cmd_frame_msg = self.adu_drive_cmd_frame.bind()
         
         self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
-        self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = -self.adu_drive_cmd_msg.adu_gas_stoke_req
+        self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = self.adu_drive_cmd_msg.adu_gas_stoke_req
         self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
         
         self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl

@@ -409,7 +409,7 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
     CppAD::ipopt::solve_result<Dvector> solution;
 
     /* Solve the problem. */
-    cout << "Solve the problem......" << endl;
+    // cout << "Solve the problem......" << endl;
     CppAD::ipopt::solve<Dvector, FG_eval>(
         options,
         vars,
@@ -417,7 +417,7 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
         constraints_lower_bounds, constraints_upper_bounds,
         fg_eval,
         solution);
-    cout << "Solve the problem DONE" << endl;
+    // cout << "Solve the problem DONE" << endl;
 
     /* Check some of the solution values. */
     ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
@@ -430,7 +430,7 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
     /* Return the first actuator values. The variables can be accessed with 'solution.x[i]'. */
     std::vector<double> result;
     result.clear();
-    cout << solution.x << endl;
+    // cout << solution.x << endl;
     // cout << front_wheel_angle_start << endl;
 
     result.push_back(solution.x[front_wheel_angle_start]);
@@ -442,6 +442,6 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
         result.push_back(solution.x[x_start + i]);
         result.push_back(solution.x[y_start + i]);
     }
-    std::cout << "end now" << std::endl;
+    // std::cout << "end now" << std::endl;
     return result;
 }

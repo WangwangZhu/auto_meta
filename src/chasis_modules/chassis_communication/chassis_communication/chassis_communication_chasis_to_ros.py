@@ -136,7 +136,7 @@ class ChassisCommunicationSend(Node):
                 
             elif raw_frame.id == 0x351:  # WVCU_HorizontalStatus
                 self.wvcu_horizontal_status_msg_frame_msg = self.wvcu_horizontal_status_frame.bind(raw_frame)
-                self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat = -float(self.wvcu_horizontal_status_msg_frame_msg.WVCU_StrWhlAngStat.phys)
+                self.wvcu_horizontal_status_msg.wvcu_str_whl_ang_stat = float(self.wvcu_horizontal_status_msg_frame_msg.WVCU_StrWhlAngStat.phys)
                 self.wvcu_horizontal_status_msg.wvcu_str_whl_tq = float(self.wvcu_horizontal_status_msg_frame_msg.WVCU_StrWhlTq.phys)
                 self.wvcu_horizontal_status_msg.wvcu_manl_gear_intv = int(self.wvcu_horizontal_status_msg_frame_msg.WVCU_ManlGearIntv.phys)
                 self.wvcu_horizontal_status_msg.wvcu_manl_exit_adu_sw_intv = int(self.wvcu_horizontal_status_msg_frame_msg.WVCU_ManlExitADUSwIntv.phys)
