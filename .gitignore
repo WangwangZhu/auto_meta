@@ -24,6 +24,9 @@ CMakeFiles/*
 build/
 build/*
 
+build-VehicleStartUI-Desktop_Qt_5_12_8_GCC_64bit-Debug/
+build-VehicleStartUI-Desktop_Qt_5_12_8_GCC_64bit-Debug*
+
 run_log/
 run_log/*
 
