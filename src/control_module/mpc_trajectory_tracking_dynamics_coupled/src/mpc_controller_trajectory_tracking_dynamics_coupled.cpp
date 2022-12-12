@@ -23,8 +23,6 @@ FG_eval::FG_eval(const Eigen::VectorXd &state,
                  const double &mpc_control_step_length,
                  const double &kinamatic_para_Lf,
                  const double &a_lateral,
-                 const double &old_steer_value,
-                 const double &old_throttle_value,
                  const double &steer_ratio)
 {
     this->steer_ratio = steer_ratio;
@@ -53,12 +51,6 @@ FG_eval::FG_eval(const Eigen::VectorXd &state,
     this->epsi_start = cte_start + Np;
     this->front_wheel_angle_start = epsi_start + Np;
     this->longitudinal_acceleration_start = front_wheel_angle_start + Nc; 
-    //控制时域长度为25的时候，控制增量一共有24个,第一个时刻点控制量与控制增量相同
-    // this->front_wheel_angle_increment_start = epsi_start + Np; 
-    // this->longitudinal_acceleration_increment_start = front_wheel_angle_increment_start + Nc - 1; 
-
-    this->old_steer_value = old_steer_value;
-    this->old_throttle_value = old_throttle_value;
 
     /* Explicitly gather state values for readability */
     this->x = state[0];
@@ -93,27 +85,12 @@ void FG_eval::operator()(ADvector &fg, ADvector &vars)
 {
     fg[0] = 0; //0 is the index at which Ipopt expects fg to store the cost value,
 
-    // std::cout << "runnning mpc controller" << std::endl;
-
-    // cout << "N in mpc controller: " << N << endl;
-    // cout << "dt in mpc controller: " << dt << endl;
-    // cout << "Lf in mpc controller: " << Lf << endl;
-    // cout << "ref_v in mpc controller (km/h): " << ref_v * 3.6 << endl;
-    // cout << "cte_weight in mpc controller : " << cte_weight << endl;
-    // cout << "epsi_weight in mpc controller : " << epsi_weight << endl;
-    // cout << "v_weight in mpc controller : " << v_weight << endl;
-    // cout << "actuator_cost_weight in mpc controller : " << actuator_cost_weight << endl;
-    // cout << "change_steer_cost_weight in mpc controller : " << change_steer_cost_weight << endl;
-    // cout << "change_accel_cost_weight in mpc controller : " << change_accel_cost_weight << endl;
-
     /* Objective term 1: Keep close to reference values.*/
     for (size_t t = 0; t < Np; t++)
     {
         fg[0] += cte_weight * CppAD::pow(vars[cte_start + t] - ref_cte, 2); //(int)(N - t) *
         fg[0] += epsi_weight * CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
         fg[0] += v_weight * CppAD::pow(vars[v_longitudinal_start + t] - ref_v, 2); // TODO：认为在预测时域内期望速度是不变的
-        // fg[0] += v_weight * 0.1 * CppAD::pow(vars[v_lateral_start + t], 2);
-        // fg[0] += v_weight * 0.1 * CppAD::pow(vars[yaw_rate_start + t], 2);
     }
     /* Objective term 2: Avoid to actuate as much as possible, minimize the use of actuators.*/
     for (size_t t = 0; t < Nc; t++)
@@ -122,8 +99,7 @@ void FG_eval::operator()(ADvector &fg, ADvector &vars)
         fg[0] += acc_actuator_cost_weight_fg * CppAD::pow(vars[longitudinal_acceleration_start + t],2);
     }
     /* Objective term 3: Enforce actuators smoothness in change, minimize the value gap between sequential actuation.*/
-    for (size_t t = 0; t < Nc - 1; t++)
-    {
+    for (size_t t = 0; t < Nc - 1; t++){
         fg[0] += change_steer_cost_weight * CppAD::pow(vars[front_wheel_angle_start + t + 1] - vars[front_wheel_angle_start + t], 2);
         fg[0] += change_accel_cost_weight * CppAD::pow(vars[longitudinal_acceleration_start + t + 1] - vars[longitudinal_acceleration_start + t], 2);
     }
@@ -169,30 +145,13 @@ void FG_eval::operator()(ADvector &fg, ADvector &vars)
         front_wheel_angle_0 = vars[front_wheel_angle_start + t - 1];
         longitudinal_acceleration_0 = vars[longitudinal_acceleration_start + t - 1];
 
-        // if(t < Nc)
-        // {
-        //     longitudinal_acceleration_0 = vars[longitudinal_acceleration_start + t - 1];
-        // }
-        // else
-        // {
-            // front_wheel_angle_0 = vars[front_wheel_angle_start + Nc];
-        //     longitudinal_acceleration_0 = 0;
-        // }
-
-        // old_steer_value = old_steer_value + front_wheel_angle_increment_0;
-        // old_throttle_value = old_throttle_value + longitudinal_acceleration_increment_0;
-        // AD<double> front_wheel_angle_0 = old_steer_value;
-        // AD<double> longitudinal_acceleration_0 = old_throttle_value;
-
-        // TODO: 在这里将控制时域进行压缩,控制时域的长度控制在5以内,控制时域太长只能增加计算量,对于控制系统的执行效果没有明显影响,希望在变短控制时域长度的同时,增加预测时域.
-        
         // reference path
         AD<double> f_0 = coeffs[0] +
                          coeffs[1] * x_0 +
                          coeffs[2] * CppAD::pow(x_0, 2) +
                          coeffs[3] * CppAD::pow(x_0, 3) +
                          coeffs[4] * CppAD::pow(x_0, 4) +
-                         coeffs[5] * CppAD::pow(x_0, 5); // + coeffs[6] * CppAD::pow(x_0, 6);
+                         coeffs[5] * CppAD::pow(x_0, 5); 
 
         // reference psi: can be calculated as the tangential angle of the polynomial f evaluated at x_0
         AD<double> psi_des_0 = CppAD::atan(1 * coeffs[1] +
@@ -202,31 +161,24 @@ void FG_eval::operator()(ADvector &fg, ADvector &vars)
                                            5 * coeffs[5] * CppAD::pow(x_0, 4)); // + 6 * coeffs[6] * CppAD::pow(x_0, 5));
 
         /*The idea here is to constraint this value to be 0.*/
-
         /* 全局坐标系 */ 
         fg[1 + x_start + t] = x_1 - (x_0 + v_longitudinal_0 * CppAD::cos(psi_0) * dt - v_lateral_0 * CppAD::sin(psi_0) * dt);
         fg[1 + y_start + t] = y_1 - (y_0 + v_longitudinal_0 * CppAD::sin(psi_0) * dt + v_lateral_0 * CppAD::cos(psi_0) * dt);
-
         /* 航向角变化 */
         fg[1 + psi_start + t] = psi_1 - (psi_0 - v_longitudinal_0 * (front_wheel_angle_0 / steer_ratio) / lf * dt);
-
         /* 车辆纵向速度 */
         fg[1 + v_longitudinal_start + t] = v_longitudinal_1 - (v_longitudinal_0 + longitudinal_acceleration_0 * dt);
-
         /* 车辆侧向速度 */
         /* 当不考虑速度的方向变化时,对于 v = v0 + a * t是不成立的,举一个简单的例子,对于圆周运动,侧向加速度可以较大,在速度恒定的条件下,侧向加速度全部为向心加速度,
         用于改变速度的方向,侧向速度大小的变化没有作用, 因此,这里将侧向速度看作一个时域内不变处理. */
         // AD<double> a_lateral = ((-v_longitudinal_0) * (yaw_rate_0)) +
                             //    (2 / m) * (Cf * ((-front_wheel_angle_0 / t1) - ((v_lateral_0 + lf * yaw_rate_0) / (v_longitudinal_0))) + Cr * ((lr * yaw_rate_0 - v_lateral_0) / (v_longitudinal_0)));
         fg[1 + v_lateral_start + t] = v_lateral_1 - (v_lateral_0 + 0 * dt);
-        
         /* 车辆横摆角速度 */
         AD<double> yaw_acceleration = 2 / I * ((lf * Cf * (((-front_wheel_angle_0 / steer_ratio) - ((v_lateral_0 + lf * yaw_rate_0) / (v_longitudinal_0))))) - (lr * Cr * (lr * yaw_rate_0 - v_lateral_0) / (v_longitudinal_0)));
         fg[1 + yaw_rate_start + t] = yaw_rate_1 - (yaw_rate_0 + yaw_acceleration * dt);
-
         /* 横向位置跟踪误差 */
         fg[1 + cte_start + t] = cte_1 - (f_0 - y_0 + v_longitudinal_0 * CppAD::tan(epsi_0) * dt);
-
         /* 航向跟踪误差 */
         fg[1 + epsi_start + t] = epsi_1 - (psi_0 - psi_des_0 - v_longitudinal_0 * (front_wheel_angle_0 / steer_ratio) / Lf * dt);
 
@@ -255,13 +207,10 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
                                           const int &acc_actuator_cost_weight,
                                           const int &change_steer_cost_weight,
                                           const int &change_accel_cost_weight,
-                                        //   const int &mpc_prediction_horizon_length,
                                           const int &mpc_control_horizon_length,
                                           const double &mpc_control_step_length,
                                           const double &kinamatic_para_Lf,
                                           const double &a_lateral,
-                                          const double &old_steer_value,
-                                          const double &old_throttle_value,
                                           const double &steer_ratio)
 {
     this->Nc = mpc_control_horizon_length;
@@ -277,8 +226,6 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
     this->epsi_start = cte_start + Np;
     this->front_wheel_angle_start = epsi_start + Np;
     this->longitudinal_acceleration_start = front_wheel_angle_start + Nc; //控制时域长度为25的时候，控制量一共有24个。
-    // this->front_wheel_angle_increment_start = epsi_start + Np;
-    // this->longitudinal_acceleration_increment_start = front_wheel_angle_increment_start + Nc - 1;
 
     this->a_lateral = a_lateral;
     bool ok = true;
@@ -388,8 +335,6 @@ std::vector<double> mpc_controller::Solve(const Eigen::VectorXd &state,
                     mpc_control_step_length,
                     kinamatic_para_Lf,
                     a_lateral,
-                    old_steer_value,
-                    old_throttle_value,
                     steer_ratio);
     /* NOTE: You don't have to worry about these options. options for IPOPT solver. */
     std::string options;

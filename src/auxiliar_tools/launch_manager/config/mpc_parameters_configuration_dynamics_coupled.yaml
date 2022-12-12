@@ -29,12 +29,6 @@ mpc_trajectory_tracking_dynamics_coupled_node:
     # 控制信号延时补偿
     mpc_controller_delay_compensation: 0.12
 
-    # 在 RVIZ 里面可视化根据参考路径拟合得到的多项式表达的曲线时,显示的点的数量和点的距离参数 
-    # step on x
-    mpc_point_distance_of_reference_line_visualization: 0.5 
-    # how many point "int the future" to be plotted.
-    mpc_points_number_of_reference_line_visualization: 20 
-
     mpc_working_mode: 2 # 1: simulation 2: real vehicle.
 
     mpc_with_planner_flag: 0   # MPC做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通 #TODO:

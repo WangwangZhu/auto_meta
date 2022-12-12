@@ -8,6 +8,7 @@
 #include <chrono> // C++里面处理时间的包
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -19,9 +20,14 @@
 #include <tf2/convert.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <nav_msgs/msg/path.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
+using std::vector;
 /*'''*****************************************************************************************************
 # Class Name  : 
 # FileFunction: 订阅到定位信息后，
@@ -41,7 +47,7 @@ public:
     {
         // odom_publisher = this->create_publisher<nav_msgs::msg::Odometry>("odom", 50);
 
-        sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::imu_position_topic_callback, this, _1));
+        sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1));
 
         publisher_timer_ = this->create_wall_timer(20ms, std::bind(&HostVehicleVisualization::publisher_timer_callback, this)); // 定时器， 定时调用
     }
@@ -72,6 +78,11 @@ public:
 
     std::shared_ptr<tf2_ros::TransformBroadcaster> odom_broadcaster;
 
+    nav_msgs::msg::Path history_path;
+    geometry_msgs::msg::PoseStamped history_path_points;
+
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr history_path_visualization_publisher = this->create_publisher<nav_msgs::msg::Path>("history_path", 2);
+
     /*'''**************************************************************************************
     - FunctionName: None
     - Function    : 订阅到新的定位消息时候的回调函数
@@ -79,11 +90,29 @@ public:
     - Outputs     : None
     - Comments    : None
     **************************************************************************************'''*/
-    void imu_position_topic_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+    void ins_data_receive_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         this->current_position = *msg;
         this->new_message = true;
         RCLCPP_INFO(this->get_logger(),"got imu data at: %f, %f", this->now().seconds(), (double)this->now().nanoseconds()/1000000000);
+
+        /* 将收到的定位信息发布出来,在rviz里显示历史轨迹 */
+        history_path.header.stamp = this->get_clock()->now();
+        history_path.header.frame_id = "odom";
+
+        history_path_points.header.stamp = this->get_clock()->now();
+        history_path_points.header.frame_id = "odom";
+        history_path_points.pose.position.x = msg->pose.pose.position.x;
+        history_path_points.pose.position.y = msg->pose.pose.position.y;
+        history_path_points.pose.position.z = 0;
+        history_path_points.pose.orientation = msg->pose.pose.orientation;
+        history_path.poses.push_back(history_path_points);
+
+        if (history_path.poses.size() > 2000){
+            vector<geometry_msgs::msg::PoseStamped>::iterator k = history_path.poses.begin();
+            history_path.poses.erase(k);
+        }
+        history_path_visualization_publisher->publish(history_path);
     }
     /*'''**************************************************************************************
     - FunctionName: None
