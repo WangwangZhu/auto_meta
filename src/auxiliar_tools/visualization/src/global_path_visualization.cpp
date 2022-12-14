@@ -24,6 +24,8 @@
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
+#include <std_msgs/msg/float32.hpp>
+
 using namespace std::chrono_literals;
 using std::cout;
 using std::endl;
@@ -43,6 +45,9 @@ public:
 
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr global_path_publisher_;
     rclcpp::TimerBase::SharedPtr global_path_publisher_timer_;
+
+    rclcpp::TimerBase::SharedPtr target_velocity_from_csv_timer;
+    rclcpp::Publisher<std_msgs::msg::Float32> target_velocity_from_csv_publisher;
 
     string global_path_path;
     string path_configure_parameter;
@@ -146,12 +151,10 @@ public:
     void load_map()
     {
         char *buffer;
-        if ((buffer = getcwd(NULL, 0)) == NULL)
-        {
+        if ((buffer = getcwd(NULL, 0)) == NULL) {
             perror("getcwd error");
         }
-        else
-        {
+        else {
             string buffer_ = buffer;
             string local_path;
             this->get_parameter<string>("global_map_name_parameter", local_path);
@@ -163,8 +166,7 @@ public:
         string value;
         int i = 0;
         getline(infile, value); // 舍弃头
-        while (infile.good())
-        {
+        while (infile.good()) {
             cout << "加载全局地图" << endl;
             getline(infile, value);
             if (value != "")
