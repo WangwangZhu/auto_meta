@@ -70,6 +70,7 @@ public:
     void global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
     void palnner_frenet_path_receive_callback(nav_msgs::msg::Path::SharedPtr msg);
     void palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg);
+    void target_velocity_from_csv_receive_callback(std_msgs::msg::Float32::SharedPtr msg);
 
 public:
     rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr mpc_control_signals_gas_brake_steer_publisher;
@@ -81,10 +82,14 @@ public:
 
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mpc_iteration_time_publisher;
 
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr fake_velocity_vis_publisher;
+    std_msgs::msg::Float32 fake_velocity;
+
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr mpc_reference_path_publisher;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr mpc_output_path_publisher;
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ins_data_subscription_;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr velocity_from_csv_subscription;
     rclcpp::Subscription<chassis_msg::msg::WVCUHorizontalStatus>::SharedPtr eps_feedback_subscription;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_subscription;
 

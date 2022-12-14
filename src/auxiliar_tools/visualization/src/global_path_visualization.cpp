@@ -24,7 +24,7 @@
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
-#include <std_msgs/msg/float32.hpp>
+#include "std_msgs/msg/float32.hpp"
 
 using namespace std::chrono_literals;
 using std::cout;
@@ -43,15 +43,25 @@ public:
     nav_msgs::msg::Path global_path;
     geometry_msgs::msg::PoseStamped this_pose_stamped;
 
+    vector<double> velocity_curve;
+
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr global_path_publisher_;
     rclcpp::TimerBase::SharedPtr global_path_publisher_timer_;
 
     rclcpp::TimerBase::SharedPtr target_velocity_from_csv_timer;
-    rclcpp::Publisher<std_msgs::msg::Float32> target_velocity_from_csv_publisher;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_velocity_from_csv_publisher;
+    std_msgs::msg::Float32 velocity_target_from_csv;
+
 
     string global_path_path;
     string path_configure_parameter;
-    bool load_map_done = false;
+    string velocity_wyx_curve;
+    bool load_map_done_global = false;
+    bool load_velocity_curve_done = false;
+
+    int i = 0;
+
+    
 
 public:
     /*'''**************************************************************************************
@@ -66,9 +76,14 @@ public:
         RCLCPP_INFO(this->get_logger(), "publishing global path.");
         global_path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("global_path", 10);
 
+        target_velocity_from_csv_publisher = this->create_publisher<std_msgs::msg::Float32>("velocity_target_from_csv", 10);
+
         global_path_publisher_timer_ = this->create_wall_timer(1000ms, std::bind(&GlobalPathVisualization::global_path_publisher_timer_callback, this));
 
+        target_velocity_from_csv_timer = this->create_wall_timer(25ms, std::bind(&GlobalPathVisualization::target_velocity_publisher_callback, this));
+
         this->declare_parameter<string>("global_map_name_parameter", path_configure_parameter);
+        this->declare_parameter<string>("velocity_curve_name_parameter", velocity_wyx_curve);
     }
 
     /*'''**************************************************************************************
@@ -89,7 +104,7 @@ public:
     **************************************************************************************'''*/
     void global_path_publisher_timer_callback()
     {
-        if (this->load_map_done)
+        if (this->load_map_done_global)
         {
             RCLCPP_INFO(this->get_logger(), "publishing global path");
 
@@ -99,6 +114,35 @@ public:
             global_path_publisher_->publish(global_path);
         }
     }
+
+    /*'''**************************************************************************************
+    - FunctionName: None
+    - Function    : None
+    - Inputs      : None
+    - Outputs     : None
+    - Comments    : None
+    **************************************************************************************'''*/
+    void target_velocity_publisher_callback()
+    {
+        if (this->load_velocity_curve_done)
+        {
+            RCLCPP_INFO(this->get_logger(), "publishing target velocity");
+
+            velocity_target_from_csv.data = velocity_curve[i];
+
+            if (i > velocity_curve.size()-2){
+                return;
+            }
+            i++;
+
+            // global_path.header.stamp = this->get_clock()->now();
+            // global_path.header.frame_id = "odom";
+            
+            // global_path_publisher_->publish(global_path);
+            target_velocity_from_csv_publisher->publish(velocity_target_from_csv);
+        }
+    }
+
     /*'''**************************************************************************************
     - FunctionName: None
     - Function    : 模板函数：将string类型变量转换为常用的数值类型（此方法具有普遍适用性）
@@ -194,7 +238,57 @@ public:
                 }
             }
         }
-        load_map_done = true;
+        load_map_done_global = true;
+    }
+    /*'''**************************************************************************************
+    - FunctionName: None
+    - Function    : None
+    - Inputs      : None
+    - Outputs     : None
+    - Comments    : None
+    **************************************************************************************'''*/
+    void load_velocity_curve()
+    {
+        char *buffer;
+        if ((buffer = getcwd(NULL, 0)) == NULL) {
+            perror("getcwd error");
+        }
+        else {
+            string buffer_ = buffer;
+            string local_path;
+            this->get_parameter<string>("velocity_curve_name_parameter", local_path);
+
+            global_path_path = buffer_ + local_path;
+            cout << "global_path_path" << global_path_path << endl;
+        }
+
+        ifstream infile(global_path_path);
+        string value;
+        int i = 0;
+        getline(infile, value); // 舍弃头
+        while (infile.good()) {
+            // cout << "load velocity curve" << endl;
+            getline(infile, value);
+            if (value != "")
+            {
+                cout << "string value : " << value << endl;
+                cout.precision(12);
+                vector<double> temp_values = string_split<double>(value, ',');
+
+                velocity_curve.push_back(temp_values[0]);
+
+                i++;
+                if (i == 10)
+                {
+                    // break;
+                }
+            }
+        }
+        load_velocity_curve_done = true;
+
+        for(int i = 0; i < velocity_curve.size(); i++){
+            cout << velocity_curve[i] << endl;
+        }
     }
 };
 
@@ -211,6 +305,7 @@ int main(int argc, char **argv)
     RCLCPP_INFO(n->get_logger(), "running");
 
     n->load_map();
+    n->load_velocity_curve();
 
     rclcpp::spin(n);
     rclcpp::shutdown();

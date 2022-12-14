@@ -37,7 +37,11 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
     mpc_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_reference_path", qos_);
     mpc_output_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_output_path", qos_);
 
+    fake_velocity_vis_publisher = this->create_publisher<std_msgs::msg::Float32>("fake_velocity", qos_);
+
     mpc_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("mpc_iteration_duration", qos_); // 用于统计MPC求解时间的广播器
+
+    velocity_from_csv_subscription = this->create_subscription<std_msgs::msg::Float32>("velocity_target_from_csv", qos_, std::bind(&MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback, this, _1));
 
     // mpc 求解所需要的车辆信息
     ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&MpcTrajectoryTrackingPublisher::ins_data_receive_callback, this, _1));
@@ -148,6 +152,20 @@ void MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback(nav_ms
 - Function    : None
 - Inputs      : None
 - Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback(std_msgs::msg::Float32::SharedPtr msg){
+    target_v = msg->data/3.6;
+
+    cout << "!@#$%^&*~~~~~~~~~~~~~~~~~~ velocity form CSV : " << target_v << endl;
+}
+
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
 - Comments    : 
 **************************************************************************************'''*/    
 void MpcTrajectoryTrackingPublisher::vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg){
@@ -224,6 +242,10 @@ void MpcTrajectoryTrackingPublisher::ins_data_receive_callback(nav_msgs::msg::Od
         vector<double> car_s_d = cartesian_to_frenet(px, py, psi, global_path_x, global_path_y);
         car_s = car_s_d[0];
         car_d = car_s_d[1];
+
+        fake_velocity.data = v_longitudinal * 1.05 * 3.6;
+
+        fake_velocity_vis_publisher->publish(fake_velocity);
     }
 }
 /*'''**************************************************************************************
@@ -252,7 +274,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
     // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 40;
     // vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
     // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
-    // vehicle_control_gear_msg.gear_request = 3;
+    vehicle_control_gear_msg.gear_request = 3;
 
     rclcpp::Time start_mpc;
     rclcpp::Time end_mpc;
@@ -409,21 +431,24 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                                     a_lateral,
                                     steering_ratio);
                 /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
+                steer_value = 1 * rad2deg((vars[0] / 1)); 
                 vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
 
                 /* ----------------------------------------------------------------------------- 纵向控制信号 ----------------------------------------------------------------------------- */
                 // determining if brake or throttle
                 throttle_value = vars[1];
-                if (throttle_value <= -0.02){
+                cout << "throttle_value:::::::::::::::::::::::::" << throttle_value << endl;
+                if (throttle_value <= -0.01){
                     vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
-                    vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = max_mpc(0, min_mpc(100, -9.03 * throttle_value - 9.548));
+                    // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = max_mpc(0, min_mpc(100, -9.03 * throttle_value - 9.548));0.3892 x - 5.072 x - 0.7559
+                    vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 3.8 * max_mpc(0, min_mpc(100, 0.3892 * throttle_value  * throttle_value - throttle_value *  5.072 - 0.7559));
                 }
                 else if (throttle_value > -0.02 && throttle_value <=0 ){
                     vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
                     vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
                 }
                 else if (throttle_value > 0){
-                    vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = max_mpc(0, min_mpc(100, -0.00208291341652652 * v_longitudinal * v_longitudinal - 0.17134578234501768 * v_longitudinal * throttle_value + 1.035345901656135 * throttle_value * throttle_value + 0.7720091370971741 * v_longitudinal + 26.614571054897834 * throttle_value - 1.2802321021287273));
+                    vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 1.4 * max_mpc(0, min_mpc(100, -0.00208291341652652 * v_longitudinal * v_longitudinal - 0.17134578234501768 * v_longitudinal * throttle_value + 1.035345901656135 * throttle_value * throttle_value + 0.7720091370971741 * v_longitudinal + 26.614571054897834 * throttle_value - 1.2802321021287273));
                     vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;                    
                 }
                 

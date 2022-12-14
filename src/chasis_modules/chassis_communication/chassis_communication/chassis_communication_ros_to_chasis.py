@@ -29,7 +29,7 @@ class ChassisCommunicationReceive(Node):
                  dbc_filename='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/auto_meta/src/chasis_modules/chassis_communication/chassis_communication/nezha.dbc'):
         super().__init__('chassis_communication_receive')
         
-        self.maximum_velocity_limitation = 30 # 车辆允许最大速度限制
+        self.maximum_velocity_limitation = 50 # 车辆允许最大速度限制
 
         # 创建 ROS 2 网络上的控制信号消息
         self.adu_drive_cmd_msg = ADUDriveCmd()
@@ -137,6 +137,7 @@ class ChassisCommunicationReceive(Node):
         self.adu_drive_cmd_frame_msg = self.adu_drive_cmd_frame.bind()
         
         self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
+        # self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 20
         self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = self.adu_drive_cmd_msg.adu_gas_stoke_req
         self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
         

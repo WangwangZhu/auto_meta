@@ -6,16 +6,15 @@ mpc_trajectory_tracking_dynamics_coupled_node:
     vehicle_Lf_double: 0.95
 
     mpc_control_horizon_length_int: 20 
-    mpc_control_step_length_double: 0.25
+    mpc_control_step_length_double: 0.18
     mpc_former_point_of_current_position: 0 # 这个值可以将启始点向前推进一定的点的数量，但是不能太多，否则会出现找点错误的问题。
 
     mpc_tracking_enable_bool: true
 
     # MPC 目标函数里面可以调节的权重
-    mpc_cte_weight_int:  20
-    mpc_epsi_weight_int: 20
-    mpc_v_weight_int: 10
-
+    mpc_cte_weight_int:  18
+    mpc_epsi_weight_int: 18
+    mpc_v_weight_int: 12
     # 控制量幅值代价权重
     mpc_steer_actuator_cost_weight_int: 10 
     mpc_acc_actuator_cost_weight_int: 10 
