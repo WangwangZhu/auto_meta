@@ -101,12 +101,8 @@ public:
 
     visualization_msgs::msg::Marker reference_path;
     visualization_msgs::msg::Marker mpc_output_path;
-    nav_msgs::msg::Path history_path;
-    geometry_msgs::msg::PoseStamped history_path_points;
 
     std_msgs::msg::Float32 mpc_iteration_duration_msg = std_msgs::msg::Float32();
-
-    long int history_path_id = 103;
 
     rclcpp::TimerBase::SharedPtr parameter_reconfigure_timer_;
 

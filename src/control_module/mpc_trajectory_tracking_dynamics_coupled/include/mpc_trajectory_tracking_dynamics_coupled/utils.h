@@ -10,9 +10,9 @@
 using std::string;
 using std::vector;
 
-const double lane_width		= 4.0;		// width of a lane					(m)
+const double lane_width		= 3.5;		// width of a lane					(m)
 const double safety_margin	= 20.0;		// distance to keep from other cars	(m)
-const double max_safe_speed	= 49.5;		// max reference speed in the limit	(mph)
+const double max_safe_speed	= 30;		// max reference speed in the limit	(mph)
 
 /* *****************************************************************************************************************
 - FunctionName: 

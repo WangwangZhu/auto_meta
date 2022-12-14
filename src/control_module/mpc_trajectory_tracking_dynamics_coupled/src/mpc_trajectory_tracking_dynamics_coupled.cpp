@@ -43,8 +43,8 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
     ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&MpcTrajectoryTrackingPublisher::ins_data_receive_callback, this, _1));
     eps_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCUHorizontalStatus>("wvcu_horizontal_status", qos_, std::bind(&MpcTrajectoryTrackingPublisher::eps_feedback_callback, this, _1));
     global_path_subscription = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&MpcTrajectoryTrackingPublisher::global_path_callback, this, _1));
-    mpc_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("highway_with_prediction_planner_path_frenet", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback, this, _1));
-    mpc_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("highway_with_prediction_planner_path_cardesian", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_cartesian_path_receive_callback, this, _1));
+    mpc_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback, this, _1));
+    mpc_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_cartesian_path_receive_callback, this, _1));
     vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&MpcTrajectoryTrackingPublisher::vehicle_status_feedback_callback, this, _1));
 
     // 定频调用求解器，时间必须大于MPC单次求解耗时
@@ -432,7 +432,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* 这里的路径和全局路径可视化是重合的，消息发出来，但是不一定要用的 */
                 next_x_vals.clear();
                 next_y_vals.clear();
-                for (size_t i = 0; i < reference_path_points_number; i++){
+                for (int i = 0; i < reference_path_points_number; i++){
                     double future_x;
                     if (with_planner_flag == 0){
                         future_x = 0.6 * i;

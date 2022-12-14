@@ -1,5 +1,5 @@
-#ifndef HIGHWAY_PATH_PLANNING_WITH_PREDICTION_H
-#define HIGHWAY_PATH_PLANNING_WITH_PREDICTION_H
+#ifndef LATTICE_PLANNER_H_
+#define LATTICE_PLANNER_H_
 
 #include <vector>
 #include <chrono>     // 时间库
@@ -16,11 +16,12 @@
 #include <math.h>
 #include <algorithm>
 #include <iomanip>
-#include "highway_path_planning_with_prediction/utils.h"
+#include "lattice_planner/utils.h"
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
+#include "std_msgs/msg/int16.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -57,11 +58,11 @@ using std::vector;
 using std::placeholders::_1;
 // using boost::math::interpolators::makima;
 
-class HighwayPathPlanningWithPrediction : public rclcpp::Node
+class LatticePlanner : public rclcpp::Node
 {
 public:    
-    HighwayPathPlanningWithPrediction();
-    virtual ~HighwayPathPlanningWithPrediction();
+    LatticePlanner();
+    virtual ~LatticePlanner();
 
 public:
     void ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); // 后面加 const表示函数不可以修改class的成员
@@ -69,13 +70,16 @@ public:
     void planner_tracking_iteration_callback();
     void sensor_fusion_results_bounding_box_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
     void sensor_fusion_results_label_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
+    void fsm_behavior_decision_makeing_callback(std_msgs::msg::Int16::SharedPtr msg);
+
     
 public:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_subscription_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ins_data_subscription_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr fsm_behavior_decision_makeing_subscription;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr planner_iteration_time_publisher;  // 用于统计 planner 求解时间的广播器
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr highway_with_prediction_planner_path_cartesian_publisher; // 广播规划器求解结果
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr highway_with_prediction_planner_path_frenet_publisher; // 广播规划器求解结果
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lattice_planner_path_cartesian_publisher; // 广播规划器求解结果
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr lattice_planner_path_frenet_publisher; // 广播规划器求解结果
     rclcpp::TimerBase::SharedPtr planner_iteration_timer_; // 定时器，定频调用路径规划算法
 
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr sensor_fusion_results_bounding_box_subscription_;
@@ -87,10 +91,10 @@ public:
 
     std_msgs::msg::Float32 planner_iteration_duration_msg = std_msgs::msg::Float32();
 
-    visualization_msgs::msg::Marker highway_with_prediction_planner_path_cardesian;
+    visualization_msgs::msg::Marker lattice_planner_path_cardesian;
     geometry_msgs::msg::Point highway_with_prediction_planner_point_cartesian;
 
-    nav_msgs::msg::Path highway_with_prediction_planner_path_frenet;
+    nav_msgs::msg::Path lattice_planner_path_frenet;
     geometry_msgs::msg::PoseStamped highway_with_prediction_planner_point_frenet;
 
     visualization_msgs::msg::MarkerArray sensor_fusion_results_label;
@@ -99,7 +103,6 @@ public:
     visualization_msgs::msg::MarkerArray sensor_fusion_results_bounding_box;
     visualization_msgs::msg::Marker sensor_fusion_single_result_bounding_box;
 
-public:
     double ins_data_arrive_at_planner_through_callback;
     double a_longitudinal;
     double a_lateral;
@@ -132,7 +135,7 @@ public:
     int lane = 0; // start in lane 1
     double ref_vel = 0.0; // have a reference velocity to target mph
 
-    int highway_with_prediction_planner_path_id = 10;
+    int lattice_planner_path_id = 10;
 
     double car_s;
     double car_d;
@@ -156,6 +159,8 @@ public:
 
     VectorXd coeffs;
     double cte;
+
+    int current_velocity_behavior  = 0;
 };
 
 #endif

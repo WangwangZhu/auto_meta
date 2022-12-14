@@ -12,7 +12,7 @@ import ament_index_python.packages
 
 def generate_launch_description():
     
-    planner_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/launch_manager/config', 'highway_path_planning_with_prediction.yaml')
+    planner_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/launch_manager/config', 'lattice_planner.yaml')
 
     
     return LaunchDescription([
@@ -22,10 +22,10 @@ def generate_launch_description():
             description='Prefix for node names'
         ),
         Node(
-            package='highway_path_planning_with_prediction',
+            package='lattice_planner',
             # namespace='mpc_trajectory_tracking',
-            executable='highway_path_planning_with_prediction_node',
-            name='highway_path_planning_with_prediction_node',
+            executable='lattice_planner_node',
+            name='lattice_planner_node',
             parameters=[planner_parameters_configuration],
             # remappings=None,
             # arguments=None,

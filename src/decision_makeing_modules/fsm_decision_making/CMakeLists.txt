@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(highway_path_planning_with_prediction)
+project(fsm_decision_making)
 
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -27,7 +27,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(${PROJECT_NAME}_node src/highway_path_planning_with_prediction.cpp)
+add_executable(${PROJECT_NAME}_node src/fsm_decision_making.cpp)
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)

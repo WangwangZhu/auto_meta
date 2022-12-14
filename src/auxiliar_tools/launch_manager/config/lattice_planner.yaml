@@ -1,4 +1,4 @@
-highway_path_planning_with_prediction_node:
+lattice_planner_node:
   ros__parameters:
     planner_former_point_of_current_position: 0 # 这个值可以将启始点向前推进一定的点的数量，但是不能太多，否则会出现找点错误的问题。
 
