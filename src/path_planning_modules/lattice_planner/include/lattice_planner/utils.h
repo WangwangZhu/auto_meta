@@ -18,9 +18,9 @@ using Eigen::VectorXd;
 using std::string;
 using std::vector;
 
-const double lane_width		= 3.5;		// width of a lane					(m)
+const double lane_width		= 3;		// width of a lane					(m)
 double safety_margin	= 15.0;		// distance to keep from other cars	(m)
-double max_safe_speed	= 10.0;		// max reference speed in the limit	m/s
+double max_safe_speed	= 4.0;		// max reference speed in the limit	m/s
 
 /* *****************************************************************************************************************
 - FunctionName: 

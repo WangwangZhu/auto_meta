@@ -104,7 +104,7 @@ void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::Share
         car_s = car_s_d[0];
         car_d = car_s_d[1];
 
-        RCLCPP_INFO(this->get_logger(), "got imu data: car_s %f, car_d: %f", car_s, car_d);
+        // RCLCPP_INFO(this->get_logger(), "got imu data: car_s %f, car_d: %f", car_s, car_d);
     }
 }
 
@@ -117,7 +117,7 @@ void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::Share
 **************************************************************************************'''*/
 void FSMDecisionMaking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg)
 {
-    RCLCPP_INFO(this->get_logger(), "receiveing global path %lu", msg->poses.size());
+    // RCLCPP_INFO(this->get_logger(), "receiveing global path %lu", msg->poses.size());
     int path_length = msg->poses.size();
 
     global_path_x.clear();
@@ -144,7 +144,7 @@ void FSMDecisionMaking::sensor_fusion_results_bounding_box_callback(visualizatio
 {
     sensor_fusion_results_bounding_box = *msg;
     is_sensor_fusion_results_bounding_box_reveived = true;
-    RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion bounding box %u", msg->markers[0].header.stamp.nanosec);
+    // RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion bounding box %u", msg->markers[0].header.stamp.nanosec);
 }
 
 /*'''**************************************************************************************
@@ -158,7 +158,7 @@ void FSMDecisionMaking::sensor_fusion_results_label_callback(visualization_msgs:
 {
     sensor_fusion_results_label = *msg;
     is_sensor_fusion_results_label_received = true;
-    RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion label %u", msg->markers[0].header.stamp.nanosec);
+    // RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion label %u", msg->markers[0].header.stamp.nanosec);
 }
 
 /*'''**************************************************************************************
@@ -175,6 +175,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
     double iteration_time_length;
     if (rclcpp::ok()){
         if (is_global_path_received && is_ins_data_received && is_sensor_fusion_results_bounding_box_reveived && is_sensor_fusion_results_label_received){
+            current_velocity_behavior = 9; 
             rclcpp::Time now = this->now();
             double ins_parse_now = now.seconds();
             double _max_safe_speed = max_safe_speed;
@@ -219,8 +220,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
             bool need_to_slow_down = false;
             bool current_lane_free = false;
 
-            int object_lane = 0;
-            int host_lane = 0;
+            
 
             if (fabs((double)sensor_fusion_results_bounding_box.markers[0].header.stamp.nanosec - (double)sensor_fusion_results_label.markers[0].header.stamp.nanosec) < 1000000){
                 sensor_fusion.clear();
@@ -318,19 +318,20 @@ void FSMDecisionMaking::decision_iteration_callback(){
                     
                 }
             }
-            cout << "****************************************************************" << endl;
-            std::cout << "  Host Lane: " << host_lane << std::endl;
+            // cout << "****************************************************************" << endl;
+            std::cout << "  ~~~~~~~~~~~~~ Host Lane: " << which_lane(car_d) << std::endl;
             // std::cout << "LEFT: " << num_vehicles_left << "  RIGHT: " << num_vehicles_right << std::endl;
-            cout << "****************************************************************" << endl;
+            // cout << "****************************************************************" << endl;
             // acutally perform lane change, 
             // 修改 host lane 的取值可以限制主车变道的可用车道，用于调整是2车道道路还是3车道道路还是4、5车道道路
             // 先捕获到前车，才会触发变道
-            if (ready_for_lane_change && is_left_lane_free && host_lane >= 0) {
-                lane = host_lane - 1;
+            if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= 0) {
+                lane = which_lane(car_d) - 1;
                 current_velocity_behavior = 1;
+                cout << "!!!!!!!!!!!" << endl;
             }
-            else if (ready_for_lane_change && is_right_lane_free && host_lane <= 0) {
-                lane = host_lane + 1;
+            else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 0) {
+                lane = which_lane(car_d) + 1;
                 current_velocity_behavior = 2;
             }
 
@@ -352,7 +353,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
     iteration_time_length = (end_planner - start_planner).nanoseconds();
     planner_iteration_duration_msg.data = iteration_time_length / 1000000;
     planner_iteration_time_publisher->publish(planner_iteration_duration_msg);
-    RCLCPP_INFO(this->get_logger(), "Planner Iteration Time: %f ms", iteration_time_length / 1000000);
+    // RCLCPP_INFO(this->get_logger(), "Planner Iteration Time: %f ms", iteration_time_length / 1000000);
 }
 /*'''**************************************************************************************
 - FunctionName: None

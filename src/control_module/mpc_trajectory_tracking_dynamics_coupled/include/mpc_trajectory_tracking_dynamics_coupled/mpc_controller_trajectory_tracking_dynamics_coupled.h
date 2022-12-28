@@ -155,12 +155,12 @@ public:
     AD<double> Cr = 46000; // 后轮轮胎纵向刚度
     // AD<double> Sf = 0.2;    // 前轮滑移率
     // AD<double> Sr = 0.0;    // 后轮滑移率
-    AD<double> m = 1000;
+    AD<double> m = 1660;
     // AD<double> v_lateral;
     // AD<double> v_longitudinal;
-    AD<double> l = 1.60;
-    AD<double> I = 3575;
-    AD<double> lf = 0.95;
+    AD<double> l = 2.77;
+    AD<double> I = 3253;
+    AD<double> lf = 1.4;
     AD<double> lr = 1.6 - lf;
 
     double x;

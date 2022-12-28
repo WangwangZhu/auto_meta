@@ -171,6 +171,8 @@ public:
     int current_velocity_behavior = 7;
 
     int preference_lane_id = 0; // TODO: 这个0可以调节车辆的期望车道
+    int object_lane = 0;
+    int host_lane = 0;
      
 };
 

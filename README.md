@@ -22,7 +22,9 @@ ros2 run key_board_monitor key_board_monitor
 
 ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
 
-ros2 launch launch_manager highway_path_planning_with_prediction_launch.py
+ros2 launch launch_manager lattice_planner_launch.py
+
+ros2 run fsm_decision_making fsm_decision_making_node
 
 ros2 run sensor_fusion sensor_fusion_node
 
