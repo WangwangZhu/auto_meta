@@ -67,7 +67,7 @@ public:
 public:
     void ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); // 后面加 const表示函数不可以修改class的成员
     void global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
-    void planner_tracking_iteration_callback();
+    void decision_iteration_callback();
     void sensor_fusion_results_bounding_box_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
     void sensor_fusion_results_label_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
     

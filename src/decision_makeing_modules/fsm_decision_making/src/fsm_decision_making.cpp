@@ -35,7 +35,7 @@ FSMDecisionMaking::FSMDecisionMaking() : Node("fsm_decision_making") // 使用�
     fsm_behavior_decision_makeing_publisher = this->create_publisher<std_msgs::msg::Int16>("fsm_behavior_decision", qos_);
 
 
-    planner_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&FSMDecisionMaking::planner_tracking_iteration_callback, this));
+    planner_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&FSMDecisionMaking::decision_iteration_callback, this));
     planner_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("planner_iteration_duration", qos_); // 用于统计planner求解时间的广播器
 
 }
@@ -168,7 +168,7 @@ void FSMDecisionMaking::sensor_fusion_results_label_callback(visualization_msgs:
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void FSMDecisionMaking::planner_tracking_iteration_callback(){
+void FSMDecisionMaking::decision_iteration_callback(){
     rclcpp::Time start_planner;
     rclcpp::Time end_planner;
     start_planner = this->now();
@@ -315,21 +315,21 @@ void FSMDecisionMaking::planner_tracking_iteration_callback(){
                         lane = preference_lane_id;
                     }
 
-                    // cout << "****************************************************************" << endl;
-                    // std::cout << "Object Lane: " << object_lane << "  Host Lane: " << host_lane << std::endl;
-                    // std::cout << "LEFT: " << num_vehicles_left << "  RIGHT: " << num_vehicles_right << std::endl;
-                    // cout << "****************************************************************" << endl;
+                    
                 }
             }
-
+            cout << "****************************************************************" << endl;
+            std::cout << "  Host Lane: " << host_lane << std::endl;
+            // std::cout << "LEFT: " << num_vehicles_left << "  RIGHT: " << num_vehicles_right << std::endl;
+            cout << "****************************************************************" << endl;
             // acutally perform lane change, 
             // 修改 host lane 的取值可以限制主车变道的可用车道，用于调整是2车道道路还是3车道道路还是4、5车道道路
             // 先捕获到前车，才会触发变道
-            if (ready_for_lane_change && is_left_lane_free && host_lane >= -1) {
+            if (ready_for_lane_change && is_left_lane_free && host_lane >= 0) {
                 lane = host_lane - 1;
                 current_velocity_behavior = 1;
             }
-            else if (ready_for_lane_change && is_right_lane_free && host_lane <= 1) {
+            else if (ready_for_lane_change && is_right_lane_free && host_lane <= 0) {
                 lane = host_lane + 1;
                 current_velocity_behavior = 2;
             }
@@ -344,6 +344,7 @@ void FSMDecisionMaking::planner_tracking_iteration_callback(){
             }
 
             behavior_decision_result_msg.data = current_velocity_behavior;
+            RCLCPP_INFO(this->get_logger(), "Current Behavior Decision Results:~~~~ %d", behavior_decision_result_msg.data);
             fsm_behavior_decision_makeing_publisher->publish(behavior_decision_result_msg);
         }
     }

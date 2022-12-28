@@ -35,8 +35,9 @@ ros2 run sensor_fusion sensor_fusion_node
 5. source ros2_terminal_setup.sh + ros2 run chassis_communication chassis_communication_chasis_to_ros
 6. source ros2_terminal_setup.sh + ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
 7. source ros2_terminal_setup.sh + rqt
-8. source ros2_terminal_setup.sh + ros2 launch launch_manager highway_path_planning_with_prediction_launch.py
-9. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
+8. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
+9. source ros2_terminal_setup.sh + ros2 launch launch_manager lattice_planner_launch.py
+10. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
 
 # 关于坐标系变换的说明:
 

@@ -37,6 +37,8 @@ LatticePlanner::LatticePlanner() : Node("lattice_planner") {
 
     sensor_fusion_results_label_subscription_ = this->create_subscription<visualization_msgs::msg::MarkerArray>("sensor_fusion_results_label", qos_, std::bind(&LatticePlanner::sensor_fusion_results_label_callback, this, _1));
 
+    fsm_behavior_decision_makeing_subscription = this->create_subscription<std_msgs::msg::Int16>("fsm_behavior_decision", qos_, std::bind(&LatticePlanner::fsm_behavior_decision_makeing_callback, this, _1));
+
     // Declare and initialize a parameter, return the effective value.
     this->declare_parameter<int>("planner_former_point_of_current_position", former_point_of_current_position);
     this->declare_parameter<int>("planner_working_mode", working_mode);
@@ -173,6 +175,7 @@ void LatticePlanner::sensor_fusion_results_label_callback(visualization_msgs::ms
 - Comments    : None
 **************************************************************************************'''*/
 void LatticePlanner::fsm_behavior_decision_makeing_callback(std_msgs::msg::Int16::SharedPtr msg){
+    RCLCPP_INFO(this->get_logger(), "~~~~~~~~~~~~~~~~~~~receiveing behavior decision results: %d", msg->data);
     this->current_velocity_behavior = msg->data;
 }
 

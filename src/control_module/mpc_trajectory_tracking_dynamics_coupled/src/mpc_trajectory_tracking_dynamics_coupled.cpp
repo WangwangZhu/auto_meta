@@ -155,7 +155,8 @@ void MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback(nav_ms
 - Comments    : None
 **************************************************************************************'''*/
 void MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback(std_msgs::msg::Float32::SharedPtr msg){
-    target_v = msg->data/3.6;
+    // target_v = 5;
+    // target_v = msg->data/3.6;
 
     cout << "!@#$%^&*~~~~~~~~~~~~~~~~~~ velocity form CSV : " << target_v << endl;
 }
@@ -271,9 +272,9 @@ void MpcTrajectoryTrackingPublisher::eps_feedback_callback(chassis_msg::msg::WVC
 void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
     // 直接发控制信号给底盘，测试底盘是否正常
     // vehicle_control_gas_brake_steer_msg.adu_gear_req = 3;
-    // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 40;
-    // vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
-    // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
+    // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
+    // vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 40;
+    // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 100;
     vehicle_control_gear_msg.gear_request = 3;
 
     rclcpp::Time start_mpc;
@@ -414,7 +415,10 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* Feed in the predicted state values.  这里传入的是车辆坐标系下的控制器时延模型*/
                 Eigen::VectorXd state(8);
                 state << pred_px, pred_py, pred_psi, pred_v_longitudinal, pred_v_lateral, pred_omega, pred_cte, pred_epsi;
-                
+                if (target_v <= 0.02) // TODO：超过这个速度极限，MPC就不工作了，直接停车
+                {
+                    target_v = 0.02;
+                }
                 auto vars = mpc.Solve(state,
                                     coeffs,
                                     target_v,
