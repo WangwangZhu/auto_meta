@@ -17,6 +17,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(custom_interfaces REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
@@ -31,7 +32,7 @@ add_executable(${PROJECT_NAME}_node src/fsm_decision_making.cpp)
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs")# ipopt z ssl uv uWS
+ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "custom_interfaces" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs")# ipopt z ssl uv uWS
 
 install(TARGETS ${PROJECT_NAME}_node
   EXPORT export_${PROJECT_NAME}

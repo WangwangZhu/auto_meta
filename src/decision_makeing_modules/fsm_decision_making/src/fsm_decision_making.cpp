@@ -32,7 +32,8 @@ FSMDecisionMaking::FSMDecisionMaking() : Node("fsm_decision_making") // 使用�
     // fsm_decision_making_path_cartesian_publisher = this->create_publisher<visualization_msgs::msg::Marker>("fsm_decision_making_path_cardesian", qos_);
     // fsm_decision_making_path_frenet_publisher = this->create_publisher<nav_msgs::msg::Path>("fsm_decision_making_path_frenet", qos_);
 
-    fsm_behavior_decision_makeing_publisher = this->create_publisher<std_msgs::msg::Int16>("fsm_behavior_decision", qos_);
+    fsm_behavior_decision_makeing_publisher = this->create_publisher<custom_interfaces::msg::FSMDecisionResults>("fsm_behavior_decision", qos_);
+
 
 
     planner_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&FSMDecisionMaking::decision_iteration_callback, this));
@@ -176,6 +177,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
     if (rclcpp::ok()){
         if (is_global_path_received && is_ins_data_received && is_sensor_fusion_results_bounding_box_reveived && is_sensor_fusion_results_label_received){
             current_velocity_behavior = 9; 
+            lane = which_lane(car_d);
             rclcpp::Time now = this->now();
             double ins_parse_now = now.seconds();
             double _max_safe_speed = max_safe_speed;
@@ -196,10 +198,10 @@ void FSMDecisionMaking::decision_iteration_callback(){
             car_s = car_s_d[0];
             car_d = car_s_d[1];
 
-            cout << "Current Position in Frenet Coordinate, s: " << car_s << ", d: " << car_d << endl;
+            // cout << "Current Position in Frenet Coordinate, s: " << car_s << ", d: " << car_d << endl;
 
             //TODO: 采取规避动作的极限距离体现了不同激进程度的驾驶风格
-            double _safety_margin = safety_margin + v_longitudinal * 2.0;
+            double _safety_margin = safety_margin + v_longitudinal * 4;
 
             next_x_vals.clear();
             next_y_vals.clear();
@@ -303,10 +305,10 @@ void FSMDecisionMaking::decision_iteration_callback(){
                         sensor_fusion_single = sensor_fusion[i];
                         // 前方的车要足够远，后方的车也要足够远
                         if (sensor_fusion_single.s > car_s)  {
-                            front_ready_back_to_ref = (sensor_fusion_single.s > (car_s + _safety_margin)) && front_ready_back_to_ref;
+                            front_ready_back_to_ref = (sensor_fusion_single.s > (car_s + _safety_margin * 1.5)) && front_ready_back_to_ref;
                         }
                         else {
-                            rear_ready_back_to_ref = (sensor_fusion_single.s < (car_s - _safety_margin * 0.3)) && rear_ready_back_to_ref;
+                            rear_ready_back_to_ref = (sensor_fusion_single.s < (car_s - _safety_margin * 0.5)) && rear_ready_back_to_ref;
                         }
                     }
                     if (front_ready_back_to_ref && rear_ready_back_to_ref) {
@@ -314,12 +316,10 @@ void FSMDecisionMaking::decision_iteration_callback(){
                         current_velocity_behavior = 6;
                         lane = preference_lane_id;
                     }
-
-                    
                 }
             }
             // cout << "****************************************************************" << endl;
-            std::cout << "  ~~~~~~~~~~~~~ Host Lane: " << which_lane(car_d) << std::endl;
+            // std::cout << "  ~~~~~~~~~~~~~ Host Lane: " << which_lane(car_d) << std::endl;
             // std::cout << "LEFT: " << num_vehicles_left << "  RIGHT: " << num_vehicles_right << std::endl;
             // cout << "****************************************************************" << endl;
             // acutally perform lane change, 
@@ -328,7 +328,6 @@ void FSMDecisionMaking::decision_iteration_callback(){
             if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= 0) {
                 lane = which_lane(car_d) - 1;
                 current_velocity_behavior = 1;
-                cout << "!!!!!!!!!!!" << endl;
             }
             else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 0) {
                 lane = which_lane(car_d) + 1;
@@ -343,9 +342,11 @@ void FSMDecisionMaking::decision_iteration_callback(){
             if (car_s > 0 && fabs(car_d) < 2.0 && (v_longitudinal == 0)){
                 current_velocity_behavior = 7;
             }
+            behavior_decision_result_msg.target_behavior = current_velocity_behavior;
+            behavior_decision_result_msg.target_lane = lane;
+            // behavior_decision_result_msg.data = ;
 
-            behavior_decision_result_msg.data = current_velocity_behavior;
-            RCLCPP_INFO(this->get_logger(), "Current Behavior Decision Results:~~~~ %d", behavior_decision_result_msg.data);
+            RCLCPP_INFO(this->get_logger(), "Current Behavior Decision Results:~~~~ %d", behavior_decision_result_msg.target_behavior);
             fsm_behavior_decision_makeing_publisher->publish(behavior_decision_result_msg);
         }
     }

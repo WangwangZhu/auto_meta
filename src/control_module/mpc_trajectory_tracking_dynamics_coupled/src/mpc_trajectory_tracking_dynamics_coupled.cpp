@@ -158,7 +158,7 @@ void MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback(s
     // target_v = 5;
     // target_v = msg->data/3.6;
 
-    cout << "!@#$%^&*~~~~~~~~~~~~~~~~~~ velocity form CSV : " << target_v << endl;
+    // cout << "!@#$%^&*~~~~~~~~~~~~~~~~~~ velocity form CSV : " << target_v << endl;
 }
 
 
@@ -286,11 +286,11 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
         if (rclcpp::ok())
         // if (0) // 失能跟踪功能，测试控制信号是否起效
         {
-            this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * this->v_longitudinal) + 1, 20.0);
-            // RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
+            this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * this->v_longitudinal) + 1, 10.0);
+            RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
 
-            // if (is_eps_received && is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received)
-            if (is_eps_received && is_global_path_received && is_ins_data_received){
+            if (is_eps_received && is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
+            // if (is_eps_received && is_global_path_received && is_ins_data_received){
                 global_path_remap_x.clear();
                 global_path_remap_y.clear();
 
@@ -341,6 +341,8 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                     Eigen::Map<VectorXd> ptsy_transform(ptry, reference_path_points_number);            
                     coeffs = polyfit(ptsx_transform, ptsy_transform, 5);
                     cte = polyeval(coeffs, 0); // 在车辆坐标系下，当前时刻的位置偏差就是期望轨迹在车辆坐标系中的截距
+                    cout << "reference_path_points_number: " << reference_path_points_number << endl;
+
                 }
                 // -------------------- 使用规划器重规划路径作为跟踪控制器的参考路径 --------------------
                 else{
@@ -367,6 +369,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                                                                     planner_path_y[reference_path_points_number+1]);
                         reference_path_points_number ++;
                     }
+                    // cout << "reference_path_points_number: " << reference_path_points_number << endl;
                     rclcpp::Time here1 = this->now();
                     double *ptrx = &planner_path_remap_x[planner_path_former_point_of_current_position];
                     Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, reference_path_points_number);
@@ -381,9 +384,12 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                     for (uint i = 0; i < planner_path_s.size(); i++){
                         _planner_path_s[i] = planner_path_s[i];
                         _planner_path_v[i] = planner_path_v[i];
+                        cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
+                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
+                    // target_v = 4;
                 }
 
                 if (cte > max_cte){
@@ -415,9 +421,9 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* Feed in the predicted state values.  这里传入的是车辆坐标系下的控制器时延模型*/
                 Eigen::VectorXd state(8);
                 state << pred_px, pred_py, pred_psi, pred_v_longitudinal, pred_v_lateral, pred_omega, pred_cte, pred_epsi;
-                if (target_v <= 0.02) // TODO：超过这个速度极限，MPC就不工作了，直接停车
+                if (target_v <= 0.1) // TODO：超过这个速度极限，MPC就不工作了，直接停车
                 {
-                    target_v = 0.02;
+                    target_v = 0;
                 }
                 auto vars = mpc.Solve(state,
                                     coeffs,
@@ -437,11 +443,15 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
                 steer_value = 1 * rad2deg((vars[0] / 1)); 
                 vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
+                if (target_v <= 0.1) // TODO：超过这个速度极限，MPC就不工作了，直接停车
+                {
+                   vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
+                } 
 
                 /* ----------------------------------------------------------------------------- 纵向控制信号 ----------------------------------------------------------------------------- */
                 // determining if brake or throttle
                 throttle_value = vars[1];
-                cout << "throttle_value:::::::::::::::::::::::::" << throttle_value << endl;
+                // cout << "throttle_value:::::::::::::::::::::::::" << throttle_value << endl;
                 if (throttle_value <= -0.01){
                     vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
                     // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = max_mpc(0, min_mpc(100, -9.03 * throttle_value - 9.548));0.3892 x - 5.072 x - 0.7559
@@ -543,7 +553,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
         iteration_time_length = (end_mpc - start_mpc).nanoseconds();
         mpc_iteration_duration_msg.data = iteration_time_length / 1000000;
         mpc_iteration_time_publisher->publish(mpc_iteration_duration_msg);
-        RCLCPP_INFO(this->get_logger(), "MPC iteration time: %f ms", iteration_time_length / 1000000);
+        cout << "~~~ MPC iteration time: " <<  iteration_time_length / 1000000 << "ms ~~~" << endl;
     }
 }
 /*'''**************************************************************************************

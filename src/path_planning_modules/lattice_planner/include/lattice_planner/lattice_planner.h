@@ -36,6 +36,8 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 
+#include "custom_interfaces/msg/fsm_decision_results.hpp"
+
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 
@@ -70,13 +72,13 @@ public:
     void planner_tracking_iteration_callback();
     void sensor_fusion_results_bounding_box_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
     void sensor_fusion_results_label_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg);
-    void fsm_behavior_decision_makeing_callback(std_msgs::msg::Int16::SharedPtr msg);
+    void fsm_behavior_decision_makeing_callback(custom_interfaces::msg::FSMDecisionResults::SharedPtr msg);
 
     
 public:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_subscription_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ins_data_subscription_;
-    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr fsm_behavior_decision_makeing_subscription;
+    rclcpp::Subscription<custom_interfaces::msg::FSMDecisionResults>::SharedPtr fsm_behavior_decision_makeing_subscription;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr planner_iteration_time_publisher;  // 用于统计 planner 求解时间的广播器
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lattice_planner_path_cartesian_publisher; // 广播规划器求解结果
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr lattice_planner_path_frenet_publisher; // 广播规划器求解结果
@@ -161,6 +163,13 @@ public:
     double cte;
 
     int current_velocity_behavior  = 0;
+    int target_lane = 0;
+
+    int host_lane;
+
+    double ref_x;
+    double ref_y;
+    double ref_yaw;
 };
 
 #endif
