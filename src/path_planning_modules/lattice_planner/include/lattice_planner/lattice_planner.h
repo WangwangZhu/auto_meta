@@ -157,6 +157,9 @@ public:
     vector<double> next_s_vals_previous_remap;
     vector<double> next_v_vals_previous_remap;
 
+    vector<vector<double>> next_wps_previous;
+    vector<double> next_ss_previous;
+
     vector<Object_Around> sensor_fusion;
 
     VectorXd coeffs;

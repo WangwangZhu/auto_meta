@@ -198,6 +198,7 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             double ins_parse_now = now.seconds();
             double _max_safe_speed = max_safe_speed;
             int current_index_in_last_iteration_path = 0;
+            int ref_index_in_front_of_host_vehicle;
 
             double host_car_s = 0;
             double resuse_length = 0;
@@ -411,10 +412,11 @@ void LatticePlanner::planner_tracking_iteration_callback() {
                     }
                 }
 
+                ref_index_in_front_of_host_vehicle = min_planner(prev_size, current_index_in_last_iteration_path + 36);
                 if (prev_size > 0){
                     // car_s = next_s_vals_previous.back(); // car s represent the end point in the last path planning module iteration // car_s represent the future of our host car
                     // 复用10个点
-                    car_s = next_s_vals_previous[current_index_in_last_iteration_path + 30]; // car s represent the end point in the last path planning module iteration // car_s represent the future of our host car
+                    car_s = next_s_vals_previous[ref_index_in_front_of_host_vehicle]; // car s represent the end point in the last path planning module iteration // car_s represent the future of our host car
                 }
                 // ref_x = next_x_vals_previous[current_index_in_last_iteration_path];
                 // ref_y = next_y_vals_previous[current_index_in_last_iteration_path];
@@ -429,10 +431,10 @@ void LatticePlanner::planner_tracking_iteration_callback() {
                 
                 cout << "current_index_in_last_iteration_path------------ " << current_index_in_last_iteration_path << endl;
 
-                ref_x = next_x_vals_previous[current_index_in_last_iteration_path + 30 - 1];
-                ref_y = next_y_vals_previous[current_index_in_last_iteration_path + 30 - 1];
-                double ref_x_prev = next_x_vals_previous[current_index_in_last_iteration_path + 30 - 2];
-                double ref_y_prev = next_y_vals_previous[current_index_in_last_iteration_path + 30 - 2];
+                ref_x = next_x_vals_previous[ref_index_in_front_of_host_vehicle - 1];
+                ref_y = next_y_vals_previous[ref_index_in_front_of_host_vehicle - 1];
+                double ref_x_prev = next_x_vals_previous[ref_index_in_front_of_host_vehicle - 2];
+                double ref_y_prev = next_y_vals_previous[ref_index_in_front_of_host_vehicle - 2];
 
                 // ref_yaw = atan2(ref_y_future - ref_y, ref_x_future - ref_x);
                 ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
@@ -476,6 +478,22 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             // next_wp4 = frenet_to_cartesian(car_s + max_planner(6.1, (v_longitudinal * 4. + 9 - max_heading_ratio_diff * 40)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
             next_wp5 = frenet_to_cartesian(car_s + max_planner(7, (3 + v_longitudinal * 2.4)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
 
+            // next_wps_previous.push_back(next_wp1);
+            // next_wps_previous.push_back(next_wp3);
+            // next_wps_previous.push_back(next_wp5);
+
+            // next_ss_previous.push_back(car_s + max_planner(5, (1 + v_longitudinal * 2.4)));
+            // next_ss_previous.push_back(car_s + max_planner(6, (2 + v_longitudinal * 2.4)));
+            // next_ss_previous.push_back(car_s + max_planner(7, (3 + v_longitudinal * 2.4)));
+
+            // for (int i = 0; i < next_ss_previous.size(); i++){
+            //     if (next_ss_previous[i] < (car_s+10)) {
+            //         next_ss_previous.erase(next_ss_previous.begin());
+            //         next_wps_previous.erase(next_wps_previous.begin());
+            //     }
+            // }
+            // cout << "next_wps_previous  7&&&&&&&&&&" << next_ss_previous.size() << endl;
+
             // ptsx.push_back(next_wp0[0]);
             ptsx.push_back(next_wp1[0]);
             // ptsx.push_back(next_wp2[0]);
@@ -489,6 +507,11 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             ptsy.push_back(next_wp3[1]);
             // ptsy.push_back(next_wp4[1]);
             ptsy.push_back(next_wp5[1]);
+
+            // for (int i = 0; i < next_ss_previous.size(); i++){
+            //     ptsx.push_back(next_wps_previous[i][0]);
+            //     ptsy.push_back(next_wps_previous[i][1]);
+            // }
 
             // 从世界坐标系变换到车辆坐标系(不严格是车辆坐标系，坐标原点修正到了历史轨迹同轴线上)
             for (uint i = 0; i < ptsx.size(); i++)
@@ -513,7 +536,7 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
             // start with all of the previous path points from last time
             if (prev_size > 2){
-                for (int i = current_index_in_last_iteration_path; i < (current_index_in_last_iteration_path + 30); i++){
+                for (int i = current_index_in_last_iteration_path; i < (ref_index_in_front_of_host_vehicle); i++){
                     next_x_vals.push_back(next_x_vals_previous[i]);
                     next_y_vals.push_back(next_y_vals_previous[i]);
                     next_s_vals.push_back(next_s_vals_previous[i]);
@@ -598,14 +621,18 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             lattice_planner_path_cardesian.header.frame_id = "odom";
             lattice_planner_path_cardesian.type = visualization_msgs::msg::Marker::LINE_STRIP;
             lattice_planner_path_cardesian.action = visualization_msgs::msg::Marker::ADD;
-            lattice_planner_path_cardesian.lifetime = rclcpp::Duration(0s);
-            lattice_planner_path_cardesian.scale.x = 0.02;
-            lattice_planner_path_cardesian.scale.y = 0.02;
-            lattice_planner_path_cardesian.scale.z = 0.02;
-            lattice_planner_path_cardesian.color.r = 1.0;
-            lattice_planner_path_cardesian.color.g = 1.0;
-            lattice_planner_path_cardesian.color.b = 1.0;
-            lattice_planner_path_cardesian.color.a = 1.0;
+            // lattice_planner_path_cardesian.lifetime = rclcpp::Duration(0s); // 显示所有的
+            lattice_planner_path_cardesian.lifetime = rclcpp::Duration(0.1s);
+            lattice_planner_path_cardesian.scale.x = 1.6;
+            lattice_planner_path_cardesian.scale.y = 1.6;
+            lattice_planner_path_cardesian.scale.z = 1.6;
+            float rrrr = 60.0/255.0;
+            float gggg = 179.0/255.0;
+            float bbbb = 113.0/255.0;
+            lattice_planner_path_cardesian.color.r = rrrr/2;
+            lattice_planner_path_cardesian.color.g = gggg/2;
+            lattice_planner_path_cardesian.color.b = bbbb/2;
+            lattice_planner_path_cardesian.color.a = 1;
 
             lattice_planner_path_cardesian.points.clear();
 
