@@ -94,7 +94,7 @@ public:
     std_msgs::msg::Float32 planner_iteration_duration_msg = std_msgs::msg::Float32();
 
     visualization_msgs::msg::Marker lattice_planner_path_cardesian;
-    geometry_msgs::msg::Point highway_with_prediction_planner_point_cartesian;
+    geometry_msgs::msg::Point lattice_planner_path_cardesian_points;
 
     nav_msgs::msg::Path lattice_planner_path_frenet;
     geometry_msgs::msg::PoseStamped highway_with_prediction_planner_point_frenet;

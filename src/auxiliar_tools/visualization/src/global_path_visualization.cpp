@@ -1,296 +1,320 @@
-#include <cstdio>
-#include <chrono> // C++里面处理时间的包
-#include <memory>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <stdio.h>
-#include <sstream>
-#include <vector>
+#include "visualization/global_path_visualization.h"
 
-#include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/odometry.hpp"
-#include "rclcpp/clock.hpp"
-#include "rclcpp/time_source.hpp"
-#include "tf2_ros/transform_broadcaster.h"
-#include "nav_msgs/msg/odometry.hpp"
-#include <tf2/convert.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : 定时广播全局路径出去
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+GlobalPathVisualization::GlobalPathVisualization() : Node("goobal_path_visualization") {
+    RCLCPP_INFO(this->get_logger(), "publishing global path.");
+    global_path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("global_path", 10);
 
-#include <visualization_msgs/msg/marker.hpp>
-#include <nav_msgs/msg/path.hpp>
-#include <geometry_msgs/msg/quaternion.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
+    target_velocity_from_csv_publisher = this->create_publisher<std_msgs::msg::Float32>("velocity_target_from_csv", 10);
 
-#include "std_msgs/msg/float32.hpp"
+    global_path_publisher_timer_ = this->create_wall_timer(1000ms, std::bind(&GlobalPathVisualization::global_path_publisher_timer_callback, this));
 
-using namespace std::chrono_literals;
-using std::cout;
-using std::endl;
-using std::ifstream;
-using std::string;
-using std::vector;
-/*'''*****************************************************************************************************
-# Class Name  : 
-# FileFunction: 
-# Comments    :
-*****************************************************************************************************'''*/
-class GlobalPathVisualization : public rclcpp::Node
+    target_velocity_from_csv_timer = this->create_wall_timer(25ms, std::bind(&GlobalPathVisualization::target_velocity_publisher_callback, this));
+
+    global_path_multi_lines_publisher = this->create_publisher<visualization_msgs::msg::MarkerArray>("global_path_multi_lines", 10);
+
+    global_path_multi_lines_publisher_timer_ = this->create_wall_timer(2000ms, std::bind(&GlobalPathVisualization::global_path_multi_lines_publisher_timer_callback, this));
+
+    this->declare_parameter<string>("global_map_name_parameter", path_configure_parameter);
+    this->declare_parameter<string>("velocity_curve_name_parameter", velocity_wyx_curve);
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+GlobalPathVisualization::~GlobalPathVisualization() {}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::global_path_publisher_timer_callback() {
+    if (this->load_map_done_global)
+    {
+        RCLCPP_INFO(this->get_logger(), "publishing global path");
+
+        global_path.header.stamp = this->get_clock()->now();
+        global_path.header.frame_id = "odom";
+        
+        global_path_publisher_->publish(global_path);
+    }
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::global_path_multi_lines_publisher_timer_callback(){
+    if (this->load_map_done_global)
+    {
+        // global_path_multi_line_single.header.stamp = this->get_clock()->now();
+        // global_path_multi_lines.markers.clear();
+        // global_path_multi_lines.markers.push_back(global_path_multi_line_single);
+        
+        global_path_multi_lines_publisher->publish(global_path_multi_lines);
+    }
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::target_velocity_publisher_callback()
 {
-public:
-    nav_msgs::msg::Path global_path;
-    geometry_msgs::msg::PoseStamped this_pose_stamped;
-
-    vector<double> velocity_curve;
-
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr global_path_publisher_;
-    rclcpp::TimerBase::SharedPtr global_path_publisher_timer_;
-
-    rclcpp::TimerBase::SharedPtr target_velocity_from_csv_timer;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_velocity_from_csv_publisher;
-    std_msgs::msg::Float32 velocity_target_from_csv;
-
-
-    string global_path_path;
-    string path_configure_parameter;
-    string velocity_wyx_curve;
-    bool load_map_done_global = false;
-    bool load_velocity_curve_done = false;
-
-    int i = 0;
-
-    
-
-public:
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : 定时广播全局路径出去
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    GlobalPathVisualization() : Node("goobal_path_visualization")
+    if (this->load_velocity_curve_done)
     {
-        RCLCPP_INFO(this->get_logger(), "publishing global path.");
-        global_path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("global_path", 10);
+        RCLCPP_INFO(this->get_logger(), "publishing target velocity");
 
-        target_velocity_from_csv_publisher = this->create_publisher<std_msgs::msg::Float32>("velocity_target_from_csv", 10);
+        velocity_target_from_csv.data = velocity_curve[i];
 
-        global_path_publisher_timer_ = this->create_wall_timer(1000ms, std::bind(&GlobalPathVisualization::global_path_publisher_timer_callback, this));
-
-        target_velocity_from_csv_timer = this->create_wall_timer(25ms, std::bind(&GlobalPathVisualization::target_velocity_publisher_callback, this));
-
-        this->declare_parameter<string>("global_map_name_parameter", path_configure_parameter);
-        this->declare_parameter<string>("velocity_curve_name_parameter", velocity_wyx_curve);
-    }
-
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : None
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    ~GlobalPathVisualization() {}
-
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : None
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    void global_path_publisher_timer_callback()
-    {
-        if (this->load_map_done_global)
-        {
-            RCLCPP_INFO(this->get_logger(), "publishing global path");
-
-            global_path.header.stamp = this->get_clock()->now();
-            global_path.header.frame_id = "odom";
-            
-            global_path_publisher_->publish(global_path);
+        if (i > velocity_curve.size()-2){
+            return;
         }
+        i++;
+
+        // global_path.header.stamp = this->get_clock()->now();
+        // global_path.header.frame_id = "odom";
+        
+        // global_path_publisher_->publish(global_path);
+        target_velocity_from_csv_publisher->publish(velocity_target_from_csv);
     }
+}
 
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : None
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    void target_velocity_publisher_callback()
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : 模板函数：将string类型变量转换为常用的数值类型（此方法具有普遍适用性）
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+template <class Type>
+Type GlobalPathVisualization::stringToNum(const string &str)
+{
+    std::istringstream iss(str);
+    Type num;
+    iss >> num;
+    return num;
+}
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : 模板函数
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+template <class Type>
+vector<Type> GlobalPathVisualization::string_split(const string &str, const char &pattern)
+{
+    vector<Type> res;
+    if (str == "")
     {
-        if (this->load_velocity_curve_done)
-        {
-            RCLCPP_INFO(this->get_logger(), "publishing target velocity");
-
-            velocity_target_from_csv.data = velocity_curve[i];
-
-            if (i > velocity_curve.size()-2){
-                return;
-            }
-            i++;
-
-            // global_path.header.stamp = this->get_clock()->now();
-            // global_path.header.frame_id = "odom";
-            
-            // global_path_publisher_->publish(global_path);
-            target_velocity_from_csv_publisher->publish(velocity_target_from_csv);
-        }
-    }
-
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : 模板函数：将string类型变量转换为常用的数值类型（此方法具有普遍适用性）
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    template <class Type>
-    Type stringToNum(const string &str)
-    {
-        std::istringstream iss(str);
-        Type num;
-        iss >> num;
-        return num;
-    }
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : 模板函数
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    template <class Type>
-    vector<Type> string_split(const string &str, const char &pattern)
-    {
-        vector<Type> res;
-        if (str == "")
-        {
-            return res;
-        }
-        string strs = str + pattern; // 在字符串末尾加入分割符号，方便截取最后一段。
-        size_t pos = strs.find(pattern);
-        while (pos != strs.npos)
-        {
-            string temp_string = strs.substr(0, pos);
-            Type temp_number = stringToNum<Type>(temp_string);
-            res.push_back(temp_number);
-            strs = strs.substr(pos + 1, strs.size()); // 去掉已分割的字符串,在剩下的字符串中进行分割
-            pos = strs.find(pattern);
-        }
         return res;
     }
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : None
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    void load_map()
+    string strs = str + pattern; // 在字符串末尾加入分割符号，方便截取最后一段。
+    size_t pos = strs.find(pattern);
+    while (pos != strs.npos)
     {
-        char *buffer;
-        if ((buffer = getcwd(NULL, 0)) == NULL) {
-            perror("getcwd error");
-        }
-        else {
-            string buffer_ = buffer;
-            string local_path;
-            this->get_parameter<string>("global_map_name_parameter", local_path);
-            global_path_path = buffer_ + local_path;
-            cout << "global_path_path" << global_path_path << endl;
-        }
-
-        ifstream infile(global_path_path);
-        string value;
-        int i = 0;
-        getline(infile, value); // 舍弃头
-        while (infile.good()) {
-            cout << "加载全局地图" << endl;
-            getline(infile, value);
-            if (value != "")
-            {
-                cout << "string value : " << value << endl;
-                cout.precision(12);
-                vector<double> temp_values = string_split<double>(value, ',');
-
-                this_pose_stamped.header.frame_id = "odom";             
-                this_pose_stamped.header.stamp = this->get_clock()->now();
-                this_pose_stamped.pose.position.x = temp_values[2];
-                this_pose_stamped.pose.position.y = temp_values[3];
-                this_pose_stamped.pose.position.z = 0;
-                this_pose_stamped.pose.orientation.x = 0;
-                this_pose_stamped.pose.orientation.y = 0;
-                this_pose_stamped.pose.orientation.z = 0;
-                this_pose_stamped.pose.orientation.w = temp_values[7]; // 这里实际上是放的frenet坐标系的S
-                
-                global_path.poses.push_back(this_pose_stamped);
-
-                i++;
-                if (i == 10)
-                {
-                    // break;
-                }
-            }
-        }
-        load_map_done_global = true;
+        string temp_string = strs.substr(0, pos);
+        Type temp_number = stringToNum<Type>(temp_string);
+        res.push_back(temp_number);
+        strs = strs.substr(pos + 1, strs.size()); // 去掉已分割的字符串,在剩下的字符串中进行分割
+        pos = strs.find(pattern);
     }
-    /*'''**************************************************************************************
-    - FunctionName: None
-    - Function    : None
-    - Inputs      : None
-    - Outputs     : None
-    - Comments    : None
-    **************************************************************************************'''*/
-    void load_velocity_curve()
-    {
-        char *buffer;
-        if ((buffer = getcwd(NULL, 0)) == NULL) {
-            perror("getcwd error");
-        }
-        else {
-            string buffer_ = buffer;
-            string local_path;
-            this->get_parameter<string>("velocity_curve_name_parameter", local_path);
+    return res;
+}
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::load_map()
+{
+    char *buffer;
+    if ((buffer = getcwd(NULL, 0)) == NULL) {
+        perror("getcwd error");
+    }
+    else {
+        string buffer_ = buffer;
+        string local_path;
+        this->get_parameter<string>("global_map_name_parameter", local_path);
+        global_path_path = buffer_ + local_path;
+        cout << "global_path_path" << global_path_path << endl;
+    }
 
-            global_path_path = buffer_ + local_path;
-            cout << "global_path_path" << global_path_path << endl;
-        }
+    ifstream infile(global_path_path);
+    string value;
+    int i = 0;
+    getline(infile, value); // 舍弃头
+    while (infile.good()) {
+        cout << "加载全局地图" << endl;
+        getline(infile, value);
+        if (value != "")
+        {
+            cout << "string value : " << value << endl;
+            cout.precision(12);
+            vector<double> temp_values = string_split<double>(value, ',');
 
-        ifstream infile(global_path_path);
-        string value;
-        int i = 0;
-        getline(infile, value); // 舍弃头
-        while (infile.good()) {
-            // cout << "load velocity curve" << endl;
-            getline(infile, value);
-            if (value != "")
-            {
-                cout << "string value : " << value << endl;
-                cout.precision(12);
-                vector<double> temp_values = string_split<double>(value, ',');
+            this_pose_stamped.header.frame_id = "odom";             
+            this_pose_stamped.header.stamp = this->get_clock()->now();
+            this_pose_stamped.pose.position.x = temp_values[2];
+            this_pose_stamped.pose.position.y = temp_values[3];
+            this_pose_stamped.pose.position.z = 0;
+            this_pose_stamped.pose.orientation.x = 0;
+            this_pose_stamped.pose.orientation.y = 0;
+            this_pose_stamped.pose.orientation.z = 0;
+            this_pose_stamped.pose.orientation.w = temp_values[7]; // 这里实际上是放的frenet坐标系的S
+            
+            global_path.poses.push_back(this_pose_stamped);
+            
+            global_path_psi.push_back(temp_values[1]);
+            global_path_x.push_back(temp_values[2]);
+            global_path_y.push_back(temp_values[3]);
+            global_path_s.push_back(temp_values[7]);
 
-                velocity_curve.push_back(temp_values[0]);
-
-                i++;
-                if (i == 10)
-                {
-                    // break;
-                }
+            if (i % 8 == 0){
+                global_path_x_down_sample.push_back(temp_values[2]); // ptsx
+                global_path_y_down_sample.push_back(temp_values[3]); // ptsy
+                global_path_psi_down_sample.push_back(temp_values[1]); // ptsy
+                global_path_s_down_sample.push_back(temp_values[7]);
             }
-        }
-        load_velocity_curve_done = true;
-
-        for(int i = 0; i < velocity_curve.size(); i++){
-            cout << velocity_curve[i] << endl;
+            i++;
         }
     }
-};
+
+    GlobalPathVisualization::generate_road_structure(-1.75, 323, 0);
+    GlobalPathVisualization::generate_road_structure(-1.75 -3.5, 324, 0);
+    GlobalPathVisualization::generate_road_structure(-1.75 -3.5 * 2, 325, 1);
+
+    GlobalPathVisualization::generate_road_structure(1.75, 334, 0);
+    GlobalPathVisualization::generate_road_structure(1.75 + 3.5, 335, 0);
+    GlobalPathVisualization::generate_road_structure(1.75 + 3.5 * 2, 336, 1);
+    load_map_done_global = true;
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::generate_road_structure(double lane_d_coordinate, int lane_id, int line_type_flag){
+    visualization_msgs::msg::Marker global_path_multi_line_single;
+    global_path_multi_line_single.id = lane_id;
+    global_path_multi_line_single.header.stamp = this->get_clock()->now();
+    global_path_multi_line_single.header.frame_id = "odom";
+    if (line_type_flag == 0){
+        global_path_multi_line_single.type = visualization_msgs::msg::Marker::LINE_LIST;
+    }
+    else{
+        global_path_multi_line_single.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    }
+    global_path_multi_line_single.action = visualization_msgs::msg::Marker::ADD;
+    // global_path_multi_line_single.lifetime = rclcpp::Duration(0s); // 显示所有的
+    global_path_multi_line_single.lifetime = rclcpp::Duration(2s);
+    global_path_multi_line_single.scale.x = 0.2;
+    global_path_multi_line_single.scale.y = 0.2;
+    global_path_multi_line_single.scale.z = 0.2;
+    global_path_multi_line_single.color.r = 1;
+    global_path_multi_line_single.color.g = 1;
+    global_path_multi_line_single.color.b = 1;
+    global_path_multi_line_single.color.a = 1;
+
+    global_path_multi_line_single.points.clear();
+    geometry_msgs::msg::Point global_path_multi_line_single_single_point;
+    for (int i = 0; i < global_path_x_down_sample.size(); i++){
+        vector<double> line_s_d = cartesian_to_frenet(global_path_x_down_sample[i], global_path_y_down_sample[i], global_path_psi_down_sample[i]/57.29578, global_path_x, global_path_y);
+        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + lane_d_coordinate, global_path_s, global_path_x, global_path_y); 
+
+        global_path_multi_line_single_single_point.x = line_x_y[0];
+        global_path_multi_line_single_single_point.y = line_x_y[1];
+        global_path_multi_line_single_single_point.z = 0;
+
+        if (global_path_x_down_sample.size() % 2 == 0) {
+            if (i >= 2) {
+                global_path_multi_line_single.points.push_back(global_path_multi_line_single_single_point);
+            }
+        }
+        else{
+            if (i >= 1) {
+                global_path_multi_line_single.points.push_back(global_path_multi_line_single_single_point);
+            }
+        }
+    }
+    global_path_multi_lines.markers.push_back(global_path_multi_line_single);
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void GlobalPathVisualization::load_velocity_curve()
+{
+    char *buffer;
+    if ((buffer = getcwd(NULL, 0)) == NULL) {
+        perror("getcwd error");
+    }
+    else {
+        string buffer_ = buffer;
+        string local_path;
+        this->get_parameter<string>("velocity_curve_name_parameter", local_path);
+
+        global_path_path = buffer_ + local_path;
+        cout << "global_path_path" << global_path_path << endl;
+    }
+
+    ifstream infile(global_path_path);
+    string value;
+    int i = 0;
+    getline(infile, value); // 舍弃头
+    while (infile.good()) {
+        // cout << "load velocity curve" << endl;
+        getline(infile, value);
+        if (value != "")
+        {
+            cout << "string value : " << value << endl;
+            cout.precision(12);
+            vector<double> temp_values = string_split<double>(value, ',');
+
+            velocity_curve.push_back(temp_values[0]);
+
+            i++;
+            if (i == 10)
+            {
+                // break;
+            }
+        }
+    }
+    load_velocity_curve_done = true;
+
+    for(int i = 0; i < velocity_curve.size(); i++){
+        cout << velocity_curve[i] << endl;
+    }
+}
 
 /*'''*****************************************************************************************************
 # Function Name  : 

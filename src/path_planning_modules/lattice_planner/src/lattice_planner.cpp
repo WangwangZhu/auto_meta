@@ -637,11 +637,11 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             lattice_planner_path_cardesian.points.clear();
 
             for (size_t i = 0; i < next_x_vals.size(); i++) {
-                highway_with_prediction_planner_point_cartesian.x = next_x_vals[i];
-                highway_with_prediction_planner_point_cartesian.y = next_y_vals[i];
-                highway_with_prediction_planner_point_cartesian.z = 0;
+                lattice_planner_path_cardesian_points.x = next_x_vals[i];
+                lattice_planner_path_cardesian_points.y = next_y_vals[i];
+                lattice_planner_path_cardesian_points.z = 0;
 
-                lattice_planner_path_cardesian.points.push_back(highway_with_prediction_planner_point_cartesian);
+                lattice_planner_path_cardesian.points.push_back(lattice_planner_path_cardesian_points);
             }
             
             // TODO:打包消息发出去, 规划器发出的结果是在全局Frenet坐标系中的
