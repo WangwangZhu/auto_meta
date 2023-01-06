@@ -305,27 +305,27 @@ void SensorFusion::sensor_fusion_iteration_callback()
                                             object_frame_id);
 
             // *************** 模拟目标物 3 ***************
-            // object_s = 94.660;
-            // object_d = 0.0;
-            // object_id += 1; // 103
-            // object_label = "Car" + std::to_string(object_id);
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
-            // // *************** 模拟目标物 4 ***************
-            // object_s = 96.660;
-            // object_d = -3.5;
-            // object_id += 1; // 104
-            // object_label = "Car" + std::to_string(object_id);
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
+            object_s = 94.660;
+            object_d = 0.0;
+            object_id += 1; // 103
+            object_label = "Car" + std::to_string(object_id);
+            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+                                            object_label, object_id,
+                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+                                            object_frame_id);
+            // *************** 模拟目标物 4 ***************
+            object_s = 140.660;
+            object_d = -3.5;
+            object_id += 1; // 104
+            object_label = "Car" + std::to_string(object_id);
+            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+                                            object_label, object_id,
+                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+                                            object_frame_id);
 
             // *************** 模拟目标物 4 ***************
             // object_s = 90.660;

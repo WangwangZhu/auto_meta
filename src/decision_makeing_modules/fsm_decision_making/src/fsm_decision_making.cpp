@@ -325,11 +325,11 @@ void FSMDecisionMaking::decision_iteration_callback(){
             // acutally perform lane change, 
             // 修改 host lane 的取值可以限制主车变道的可用车道，用于调整是2车道道路还是3车道道路还是4、5车道道路
             // 先捕获到前车，才会触发变道
-            if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= 0) {
+            if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= -1) {
                 lane = which_lane(car_d) - 1;
                 current_velocity_behavior = 1;
             }
-            else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 0) {
+            else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 1) {
                 lane = which_lane(car_d) + 1;
                 current_velocity_behavior = 2;
             }

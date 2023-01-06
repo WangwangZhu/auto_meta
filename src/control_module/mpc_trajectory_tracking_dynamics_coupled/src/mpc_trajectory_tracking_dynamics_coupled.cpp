@@ -443,7 +443,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
                 steer_value = 1 * rad2deg((vars[0] / 1)); 
                 vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
-                if (target_v <= 0.1) // TODO：超过这个速度极限，MPC就不工作了，直接停车
+                if (target_v <= 1) // TODO：超过这个速度极限，MPC就不工作了，直接停车
                 {
                    vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
                 } 

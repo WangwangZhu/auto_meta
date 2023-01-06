@@ -21,7 +21,8 @@ setup(
         'console_scripts': [
             'ins_d_data_parse = integrated_navigation_system.ins_d_data_parse:main',
             'ins_d_data_collect = integrated_navigation_system.ins_data_collection:main',
-            'map_preprocess = integrated_navigation_system.map_preprocess:main'
+            'map_preprocess = integrated_navigation_system.map_preprocess:main',
+            'ins_d_data_receive_from_simu_to_log = integrated_navigation_system.ins_d_data_receive_from_simu_to_log:main'
         ],
     },
 )
