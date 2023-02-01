@@ -36,7 +36,7 @@ class MapPreprocess(Node):
     def __init__(self,
                  raw_data_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',
-                 raw_data_file_name='2022_12_28_18_33_07_ins_data_map.csv',
+                 raw_data_file_name='2023_02_01_10_17_45_ins_data_map.csv',
                  data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/map_after_preprocess/',
                  data_map_sub_name="_ins_data_map_after_preprocess.csv",
