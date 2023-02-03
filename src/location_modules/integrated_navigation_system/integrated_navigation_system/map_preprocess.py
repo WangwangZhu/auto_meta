@@ -36,10 +36,10 @@ class MapPreprocess(Node):
     def __init__(self,
                  raw_data_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',
-                 raw_data_file_name='2023_02_01_10_17_45_ins_data_map.csv',
+                 raw_data_file_name='2023_02_01_09_58_16_ins_data_map.csv',
                  data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/map_after_preprocess/',
-                 data_map_sub_name="_ins_data_map_after_preprocess.csv",
+                 data_map_sub_name="_after_preprocess.csv",
                  ):
         '''**************************************************************************************
         - FunctionName:
@@ -51,7 +51,7 @@ class MapPreprocess(Node):
         super().__init__('map_preprocess')
         self.data_storage_folder = data_storage_folder
         self.date_now = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-        self.data_map_name = self.data_storage_folder + self.date_now + data_map_sub_name
+        self.data_map_name = self.data_storage_folder + raw_data_file_name
         self.data_raw_map_name = raw_data_folder + raw_data_file_name
         self.raw_data = np.array(pd.read_csv(self.data_raw_map_name))
         
@@ -67,7 +67,7 @@ class MapPreprocess(Node):
         self.raw_index = 1
         self.ref_index = 0
         self.utm_x_y_ref_position = [self.raw_index, self.heading[0], self.local_x[0], self.local_y[0], self.longitude[0], self.latitude[0], self.altitude[0]]
-        self.dis_threshold = 0.6  # 单位是m 距离差值的阈值
+        self.dis_threshold = 6  # 单位是m 距离差值的阈值
         self.headers = ['index', 'heading', 'local_x', 'local_y', 'longitude', 'latitude', 'altitude', "s"]
         
     def cal_absolute_distance(self, utm_x_ref, utm_y_ref, utm_x_raw, utm_y_raw):
@@ -100,8 +100,8 @@ class MapPreprocess(Node):
             row_data_in_csv = {
                 'index':self.utm_x_y_ref_position[0],
                 'heading':self.utm_x_y_ref_position[1],
-                'local_x': self.utm_x_y_ref_position[2],
-                'local_y': self.utm_x_y_ref_position[3],
+                'local_x': round(self.utm_x_y_ref_position[2], 3),
+                'local_y': round(self.utm_x_y_ref_position[3], 3),
                 'longitude': self.utm_x_y_ref_position[4],
                 'latitude': self.utm_x_y_ref_position[5],
                 'altitude': self.utm_x_y_ref_position[6],
@@ -124,8 +124,8 @@ class MapPreprocess(Node):
                     row_data_in_csv = {
                         'index':self.raw_index,
                         'heading':self.heading[self.raw_index],
-                        'local_x': self.local_x[self.raw_index],
-                        'local_y': self.local_y[self.raw_index],
+                        'local_x': round(self.local_x[self.raw_index], 3),
+                        'local_y': round(self.local_y[self.raw_index], 3),
                         'longitude': self.longitude[self.raw_index],
                         'latitude': self.latitude[self.raw_index],
                         'altitude': self.altitude[self.raw_index],

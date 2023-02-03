@@ -142,7 +142,7 @@ NeZha: 顺时针为负
 
 1. 在头文件里面有个 “int preference_lane_id =0; // TODO: 这个0可以调节车辆的期望车道”，这个变量在两个包里面都有，如果要改，两个包里面要一起改。
 
-
+# 建立Roadrunner地图的时候录制的 CSV 文件信息
 2023_02_01_09_19_01_ins_data_map 长直道
 2023_02_01_09_24_25_ins_data_map 二餐厅东边道路
 2023_02_01_09_29_26_ins_data_map 外环路
@@ -150,3 +150,66 @@ NeZha: 顺时针为负
 2023_02_01_09_46_51_ins_data_map 三餐厅东面直路到学服
 2023_02_01_09_50_36_ins_data_map 五餐厅东，包围电院，含凯旋门正对面小弧线
 2023_02_01_09_58_16_ins_data_map 北三门进来
+
+# carla 里面方向盘左正右负
+
+# PID & Foxy 启动流程
+1. cd /carla-ros-bridge
+2. source source_env.sh 
+3. colcon build
+4. source source_env.sh
+5. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+6. 在新的终端里面: ros2 run carla_zww_pid_controller carla_zww_pid_controller_node
+
+# Stanley & Foxy 需要完成的内容
+1. src/ros-bridge/carla_zww_projects/carla_zww_stanley_pid_controller/src/stanley_controller.cpp 中的 TODO 部分
+
+# Stanley & Foxy 启动流程
+1. cd /carla-ros-bridge
+2. source source_env.sh
+3. colcon build
+4. source source_env.sh
+5. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+6. 在新的终端里面: ros2 run carla_zww_stanley_pid_controller carla_zww_stanley_pid_controller_node
+
+# LQR & Foxy 需要完成的内容
+1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_lqr_pid_controller/src/lqr_controller.cpp 中的 TODO 部分
+
+# LQR & Foxy 启动流程
+1. cd /carla-ros-bridge
+2. source source_env.sh
+3. colcon build
+4. source source_env.sh
+5. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+6. 在新的终端里面: ros2 launch carla_zww_lqr_pid_controller lqr_launch.py
+
+# MPC & Foxy 需要完成的内容
+1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_mpc_controller/src/mpc_controller.cpp 中的 TODO 部分
+
+# MPC & Foxy 启动流程
+1. cd /carla-ros-bridge
+2. source source_env.sh
+3. colcon build
+4. source source_env.sh
+5. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+6. 在新的终端里面: ros2 launch carla_zww_mpc_controller mpc_launch.py
+
+# Lattice & Foxy 启动流程
+1. 需要完成部分： lattice_planner.cpp 中的TODO部分
+2. cd /carla-ros-bridge
+3. source source_env.sh
+4. colcon build
+5. source source_env.sh
+6. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+7. 在新的终端里面: ros2 launch carla_zww_lattice_planner lattice_launch.py
+
+# A* & Foxy 启动流程
+1. cd /carla-ros-bridge
+2. source source_env.sh
+3. colcon build
+4. source source_env.sh
+5. ros2 launch carla_zww_a_star_planner a_star_planner.launch.py
+## 作业要求
+1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_a_star_planner/src/Astar_searcher.cpp 中的 TODO部分
+2. 对比分析不同的启发函数的计算耗时，每次运行后在终端内会打印计算时间，需要截图放入文档中上传。
+![alt](./2022-11-06_15-06.png)

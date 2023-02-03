@@ -1,2 +1,2 @@
-source /opt/ros/galactic/setup.bash
+source /opt/ros/foxy/setup.bash
 source install/setup.bash
