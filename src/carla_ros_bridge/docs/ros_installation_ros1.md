@@ -74,7 +74,7 @@ __1.__ Create a catkin workspace:
 __2.__ Clone the ROS Bridge repository and submodules:
 ```sh
     cd ~/carla-ros-bridge
-    git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git catkin_ws/src/ros-bridge
+    git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git catkin_ws/src/carla_ros_bridge
 ```
 
 __5.__ Set up the ROS environment according to the ROS version you have installed:

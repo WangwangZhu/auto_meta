@@ -51,6 +51,7 @@ class GlobalPathVisualization : public rclcpp::Node
 {
 public:
     nav_msgs::msg::Path global_path;
+    nav_msgs::msg::Path global_path_offset;
     geometry_msgs::msg::PoseStamped this_pose_stamped;
 
     vector<double> velocity_curve;
@@ -64,6 +65,9 @@ public:
     vector<double> global_path_y_down_sample; // ptsy
     vector<double> global_path_psi_down_sample; // ptsy
     vector<double> global_path_s_down_sample;
+
+    vector<double> global_path_x_offset; // ptsx
+    vector<double> global_path_y_offset; // ptsy
 
     
     visualization_msgs::msg::MarkerArray global_path_multi_lines;

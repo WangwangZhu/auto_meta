@@ -32,7 +32,7 @@ __1.__ Set up the project directory and clone the ROS bridge repository and subm
 
 ```sh
     mkdir -p ~/carla-ros-bridge && cd ~/carla-ros-bridge
-    git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git src/ros-bridge
+    git clone --recurse-submodules https://github.com/carla-simulator/ros-bridge.git src/carla_ros_bridge
 ```
 
 __2.__ Set up the ROS environment:

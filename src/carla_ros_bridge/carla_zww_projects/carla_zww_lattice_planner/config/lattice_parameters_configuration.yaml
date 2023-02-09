@@ -1,6 +1,6 @@
 lattice_mpc_lateral_longitudinal:
   ros__parameters:
-    roadmap_path : "src/ros-bridge/carla_zww_projects/carla_zww_lattice_planner/data/2022_12_14_19_35_09_ins_data_map_after_preprocess.csv" 
+    roadmap_path : "src/carla_ros_bridge/carla_zww_projects/carla_zww_lattice_planner/data/2022_12_14_19_35_09_ins_data_map_after_preprocess.csv" 
     target_speed : 5.0
     goal_tolerance : 0.5
     speed_P : 0.16

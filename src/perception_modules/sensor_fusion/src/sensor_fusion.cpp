@@ -22,11 +22,14 @@ double inline max_sensor(double a, double b) { return (a > b) ? a : b; }
 **************************************************************************************'''*/
 SensorFusion::SensorFusion() : Node("sensor_fusion_publisher")
 {
-    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    // sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
 
     sensor_fusion_global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&SensorFusion::sensor_fusion_global_path_callback, this, _1));
 
-    sensor_fusion_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&SensorFusion::sensor_fusion_iteration_callback, this));
+    // sensor_fusion_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&SensorFusion::sensor_fusion_iteration_callback, this));
+
+    sensor_fusion_objects_from_carla = this->create_subscription<derived_object_msgs::msg::ObjectArray>("/carla/objects", qos_, std::bind(&SensorFusion::sensor_fusion_iteration_callback, this, _1));
 
     sensor_fusion_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("sensor_fusion_iteration_duration", qos_);
 
@@ -154,8 +157,7 @@ void SensorFusion::sensor_fusion_object_pack(double object_s,
                                              double object_color_a,
                                              visualization_msgs::msg::MarkerArray &sensor_fusion_results_bounding_box_msg,
                                              visualization_msgs::msg::MarkerArray &sensor_fusion_results_label_msg,
-                                             string object_frame_id)
-{
+                                             string object_frame_id){
     visualization_msgs::msg::Marker sensor_fusion_single_result_bounding_box_msg;
     visualization_msgs::msg::Marker sensor_fusion_single_result_label_msg;
     // 封装 bounding box
@@ -226,287 +228,57 @@ void SensorFusion::sensor_fusion_object_pack(double object_s,
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void SensorFusion::sensor_fusion_iteration_callback()
+void SensorFusion::sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg)
 {
     rclcpp::Time start_sensor_fusion;
     rclcpp::Time end_sensor_fusion;
     start_sensor_fusion = this->now();
     double iteration_time_length;
-    if (rclcpp::ok())
-    {
-        if (is_global_path_received && is_ins_data_received)
-        {
-            if (first_iterion)
-            {
-                first_iterion = false;
-                run_start_time_stamp = this->now().seconds();
-            }
-            rclcpp::Time now = this->now();
-            double ins_parse_now = now.seconds();
-            // 定位延迟补偿发生在将全局路径转换到车辆坐标系下之前,用来补偿定位信息到达早于被使用而引起的定位误差
-            if (working_mode == 1)
-            {
-                ins_delay = ins_parse_now - ins_data_arrive_at_sensor_fusion_through_callback + 0.005;
-            }
-            if (working_mode == 2)
-            {
-                ins_delay = ins_parse_now - ins_arrive_at_rs232_buffer + 0.005;
-            }
-            /* 全局坐标系下的定位信息延时补偿 */
-            psi = psi + yaw_rate * ins_delay;
-            cout << "v_longitudinal: " << v_longitudinal << ", ins_delay:" << ins_delay << ", v_lateral:" << v_lateral << ", psi:" << psi * 57.296 << endl;
-            px = px + v_longitudinal * cos(psi) * ins_delay - v_lateral * sin(psi) * ins_delay;
-            py = py + v_longitudinal * sin(psi) * ins_delay + v_lateral * cos(psi) * ins_delay;
-
-            vector<double> car_s_d = cartesian_to_frenet(px, py, psi, global_path_x, global_path_y);
-            car_s = car_s_d[0];
-            car_d = car_s_d[1];
-
+    if (rclcpp::ok()){
+        if (is_global_path_received && is_ins_data_received){   
             // 每个障碍物对应一个marker
             sensor_fusion_results_bounding_box_msg.markers.clear();
             sensor_fusion_results_label_msg.markers.clear();
 
-            // *************** 模拟目标物 1 ***************
-            double object_s = 63.660;
-            double object_d = 0.0;
-            double object_length = 4.00; // 纵向
-            double object_width = 1.9;   // 横向
-            double object_height = 1.7;
-            double object_heading = 200;
-            double object_v_X = 0;
-            double object_v_Y = 0;
-            double object_v_yaw_rate = 0;
-            uint object_id = 101;
-            string object_label = "Car" + std::to_string(object_id);
-            string object_frame_id = "odom";
-            double object_line_sacle = 0.04; // TODO:need to be checked
-            double object_label_scale = 0.5;
-            double object_color_r = 1.0;
-            double object_color_g = 0.0;
-            double object_color_b = 0.0;
-            double object_color_a = 1.0;
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
+            for (int i = 0; i < msg->objects.size(); i++){
+                if (distance_two_point(msg->objects[i].pose.position.x, msg->objects[i].pose.position.y, px, py) > 1.0){
+                    cout << "carla objects: " << msg->objects[i].pose.position.x << ", " << msg->objects[i].pose.position.y  << ", " << msg->objects[i].pose.position.z << endl;
 
-            // *************** 模拟目标物 2 ***************
-            object_s = 64.660;
-            object_d = +3.5;
-            object_id += 1; // 102
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
+                    vector<double> car_s_d = cartesian_to_frenet(msg->objects[i].pose.position.x, msg->objects[i].pose.position.y, psi, global_path_x, global_path_y);
+                    car_s = car_s_d[0];
+                    car_d = car_s_d[1];
 
-            // *************** 模拟目标物 3 ***************
-            object_s = 94.660;
-            object_d = 0.0;
-            object_id += 1; // 103
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-            // *************** 模拟目标物 4 ***************
-            object_s = 140.660;
-            object_d = -3.5;
-            object_id += 1; // 104
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 4 ***************
-            // object_s = 90.660;
-            // object_d = -3.5;
-            // object_id += 1;
-            // object_label = "Car" + std::to_string(object_id);
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
-
-            // *************** 模拟目标物 5 ***************
-            object_s = 190.660;
-            object_d = 0.0;
-            object_id += 1; // 105
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 6 ***************
-            object_s = 189.960;
-            object_d = -3.5;
-            object_id += 1;
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 7 ***************
-            object_s = 330;
-            object_d = -3.5;
-            object_id += 1; // 106
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-            // *************** 模拟目标物 8 ***************
-            if (this->now().seconds() - run_start_time_stamp < 50)
-            {
-                object_s = 330;
-                object_d = 0;
-                object_id += 1; // 107
-                object_label = "Car" + std::to_string(object_id);
-                this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                                240, object_v_X, object_v_Y, object_v_yaw_rate,
-                                                object_label, object_id,
-                                                object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                                sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                                object_frame_id);
+                    
+                    double object_s = car_s;
+                    double object_d = car_d;
+                    double object_length = 4.00; // 纵向
+                    double object_width = 1.9;   // 横向
+                    double object_height = 1.7;
+                    double object_heading = 200;
+                    double object_v_X = 0;
+                    double object_v_Y = 0;
+                    double object_v_yaw_rate = 0;
+                    uint object_id = 101 + i;
+                    string object_label = "Car" + std::to_string(object_id);
+                    string object_frame_id = "odom";
+                    double object_line_sacle = 0.04; // TODO:need to be checked
+                    double object_label_scale = 0.5;
+                    double object_color_r = 1.0;
+                    double object_color_g = 0.0;
+                    double object_color_b = 0.0;
+                    double object_color_a = 1.0;
+                    this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+                                                    object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+                                                    object_label, object_id,
+                                                    object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+                                                    sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+                                                    object_frame_id);
+                }
             }
-            // *************** 模拟目标物 9 ***************
-            object_s = 330;
-            object_d = 3.5;
-            object_id += 1; // 108
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 10 ***************
-            object_s = 330;
-            object_d = 7;
-            object_id += 1; // 109
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-            // *************** 模拟目标物 11 ***************
-            object_s = 330;
-            object_d = -7;
-            object_id += 1; // 110
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 7 ***************
-            object_s = 480;
-            object_d = -3.5;
-            object_id += 1; // 111
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-            // // *************** 模拟目标物 8 ***************
-            // object_s = 480;
-            // object_d = 0;
-            // object_id += 1;
-            // object_label = "Car" + std::to_string(object_id);
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
-            // *************** 模拟目标物 9 ***************
-            object_s = 480;
-            object_d = 3.5;
-            object_id += 1;  // 112
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 10 ***************
-            object_s = 480;
-            object_d = 7;
-            object_id += 1; // 113
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-            // *************** 模拟目标物 11 ***************
-            object_s = 480;
-            object_d = -7;
-            object_id += 1;  // 114
-            object_label = "Car" + std::to_string(object_id);
-            this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-                                            object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-                                            object_label, object_id,
-                                            object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-                                            sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-                                            object_frame_id);
-
-            // *************** 模拟目标物 8 ***************
-            // object_s = 530;
-            // object_d = 0;
-            // object_id += 1;
-            // object_label = "Car" + std::to_string(object_id);
-            // object_heading = 258;
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
-
-            // object_s = 530;
-            // object_d = -3.5;
-            // object_id += 1;
-            // object_label = "Car" + std::to_string(object_id);
-            // object_heading = 258;
-            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
-            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
-            //                                 object_label, object_id,
-            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
-            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
-            //                                 object_frame_id);
-
-            sensor_fusion_results_label_publisher->publish(sensor_fusion_results_label_msg);
-            sensor_fusion_results_bounding_box_publisher->publish(sensor_fusion_results_bounding_box_msg); // 存放环境感知结果
+            if (sensor_fusion_results_label_msg.markers.size() > 0){
+                sensor_fusion_results_label_publisher->publish(sensor_fusion_results_label_msg);
+                sensor_fusion_results_bounding_box_publisher->publish(sensor_fusion_results_bounding_box_msg); // 存放环境感知结果
+            }
         }
     }
     end_sensor_fusion = this->now();
@@ -536,3 +308,223 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
 }
+
+
+                // }
+                // if (first_iterion)
+                // {
+                //     first_iterion = false;
+                //     run_start_time_stamp = this->now().seconds();
+                // }
+
+            // object_s = 64.660;
+            // object_d = +3.5;
+            // object_id += 1; // 102
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 3 ***************
+            // object_s = 94.660;
+            // object_d = 0.0;
+            // object_id += 1; // 103
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+            // // *************** 模拟目标物 4 ***************
+            // object_s = 140.660;
+            // object_d = -3.5;
+            // object_id += 1; // 104
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 4 ***************
+            // // object_s = 90.660;
+            // // object_d = -3.5;
+            // // object_id += 1;
+            // // object_label = "Car" + std::to_string(object_id);
+            // // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            // //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            // //                                 object_label, object_id,
+            // //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            // //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            // //                                 object_frame_id);
+
+            // // *************** 模拟目标物 5 ***************
+            // object_s = 190.660;
+            // object_d = 0.0;
+            // object_id += 1; // 105
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 6 ***************
+            // object_s = 189.960;
+            // object_d = -3.5;
+            // object_id += 1;
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 7 ***************
+            // object_s = 330;
+            // object_d = -3.5;
+            // object_id += 1; // 106
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+            // // *************** 模拟目标物 8 ***************
+            // if (this->now().seconds() - run_start_time_stamp < 50)
+            // {
+            //     object_s = 330;
+            //     object_d = 0;
+            //     object_id += 1; // 107
+            //     object_label = "Car" + std::to_string(object_id);
+            //     this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                     240, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                     object_label, object_id,
+            //                                     object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                     sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                     object_frame_id);
+            // }
+            // // *************** 模拟目标物 9 ***************
+            // object_s = 330;
+            // object_d = 3.5;
+            // object_id += 1; // 108
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 10 ***************
+            // object_s = 330;
+            // object_d = 7;
+            // object_id += 1; // 109
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+            // // *************** 模拟目标物 11 ***************
+            // object_s = 330;
+            // object_d = -7;
+            // object_id += 1; // 110
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 7 ***************
+            // object_s = 480;
+            // object_d = -3.5;
+            // object_id += 1; // 111
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+            // // // *************** 模拟目标物 8 ***************
+            // // object_s = 480;
+            // // object_d = 0;
+            // // object_id += 1;
+            // // object_label = "Car" + std::to_string(object_id);
+            // // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            // //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            // //                                 object_label, object_id,
+            // //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            // //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            // //                                 object_frame_id);
+            // // *************** 模拟目标物 9 ***************
+            // object_s = 480;
+            // object_d = 3.5;
+            // object_id += 1;  // 112
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 10 ***************
+            // object_s = 480;
+            // object_d = 7;
+            // object_id += 1; // 113
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+            // // *************** 模拟目标物 11 ***************
+            // object_s = 480;
+            // object_d = -7;
+            // object_id += 1;  // 114
+            // object_label = "Car" + std::to_string(object_id);
+            // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            //                                 object_label, object_id,
+            //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            //                                 object_frame_id);
+
+            // // *************** 模拟目标物 8 ***************
+            // // object_s = 530;
+            // // object_d = 0;
+            // // object_id += 1;
+            // // object_label = "Car" + std::to_string(object_id);
+            // // object_heading = 258;
+            // // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            // //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            // //                                 object_label, object_id,
+            // //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            // //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            // //                                 object_frame_id);
+
+            // // object_s = 530;
+            // // object_d = -3.5;
+            // // object_id += 1;
+            // // object_label = "Car" + std::to_string(object_id);
+            // // object_heading = 258;
+            // // this->sensor_fusion_object_pack(object_s, object_d, object_length, object_width, object_height,
+            // //                                 object_heading, object_v_X, object_v_Y, object_v_yaw_rate,
+            // //                                 object_label, object_id,
+            // //                                 object_line_sacle, object_label_scale, object_color_r, object_color_g, object_color_b, object_color_a,
+            // //                                 sensor_fusion_results_bounding_box_msg, sensor_fusion_results_label_msg,
+            // //                                 object_frame_id);

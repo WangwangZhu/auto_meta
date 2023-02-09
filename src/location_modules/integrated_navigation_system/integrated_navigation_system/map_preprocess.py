@@ -36,7 +36,7 @@ class MapPreprocess(Node):
     def __init__(self,
                  raw_data_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',
-                 raw_data_file_name='2023_02_01_09_58_16_ins_data_map.csv',
+                 raw_data_file_name='2022_12_28_18_33_07_ins_data_map.csv',
                  data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split(
                      '/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/map_after_preprocess/',
                  data_map_sub_name="_after_preprocess.csv",
@@ -67,7 +67,7 @@ class MapPreprocess(Node):
         self.raw_index = 1
         self.ref_index = 0
         self.utm_x_y_ref_position = [self.raw_index, self.heading[0], self.local_x[0], self.local_y[0], self.longitude[0], self.latitude[0], self.altitude[0]]
-        self.dis_threshold = 6  # 单位是m 距离差值的阈值
+        self.dis_threshold = 0.6  # 单位是m 距离差值的阈值
         self.headers = ['index', 'heading', 'local_x', 'local_y', 'longitude', 'latitude', 'altitude', "s"]
         
     def cal_absolute_distance(self, utm_x_ref, utm_y_ref, utm_x_raw, utm_y_raw):

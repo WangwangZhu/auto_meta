@@ -46,10 +46,10 @@ void GlobalPathVisualization::global_path_publisher_timer_callback() {
     {
         RCLCPP_INFO(this->get_logger(), "publishing global path");
 
-        global_path.header.stamp = this->get_clock()->now();
-        global_path.header.frame_id = "odom";
+        global_path_offset.header.stamp = this->get_clock()->now();
+        global_path_offset.header.frame_id = "odom";
         
-        global_path_publisher_->publish(global_path);
+        global_path_publisher_->publish(global_path_offset);
     }
 }
 
@@ -175,40 +175,67 @@ void GlobalPathVisualization::load_map()
             cout.precision(12);
             vector<double> temp_values = string_split<double>(value, ',');
 
-            this_pose_stamped.header.frame_id = "odom";             
-            this_pose_stamped.header.stamp = this->get_clock()->now();
-            this_pose_stamped.pose.position.x = temp_values[2];
-            this_pose_stamped.pose.position.y = temp_values[3];
-            this_pose_stamped.pose.position.z = 0;
-            this_pose_stamped.pose.orientation.x = 0;
-            this_pose_stamped.pose.orientation.y = 0;
-            this_pose_stamped.pose.orientation.z = 0;
-            this_pose_stamped.pose.orientation.w = temp_values[7]; // 这里实际上是放的frenet坐标系的S
+            // this_pose_stamped.header.frame_id = "odom";             
+            // this_pose_stamped.header.stamp = this->get_clock()->now();
+            // this_pose_stamped.pose.position.x = temp_values[2];
+            // this_pose_stamped.pose.position.y = temp_values[3];
+            // this_pose_stamped.pose.position.z = 0;
+            // this_pose_stamped.pose.orientation.x = 0;
+            // this_pose_stamped.pose.orientation.y = 0;
+            // this_pose_stamped.pose.orientation.z = 0;
+            // this_pose_stamped.pose.orientation.w = temp_values[7]; // 这里实际上是放的frenet坐标系的S
             
-            global_path.poses.push_back(this_pose_stamped);
+            // global_path.poses.push_back(this_pose_stamped);
             
             global_path_psi.push_back(temp_values[1]);
             global_path_x.push_back(temp_values[2]);
             global_path_y.push_back(temp_values[3]);
             global_path_s.push_back(temp_values[7]);
 
-            if (i % 8 == 0){
-                global_path_x_down_sample.push_back(temp_values[2]); // ptsx
-                global_path_y_down_sample.push_back(temp_values[3]); // ptsy
-                global_path_psi_down_sample.push_back(temp_values[1]); // ptsy
-                global_path_s_down_sample.push_back(temp_values[7]);
-            }
+            
+
+            // if (i % 8 == 0){
+            //     global_path_x_down_sample.push_back(temp_values[2]); // ptsx
+            //     global_path_y_down_sample.push_back(temp_values[3]); // ptsy
+            //     global_path_psi_down_sample.push_back(temp_values[1]); // ptsy
+            //     global_path_s_down_sample.push_back(temp_values[7]);
+            // }
             i++;
         }
     }
+    for (int i = 1; i < global_path_x.size()-20; i++){
+        vector<double> line_s_d = cartesian_to_frenet(global_path_x[i], global_path_y[i], global_path_psi[i]/57.29578, global_path_x, global_path_y);
+        // vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + 4/2.0, global_path_s, global_path_x, global_path_y); 
+        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] , global_path_s, global_path_x, global_path_y); 
+        cout << "line_x_y~~~~~~~~~~~~~~~~~~~~~~~~~~: " << line_x_y[0] << ", " << line_x_y[1] << endl;
 
-    GlobalPathVisualization::generate_road_structure(-1.75, 323, 0);
-    GlobalPathVisualization::generate_road_structure(-1.75 -3.5, 324, 0);
-    GlobalPathVisualization::generate_road_structure(-1.75 -3.5 * 2, 325, 1);
+        this_pose_stamped.header.frame_id = "odom";             
+        this_pose_stamped.header.stamp = this->get_clock()->now();
+        this_pose_stamped.pose.position.x = line_x_y[0];
+        this_pose_stamped.pose.position.y = line_x_y[1];
+        this_pose_stamped.pose.position.z = 0;
+        this_pose_stamped.pose.orientation.x = 0;
+        this_pose_stamped.pose.orientation.y = 0;
+        this_pose_stamped.pose.orientation.z = 0;
+        this_pose_stamped.pose.orientation.w = global_path_s[i]; // 这里实际上是放的frenet坐标系的S
+        
+        global_path_offset.poses.push_back(this_pose_stamped);
 
-    GlobalPathVisualization::generate_road_structure(1.75, 334, 0);
-    GlobalPathVisualization::generate_road_structure(1.75 + 3.5, 335, 0);
-    GlobalPathVisualization::generate_road_structure(1.75 + 3.5 * 2, 336, 1);
+        if (i % 8 == 0 || i == 1){
+            global_path_x_down_sample.push_back(line_x_y[0]); // ptsx
+            global_path_y_down_sample.push_back(line_x_y[1]); // ptsy
+            global_path_psi_down_sample.push_back(global_path_psi[i]); // ptsy
+            global_path_s_down_sample.push_back(global_path_s[i]);
+        }
+    }
+
+    GlobalPathVisualization::generate_road_structure(-2, 323, 0);
+    GlobalPathVisualization::generate_road_structure(-2 - 4, 324, 1);
+    // GlobalPathVisualization::generate_road_structure(-1.75 - 3.5 * 2, 325, 1);
+
+    GlobalPathVisualization::generate_road_structure(2, 334, 1);
+    // GlobalPathVisualization::generate_road_structure(1.75 + 3.5, 335, 1);
+    // GlobalPathVisualization::generate_road_structure(1.75 + 3.5 * 2, 336, 1);
     load_map_done_global = true;
 }
 

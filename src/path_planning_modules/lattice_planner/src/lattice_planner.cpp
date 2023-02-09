@@ -175,7 +175,7 @@ void LatticePlanner::sensor_fusion_results_label_callback(visualization_msgs::ms
 - Comments    : None
 **************************************************************************************'''*/
 void LatticePlanner::fsm_behavior_decision_makeing_callback(custom_interfaces::msg::FSMDecisionResults::SharedPtr msg){
-    RCLCPP_INFO(this->get_logger(), "~~~~~~~~~~~~~~~~~~~receiveing behavior decision results: %d", msg->target_behavior);
+    RCLCPP_INFO(this->get_logger(), "receiveing behavior decision results: %d", msg->target_behavior);
     this->current_velocity_behavior = msg->target_behavior;
     this->target_lane = msg->target_lane;
 }
@@ -222,46 +222,6 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
             cout << "Current Position in Frenet Coordinate, s: " << car_s << ", d: " << car_d << endl;
 
-            // // 找到合适的未来一段峰值速度
-            // // 从全局路径中，找到距离当前位置最近的前方的点。
-            // size_t former_point_of_current_position = 0;
-            // double distance_car_s = v_longitudinal * 6 + 16; // TODO 可以让车提前感知到前方有弯，提前减速
-            // for (size_t i = 0; i < global_path_s.size(); i++) {
-            //     if (global_path_s[i] - car_s >= -10) // 除了前方的点，车辆后面10m的点也计入统计曲率的范围
-            //     {
-            //         former_point_of_current_position = i;
-            //         break;
-            //     }            
-            // }
-            // vector<double> cal_curvature_x;
-            // vector<double> cal_curvature_y;
-            // vector<double> cal_heading_ratio;
-            // vector<double> cal_heading_ratio_diff;
-
-            // for (size_t i = former_point_of_current_position; global_path_s[i] <= car_s + distance_car_s; i++) {
-            //     cal_curvature_x.push_back(global_path_x[i]);
-            //     cal_curvature_y.push_back(global_path_y[i]);
-            // }
-            // for (size_t j = 1; j < cal_curvature_x.size(); j++) {
-            //     cal_heading_ratio.push_back(atan2(cal_curvature_y[j] - cal_curvature_y[j-1], cal_curvature_x[j] - cal_curvature_x[j-1]));
-            // }
-            // for (size_t k = 1; k < cal_heading_ratio.size()-1; k++) {
-            //     cal_heading_ratio_diff.push_back(fabs(cal_heading_ratio[k+1] - cal_heading_ratio[k-1])); 
-            // }
-            // std::sort(cal_heading_ratio_diff.begin(), cal_heading_ratio_diff.end());
-
-            // double max_heading_ratio_diff = cal_heading_ratio_diff.back();
-            // // cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  " << _max_safe_speed << "  " << max_heading_ratio_diff << endl;
-            // // TODO: 道路曲率影响速度的最小阈值
-            // if (max_heading_ratio_diff < 0.04)  {
-            //     max_heading_ratio_diff = 0;
-            // }
-            // // TODO 控制减速幅值
-            // // _max_safe_speed = _max_safe_speed - max_heading_ratio_diff * 60; 
-            // // _max_safe_speed = _max_safe_speed - max_heading_ratio_diff * 60; 
-            // if (max_safe_speed > 1.5) {
-            //     _max_safe_speed = max_planner(1.5, _max_safe_speed);
-            // }
             double _safety_margin = safety_margin + _max_safe_speed * 2.0;
 
             next_x_vals.clear();
@@ -338,7 +298,7 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
             if (current_velocity_behavior == 9) {
                 if (ref_vel > _max_safe_speed){
-                    ref_vel -= 0.2; // TODO:加速策略，起步策略公用，这里可以更加复杂
+                    ref_vel -= 0.2; // TODO:减速策略，起步策略公用，这里可以更加复杂
                 }
                 else{
                     ref_vel += 0.1;
@@ -372,12 +332,9 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
             // if previous size is almost empty, use the car as starting reference
             // use two points that make the path tangent to the car
-            cout << "current locattion ，，，，，，，，，， " << px << "  " << py << endl;
             if (prev_size < 2) {
-                cout << "22222222222222222222" << endl;
                 double prev_car_x = px - cos(psi);
                 double prev_car_y = py - sin(psi);
-                cout << "78787::" << prev_car_x << endl;
 
                 ptsx.push_back(prev_car_x);
                 ptsx.push_back(px);
@@ -387,14 +344,11 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             }
             // 新生成路径的时候，复用上一次迭代生成的路径，复用的点是上次生成的路径位于主车前方的两个点
             else {
-                cout << "333333333333333333333   " << prev_size << endl;
                 
                 for (int j = 1; j < next_x_vals_previous.size(); j++)
                 {
                     resuse_length += distance_two_point(next_x_vals_previous[j], next_y_vals_previous[j], next_x_vals_previous[j - 1], next_y_vals_previous[j - 1]);
-                    cout << "next_x_vals_previous: " << next_x_vals_previous[j] << "  " << next_y_vals_previous[j] << "  " << resuse_length << endl;
                 }
-                cout << "*************** resuse length " << resuse_length << "***************" << endl;
 
                 // redefine reference state
                 
@@ -414,22 +368,8 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
                 ref_index_in_front_of_host_vehicle = min_planner(prev_size, current_index_in_last_iteration_path + 36);
                 if (prev_size > 0){
-                    // car_s = next_s_vals_previous.back(); // car s represent the end point in the last path planning module iteration // car_s represent the future of our host car
-                    // 复用10个点
                     car_s = next_s_vals_previous[ref_index_in_front_of_host_vehicle]; // car s represent the end point in the last path planning module iteration // car_s represent the future of our host car
                 }
-                // ref_x = next_x_vals_previous[current_index_in_last_iteration_path];
-                // ref_y = next_y_vals_previous[current_index_in_last_iteration_path];
-                // // cout << "%%%%%%%%%%%%%%%%%%%%%%%%% : " <<  current_index_in_last_iteration_path << "   " << ref_x << "  " << ref_y << "  " << next_x_vals_previous[0]<< endl;
-                // double ref_x_future = next_x_vals_previous[current_index_in_last_iteration_path + 1];
-                // double ref_y_future = next_y_vals_previous[current_index_in_last_iteration_path + 1];
-
-                // ref_x = next_x_vals_previous[prev_size - 1];
-                // ref_y = next_y_vals_previous[prev_size - 1];
-                // double ref_x_prev = next_x_vals_previous[prev_size - 2];
-                // double ref_y_prev = next_y_vals_previous[prev_size - 2];
-                
-                cout << "current_index_in_last_iteration_path------------ " << current_index_in_last_iteration_path << endl;
 
                 ref_x = next_x_vals_previous[ref_index_in_front_of_host_vehicle - 1];
                 ref_y = next_y_vals_previous[ref_index_in_front_of_host_vehicle - 1];
@@ -441,26 +381,10 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 
                 ptsx.push_back(ref_x_prev);
                 ptsx.push_back(ref_x);
-                // ptsx.push_back(ref_x_future);
 
                 ptsy.push_back(ref_y_prev);
                 ptsy.push_back(ref_y);
-                // ptsy.push_back(ref_y_future);
 
-                // int resuse_number_of_previous_last = min_planner(60, 16 + 60 / v_longitudinal); // TODO:这个值跟着速度变 12
-                // // int resuse_number_of_previous_last = 20; // TODO:这个值跟着速度变 12
-                // for (int i = 2; i < next_x_vals_previous.size(); i++) // 因为之前里面已经有两个点了
-                // // for (int i = 2; i < resuse_number_of_previous_last; i++) // 因为之前里面已经有两个点了
-                // {
-                //     ptsx.push_back(next_x_vals_previous[current_index_in_last_iteration_path + i]);
-                //     ptsy.push_back(next_y_vals_previous[current_index_in_last_iteration_path + i]);
-                // }
-                
-                // for (uint j = 1; j < ptsx.size(); j++)
-                // {
-                //     resuse_length += distance_two_point(ptsx[j], ptsy[j], ptsx[j - 1], ptsy[j - 1]);
-                //     cout << "calculate resuse length:: " << ptsx[j] << ptsy[j] << ptsx[j - 1] << ptsy[j - 1] << endl;
-                // }
             }
             vector<double> next_wp0;
             vector<double> next_wp1;
@@ -468,50 +392,18 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             vector<double> next_wp3;
             vector<double> next_wp4;
             vector<double> next_wp5;
-            // cout << "*************** " << fabs(car_d - lane * lane_width / 2)   << "  " <<   fabs(lane * lane_width / 2) << endl;
-
-            // next_wp0 = frenet_to_cartesian(car_s + max_planner(5.5, (v_longitudinal * 3.5 + 6.5)) * 0.5, (lane * lane_width * 0.5), global_path_s, global_path_x, global_path_y); // TODO:这个值跟着速度变
             // 修改这里可以改变变道的激进程度
             next_wp1 = frenet_to_cartesian(car_s + max_planner(5, (1 + v_longitudinal * 2.4)), (lane * lane_width), global_path_s, global_path_x, global_path_y); 
-            // next_wp2 = frenet_to_cartesian(car_s + max_planner(5.7, (v_longitudinal * 4. + 7 - max_heading_ratio_diff * 40)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
             next_wp3 = frenet_to_cartesian(car_s + max_planner(6, (2 + v_longitudinal * 2.4)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
-            // next_wp4 = frenet_to_cartesian(car_s + max_planner(6.1, (v_longitudinal * 4. + 9 - max_heading_ratio_diff * 40)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
             next_wp5 = frenet_to_cartesian(car_s + max_planner(7, (3 + v_longitudinal * 2.4)), (lane * lane_width), global_path_s, global_path_x, global_path_y);
 
-            // next_wps_previous.push_back(next_wp1);
-            // next_wps_previous.push_back(next_wp3);
-            // next_wps_previous.push_back(next_wp5);
-
-            // next_ss_previous.push_back(car_s + max_planner(5, (1 + v_longitudinal * 2.4)));
-            // next_ss_previous.push_back(car_s + max_planner(6, (2 + v_longitudinal * 2.4)));
-            // next_ss_previous.push_back(car_s + max_planner(7, (3 + v_longitudinal * 2.4)));
-
-            // for (int i = 0; i < next_ss_previous.size(); i++){
-            //     if (next_ss_previous[i] < (car_s+10)) {
-            //         next_ss_previous.erase(next_ss_previous.begin());
-            //         next_wps_previous.erase(next_wps_previous.begin());
-            //     }
-            // }
-            // cout << "next_wps_previous  7&&&&&&&&&&" << next_ss_previous.size() << endl;
-
-            // ptsx.push_back(next_wp0[0]);
             ptsx.push_back(next_wp1[0]);
-            // ptsx.push_back(next_wp2[0]);
             ptsx.push_back(next_wp3[0]);
-            // ptsx.push_back(next_wp4[0]);
             ptsx.push_back(next_wp5[0]);
 
-            // ptsy.push_back(next_wp0[1]);
             ptsy.push_back(next_wp1[1]);
-            // ptsy.push_back(next_wp2[1]);
             ptsy.push_back(next_wp3[1]);
-            // ptsy.push_back(next_wp4[1]);
             ptsy.push_back(next_wp5[1]);
-
-            // for (int i = 0; i < next_ss_previous.size(); i++){
-            //     ptsx.push_back(next_wps_previous[i][0]);
-            //     ptsy.push_back(next_wps_previous[i][1]);
-            // }
 
             // 从世界坐标系变换到车辆坐标系(不严格是车辆坐标系，坐标原点修正到了历史轨迹同轴线上)
             for (uint i = 0; i < ptsx.size(); i++)
@@ -544,21 +436,11 @@ void LatticePlanner::planner_tracking_iteration_callback() {
                 }
             }
             
-
-            cout << "重复使用的点的数量： " << prev_size << endl;
-
             // 每次生成的路径的长度，这个target_dist的值一定不能小于MPC里面的reference_path_length的长度，否则跟踪控制器会震荡
             // 如果要增加重复使用的历史轨迹长度，这里需要把20加大，假如复用40个点，那第一次的规划结果里应该有不少于40个点，这样才行，考虑将复用的路径长度做成和速度成比例的。TODO:
             double target_x = max_planner(20, v_longitudinal * 3 + 10); // 相当于每次规划都是只规划到前方20m的位置 // TODO:这个值跟着速度变
             double target_y = s(target_x);
             double target_dist = sqrt(pow(target_x, 2) + pow(target_y, 2));
-
-            cout << "target_x  9999999999999999999999999999: " << target_x << endl;
-            cout << "target_y  9999999999999999999999999999: " << target_y << endl;
-            cout << "target_dist  9999999999999999999999999999: " << target_dist << endl;
-
-            // 根据当前车辆的期望速度，可以算得到 N 为在目标距离内，生成的点的路径点的数量
-            // double N = floor(min_planner((target_dist / (0.1 * (ref_vel + 0.01))), 300.0)); // 期望速度单位 m/s // 刚开始的时候速度很低，会导致点特点多
 
             double x_add_on = 0;
             // file up the rest of our path planner after filling it with previous points, here we will always output 50 points
@@ -567,9 +449,7 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             double y_point_last;
             double point_distance_x = 0.5;
             double N = target_dist / point_distance_x;
-            // for (int i = 0; i < 50; i++) {
             for (int i = 0; i < N; i++) {
-                // cout << "iiiiiiiiiiiiiiiiiiiiiiiiiii: " << i << endl;
                 x_point = x_add_on + point_distance_x;
                 double y_point = s(x_point);
                 x_add_on = x_point;
@@ -598,9 +478,7 @@ void LatticePlanner::planner_tracking_iteration_callback() {
                     double future_heading = atan2(y_point - y_point_last, x_point - x_point_last);
                     vector<double> s_d = cartesian_to_frenet(x_point, y_point, future_heading, global_path_x, global_path_y);
                     double _s = s_d[0];
-                    // double d = s_d[1];
                     next_s_vals.push_back(_s);
-                    cout << "&&&&*&1123232211111111111111  " << ref_vel << endl;
                     next_v_vals.push_back(ref_vel);
                 }
                 x_point_last = x_point;
@@ -608,14 +486,8 @@ void LatticePlanner::planner_tracking_iteration_callback() {
                 
                 
             }
-            // cout << next_x_vals.size() << " &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl;
-            // cout << next_s_vals.size() << "   1111111111111111111" << endl;
-
-
             // TODO:打包消息发出去, 规划器发出的结果是在全局笛卡尔坐标系中的
-            
             lattice_planner_path_id ++;
-
             lattice_planner_path_cardesian.id = lattice_planner_path_id;
             lattice_planner_path_cardesian.header.stamp = this->get_clock()->now();
             lattice_planner_path_cardesian.header.frame_id = "odom";
@@ -626,12 +498,12 @@ void LatticePlanner::planner_tracking_iteration_callback() {
             lattice_planner_path_cardesian.scale.x = 1.6;
             lattice_planner_path_cardesian.scale.y = 1.6;
             lattice_planner_path_cardesian.scale.z = 1.6;
-            float rrrr = 60.0/255.0;
-            float gggg = 179.0/255.0;
-            float bbbb = 113.0/255.0;
-            lattice_planner_path_cardesian.color.r = rrrr/2;
-            lattice_planner_path_cardesian.color.g = gggg/2;
-            lattice_planner_path_cardesian.color.b = bbbb/2;
+            float rrrr =  60.0 / 255.0;
+            float gggg = 179.0 / 255.0;
+            float bbbb = 113.0 / 255.0;
+            lattice_planner_path_cardesian.color.r = rrrr / 2;
+            lattice_planner_path_cardesian.color.g = gggg / 2;
+            lattice_planner_path_cardesian.color.b = bbbb / 2;
             lattice_planner_path_cardesian.color.a = 1;
 
             lattice_planner_path_cardesian.points.clear();
@@ -686,13 +558,9 @@ void LatticePlanner::planner_tracking_iteration_callback() {
 int main(int argc, char **argv)
 {
     // RCLCPP_INFO(LOGGER, "Initialize node");
-
     rclcpp::init(argc, argv);
-
     auto n = std::make_shared<LatticePlanner>(); // n指向一个值初始化的 MpcTrajectoryTrackingPublisher
-
     rclcpp::spin(n); // Create a default single-threaded executor and spin the specified node.
-
     rclcpp::shutdown();
     return 0;
 }

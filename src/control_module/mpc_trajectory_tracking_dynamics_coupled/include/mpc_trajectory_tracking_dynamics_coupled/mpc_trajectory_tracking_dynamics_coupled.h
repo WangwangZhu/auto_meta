@@ -35,15 +35,23 @@
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <tf2/transform_datatypes.h>
-#include <tf2/LinearMath/Quaternion.h>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/transform_datatypes.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include "mpc_controller_trajectory_tracking_dynamics_coupled.h"
+#include "common.h"
+
+#include "carla_msgs/msg/carla_ego_vehicle_control.hpp"
+#include "carla_msgs/msg/carla_status.hpp"
+#include "carla_msgs/msg/carla_vehicle_target_velocity.hpp"
+#include "carla_msgs/msg/carla_ego_vehicle_status.hpp"
 
 using namespace std::chrono_literals; // 表示时间长度的命名空间
 using std::cout;
@@ -59,11 +67,11 @@ using Eigen::VectorXd;
 # FileFunction: 
 # Comments    :
 *****************************************************************************************************'''*/
-class MpcTrajectoryTrackingPublisher : public rclcpp::Node
+class MpcTrajectoryTracking : public rclcpp::Node
 {
 public:
-    MpcTrajectoryTrackingPublisher();
-    ~MpcTrajectoryTrackingPublisher();
+    MpcTrajectoryTracking();
+    ~MpcTrajectoryTracking();
     void mpc_tracking_iteration_callback();
     void ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); // 后面加 const表示函数不可以修改class的成员
     void eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg);
@@ -96,9 +104,35 @@ public:
     rclcpp::Subscription<chassis_msg::msg::WVCULongitudinalStatus>::SharedPtr vehicle_longitudinal_status_feedback_subscription;
     void vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg);
     chassis_msg::msg::WVCULongitudinalStatus::SharedPtr vehicle_longitudinal_feedback_msg;
+    
 
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr mpc_planner_frenet_path_subscription;
     rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr mpc_planner_cartesian_path_subscription;
+
+    rclcpp::Publisher<carla_msgs::msg::CarlaEgoVehicleControl>::SharedPtr carla_vehicle_control_publisher;
+    carla_msgs::msg::CarlaEgoVehicleControl carla_control_cmd;
+
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr carla_localization_data_subscription;
+    void carla_odom_callback(nav_msgs::msg::Odometry::SharedPtr msg);
+
+    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr carla_lacalization_data_imu_subscription;
+    void carla_imu_callback(sensor_msgs::msg::Imu::SharedPtr msg);
+
+    rclcpp::Subscription<carla_msgs::msg::CarlaEgoVehicleStatus>::SharedPtr carla_status_subscription;
+    void carla_vehicle_status_callback(carla_msgs::msg::CarlaEgoVehicleStatus::SharedPtr msg);
+
+    rclcpp::Publisher<carla_msgs::msg::CarlaVehicleTargetVelocity>::SharedPtr vehicle_control_target_velocity_publisher;
+    carla_msgs::msg::CarlaVehicleTargetVelocity vehicle_control_target_velocity;
+
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr history_path_visualization_publisher;
+    nav_msgs::msg::Path history_path;
+    geometry_msgs::msg::PoseStamped history_path_points;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_gps_vehicle;
+
+    geometry_msgs::msg::TransformStamped odom_translation;
+
+    VehicleState vehicleState_;
+    bool firstRecord_ = true;
 
     mpc_controller mpc;
     tf2::Quaternion ins_quaternion_transform;
@@ -120,6 +154,9 @@ public:
     double mpc_control_step_length_double;
 
     bool mpc_tracking_enable_bool;
+
+    double old_steer_value;
+    double old_throttle_value;
 
     int mpc_cte_weight_int;
     int mpc_epsi_weight_int;

@@ -64,7 +64,7 @@ VehicleControlPublisher::VehicleControlPublisher()
 
 
     // 读取参考线路径
-    std::ifstream infile("src/ros-bridge/carla_zww_projects/carla_zww_stanley_pid_controller/data/2022_09_29_16_27_08_ins_data_map_after_preprocess.csv", ios::in);    //将文件流对象与文件连接起来
+    std::ifstream infile("src/carla_ros_bridge/carla_zww_projects/carla_zww_stanley_pid_controller/data/2022_09_29_16_27_08_ins_data_map_after_preprocess.csv", ios::in);    //将文件流对象与文件连接起来
     assert(infile.is_open());                                                                                                                      //若失败,则输出错误消息,并终止程序运行
     
     while (getline(infile, _line)) {

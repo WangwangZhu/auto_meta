@@ -143,6 +143,7 @@ NeZha: 顺时针为负
 1. 在头文件里面有个 “int preference_lane_id =0; // TODO: 这个0可以调节车辆的期望车道”，这个变量在两个包里面都有，如果要改，两个包里面要一起改。
 
 # 建立Roadrunner地图的时候录制的 CSV 文件信息
+
 2023_02_01_09_19_01_ins_data_map 长直道
 2023_02_01_09_24_25_ins_data_map 二餐厅东边道路
 2023_02_01_09_29_26_ins_data_map 外环路
@@ -154,17 +155,20 @@ NeZha: 顺时针为负
 # carla 里面方向盘左正右负
 
 # PID & Foxy 启动流程
+
 1. cd /carla-ros-bridge
-2. source source_env.sh 
+2. source source_env.sh
 3. colcon build
 4. source source_env.sh
 5. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
 6. 在新的终端里面: ros2 run carla_zww_pid_controller carla_zww_pid_controller_node
 
 # Stanley & Foxy 需要完成的内容
-1. src/ros-bridge/carla_zww_projects/carla_zww_stanley_pid_controller/src/stanley_controller.cpp 中的 TODO 部分
+
+1. src/carla_ros_bridge/carla_zww_projects/carla_zww_stanley_pid_controller/src/stanley_controller.cpp 中的 TODO 部分
 
 # Stanley & Foxy 启动流程
+
 1. cd /carla-ros-bridge
 2. source source_env.sh
 3. colcon build
@@ -173,9 +177,11 @@ NeZha: 顺时针为负
 6. 在新的终端里面: ros2 run carla_zww_stanley_pid_controller carla_zww_stanley_pid_controller_node
 
 # LQR & Foxy 需要完成的内容
-1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_lqr_pid_controller/src/lqr_controller.cpp 中的 TODO 部分
+
+1. carla-ros-bridge/src/carla_ros_bridge/carla_zww_projects/carla_zww_lqr_pid_controller/src/lqr_controller.cpp 中的 TODO 部分
 
 # LQR & Foxy 启动流程
+
 1. cd /carla-ros-bridge
 2. source source_env.sh
 3. colcon build
@@ -184,9 +190,11 @@ NeZha: 顺时针为负
 6. 在新的终端里面: ros2 launch carla_zww_lqr_pid_controller lqr_launch.py
 
 # MPC & Foxy 需要完成的内容
-1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_mpc_controller/src/mpc_controller.cpp 中的 TODO 部分
+
+1. carla-ros-bridge/src/carla_ros_bridge/carla_zww_projects/carla_zww_mpc_controller/src/mpc_controller.cpp 中的 TODO 部分
 
 # MPC & Foxy 启动流程
+
 1. cd /carla-ros-bridge
 2. source source_env.sh
 3. colcon build
@@ -195,6 +203,7 @@ NeZha: 顺时针为负
 6. 在新的终端里面: ros2 launch carla_zww_mpc_controller mpc_launch.py
 
 # Lattice & Foxy 启动流程
+
 1. 需要完成部分： lattice_planner.cpp 中的TODO部分
 2. cd /carla-ros-bridge
 3. source source_env.sh
@@ -204,12 +213,32 @@ NeZha: 顺时针为负
 7. 在新的终端里面: ros2 launch carla_zww_lattice_planner lattice_launch.py
 
 # A* & Foxy 启动流程
+
 1. cd /carla-ros-bridge
 2. source source_env.sh
 3. colcon build
 4. source source_env.sh
 5. ros2 launch carla_zww_a_star_planner a_star_planner.launch.py
+
 ## 作业要求
-1. carla-ros-bridge/src/ros-bridge/carla_zww_projects/carla_zww_a_star_planner/src/Astar_searcher.cpp 中的 TODO部分
+
+1. carla-ros-bridge/src/carla_ros_bridge/carla_zww_projects/carla_zww_a_star_planner/src/Astar_searcher.cpp 中的 TODO部分
 2. 对比分析不同的启发函数的计算耗时，每次运行后在终端内会打印计算时间，需要截图放入文档中上传。
-![alt](./2022-11-06_15-06.png)
+
+# Carla 联合仿真启动流程（纯仿真）
+
+1. cd /home/zww/carla/Unreal/CarlaUE4/Saved/StagedBuilds/LinuxNoEditor + ./CarlaUE4.sh
+2. source ros2_terminal_setup.sh + ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+4. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
+5. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
+6. source ros2_terminal_setup.sh + ros2 launch launch_manager lattice_planner_launch.py
+7. source ros2_terminal_setup.sh + ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+
+# Carla仿真 到 实车测试的改动
+
+1. mpc_parameters_configuration_dynamics_coupled.yaml 中的控制器参数
+2. mpc_parameters_configuration_dynamics_coupled.cpp 中的订阅信号 50 行
+3. sensor_fusion.cpp 中订阅信号 25行
+4. fsm_decision_making.cpp 中定位订阅信号
+5. basic_planner.cpp 中定位订阅信号

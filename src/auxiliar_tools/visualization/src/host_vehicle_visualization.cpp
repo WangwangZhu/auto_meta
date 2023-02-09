@@ -47,7 +47,8 @@ public:
     {
         // odom_publisher = this->create_publisher<nav_msgs::msg::Odometry>("odom", 50);
 
-        sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1));
+        sub = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // carla
+        // sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // nezha
 
         publisher_timer_ = this->create_wall_timer(20ms, std::bind(&HostVehicleVisualization::publisher_timer_callback, this)); // 定时器， 定时调用
     }
@@ -90,8 +91,7 @@ public:
     - Outputs     : None
     - Comments    : None
     **************************************************************************************'''*/
-    void ins_data_receive_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
-    {
+    void ins_data_receive_callback(const nav_msgs::msg::Odometry::SharedPtr msg){
         this->current_position = *msg;
         this->new_message = true;
         RCLCPP_INFO(this->get_logger(),"got imu data at: %f, %f", this->now().seconds(), (double)this->now().nanoseconds()/1000000000);

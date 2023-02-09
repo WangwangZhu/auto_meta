@@ -22,7 +22,9 @@ double inline max_planner(double a, double b) { return (a > b) ? a : b; }
 - Comments    : None
 **************************************************************************************'''*/
 BasicPlanner::BasicPlanner() : Node("basic_planner") {
-    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&BasicPlanner::ins_data_receive_callback, this, _1));
+    // ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&BasicPlanner::ins_data_receive_callback, this, _1));
+    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&BasicPlanner::ins_data_receive_callback, this, _1)); // carla
+
 
     global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&BasicPlanner::global_path_callback, this, _1));
 
@@ -30,8 +32,8 @@ BasicPlanner::BasicPlanner() : Node("basic_planner") {
 
     planner_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("planner_iteration_duration", qos_); // 用于统计planner求解时间的广播器
 
-    basic_planner_path_cartesian_publisher = this->create_publisher<visualization_msgs::msg::Marker>("basic_planner_path_cardesian", qos_);
-    basic_planner_path_frenet_publisher = this->create_publisher<nav_msgs::msg::Path>("basic_planner_path_frenet", qos_);
+    basic_planner_path_cartesian_publisher = this->create_publisher<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_);
+    basic_planner_path_frenet_publisher = this->create_publisher<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_);
 
     sensor_fusion_results_bounding_box_subscription_ = this->create_subscription<visualization_msgs::msg::MarkerArray>("sensor_fusion_results_bounding_box", qos_, std::bind(&BasicPlanner::sensor_fusion_results_bounding_box_callback, this, _1));
 

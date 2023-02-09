@@ -19,9 +19,9 @@ def generate_launch_description():
     # print(get_package_share_directory('carla_zww_a_star_planner'))
     # print(os.getcwd())
     
-    # lqr_parameters_configuration = os.path.join(os.getcwd(), 'src/ros-bridge/carla_zww_projects/carla_zww_a_star_planner/config', 'a_star_parameters_configuration.yaml')
+    # lqr_parameters_configuration = os.path.join(os.getcwd(), 'src/carla_ros_bridge/carla_zww_projects/carla_zww_a_star_planner/config', 'a_star_parameters_configuration.yaml')
 
-    rviz_config_dir = os.path.join(os.getcwd(), 'src/ros-bridge/carla_zww_projects/carla_zww_a_star_planner/rviz', 'a_star_vis.rviz')
+    rviz_config_dir = os.path.join(os.getcwd(), 'src/carla_ros_bridge/carla_zww_projects/carla_zww_a_star_planner/rviz', 'a_star_vis.rviz')
     # print(lqr_parameters_configuration)
 
     

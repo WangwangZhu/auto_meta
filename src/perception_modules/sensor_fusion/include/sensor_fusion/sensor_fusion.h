@@ -1,6 +1,7 @@
 #ifndef SENSOR_FUSION_H
 #define SENSOR_FUSION_H
 
+#include "utils.h"
 #include <vector>
 #include <chrono>     // 时间库
 #include <functional> // 函数模板库
@@ -20,6 +21,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
+#include "derived_object_msgs/msg/object_array.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <geometry_msgs/msg/point.hpp>
@@ -62,7 +64,7 @@ class SensorFusion : public rclcpp::Node
 public:
     SensorFusion();
     ~SensorFusion();
-    void sensor_fusion_iteration_callback(); // 被定时器定时回调
+    void sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg); // 被定时器定时回调
     void sensor_fusion_ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); 
     void sensor_fusion_global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
     void sensor_fusion_object_pack( double object_s, 
@@ -92,6 +94,8 @@ public:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sensor_fusion_ins_data_subscription_;
 
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sensor_fusion_global_path_subscription_;
+
+    rclcpp::Subscription<derived_object_msgs::msg::ObjectArray>::SharedPtr sensor_fusion_objects_from_carla;
 
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr sensor_fusion_iteration_time_publisher; // 广播一次算法迭代耗时
 

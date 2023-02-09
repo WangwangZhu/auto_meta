@@ -45,7 +45,7 @@ def generate_launch_description():
         ),
         launch.actions.DeclareLaunchArgument(
             name='town',
-            default_value='Carla/Maps/SJTU_MAP'
+            default_value='Carla/Maps/sjtu_map_fix_interactions'
         ),
         launch.actions.DeclareLaunchArgument(
             name='timeout',
@@ -66,10 +66,10 @@ def generate_launch_description():
         launch.actions.DeclareLaunchArgument(
             name='spawn_point',
             # default_value='176.1,-195.1,2,0,0,180'
-            default_value='325,-195.4,2,0,0,180'
+            default_value='180.61, 262.91, 2, 0, 0, 200'
         ),
         launch.actions.DeclareLaunchArgument(
-            name='target_speed',
+            name='target_speed',               
             default_value='8.33' # in m/s
         ),
         launch.actions.DeclareLaunchArgument(

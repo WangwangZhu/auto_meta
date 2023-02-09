@@ -3,6 +3,7 @@
 # FileFunction: 产生控制信号发送到 ROS 网络上。
 # Comments    : 
 *****************************************************************************************************'''*/
+
 #include "mpc_trajectory_tracking_dynamics_coupled/spline.h"
 #include "mpc_trajectory_tracking_dynamics_coupled/helpers.h"
 #include "mpc_trajectory_tracking_dynamics_coupled/coordinate_transform.h"
@@ -21,7 +22,7 @@ double inline max_mpc(double a, double b) { return (a > b) ? a : b; }
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_trajectory_tracking_publisher") // 使用初始化列表来初始化字段
+MpcTrajectoryTracking::MpcTrajectoryTracking() : Node("mpc_trajectory_tracking_publisher") // 使用初始化列表来初始化字段
 {
     // vehicle_control_gas_brake_steer_msg.adu_gear_req = 1;
     vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
@@ -29,30 +30,37 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
     vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
     vehicle_control_gear_msg.gear_request = 1;
 
-    // 定义广播器，主题的名字和转发节点里面的主题名字对应。
     mpc_control_signals_gas_brake_steer_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals_gas_brake_steer", qos_);
     mpc_control_signals_gear_publisher = this->create_publisher<chassis_msg::msg::ADUGearRequest>("vehicle_control_signals_gear_request", qos_);
+    carla_vehicle_control_publisher = this->create_publisher<carla_msgs::msg::CarlaEgoVehicleControl>("/carla/ego_vehicle/vehicle_control_cmd", 10);
+    carla_control_cmd.header.stamp = this->now();
+    carla_control_cmd.gear = 1;
+    carla_control_cmd.manual_gear_shift = false;
+    carla_control_cmd.reverse = false;
+    carla_control_cmd.hand_brake = false;
 
     // mpc 求解出来的未来一段时间的路径，以及mpc使用的未来一段时间的参考轨迹点
     mpc_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_reference_path", qos_);
     mpc_output_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("mpc_output_path", qos_);
-
-    fake_velocity_vis_publisher = this->create_publisher<std_msgs::msg::Float32>("fake_velocity", qos_);
-
     mpc_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("mpc_iteration_duration", qos_); // 用于统计MPC求解时间的广播器
-
-    velocity_from_csv_subscription = this->create_subscription<std_msgs::msg::Float32>("velocity_target_from_csv", qos_, std::bind(&MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback, this, _1));
+    vehicle_control_target_velocity_publisher = this->create_publisher<carla_msgs::msg::CarlaVehicleTargetVelocity>("/carla/ego_vehicle/target_velocity", 10);
 
     // mpc 求解所需要的车辆信息
-    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&MpcTrajectoryTrackingPublisher::ins_data_receive_callback, this, _1));
-    eps_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCUHorizontalStatus>("wvcu_horizontal_status", qos_, std::bind(&MpcTrajectoryTrackingPublisher::eps_feedback_callback, this, _1));
-    global_path_subscription = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&MpcTrajectoryTrackingPublisher::global_path_callback, this, _1));
-    mpc_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback, this, _1));
-    mpc_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&MpcTrajectoryTrackingPublisher::palnner_cartesian_path_receive_callback, this, _1));
-    vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&MpcTrajectoryTrackingPublisher::vehicle_status_feedback_callback, this, _1));
+    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&MpcTrajectoryTracking::ins_data_receive_callback, this, _1));
+    eps_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCUHorizontalStatus>("wvcu_horizontal_status", qos_, std::bind(&MpcTrajectoryTracking::eps_feedback_callback, this, _1));
+    global_path_subscription = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&MpcTrajectoryTracking::global_path_callback, this, _1));
+    mpc_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_, std::bind(&MpcTrajectoryTracking::palnner_frenet_path_receive_callback, this, _1));
+    mpc_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&MpcTrajectoryTracking::palnner_cartesian_path_receive_callback, this, _1));
+    vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&MpcTrajectoryTracking::vehicle_status_feedback_callback, this, _1));
+    carla_localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&MpcTrajectoryTracking::carla_odom_callback, this, _1));
+    carla_lacalization_data_imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&MpcTrajectoryTracking::carla_imu_callback, this, _1));
+
+    vehicle_control_target_velocity.header.stamp = this->now();
+    vehicle_control_target_velocity.velocity = 0.0;
+    carla_status_subscription = this->create_subscription<carla_msgs::msg::CarlaEgoVehicleStatus>("/carla/ego_vehicle/vehicle_status", 10, std::bind(&MpcTrajectoryTracking::carla_vehicle_status_callback, this, _1));
 
     // 定频调用求解器，时间必须大于MPC单次求解耗时
-    mpc_iteration_timer_ = this->create_wall_timer(10ms, std::bind(&MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback, this));
+    mpc_iteration_timer_ = this->create_wall_timer(10ms, std::bind(&MpcTrajectoryTracking::mpc_tracking_iteration_callback, this));
 
     // Declare and initialize a parameter, return the effective value.
     this->declare_parameter<double>("vehicle_ref_v", target_v);
@@ -123,7 +131,7 @@ MpcTrajectoryTrackingPublisher::MpcTrajectoryTrackingPublisher() : Node("mpc_tra
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-MpcTrajectoryTrackingPublisher::~MpcTrajectoryTrackingPublisher() {}
+MpcTrajectoryTracking::~MpcTrajectoryTracking() {}
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -131,19 +139,15 @@ MpcTrajectoryTrackingPublisher::~MpcTrajectoryTrackingPublisher() {}
 - Outputs     : None
 - Comments    : 规划器规划结果订阅器，规划器给的结果是全局笛卡尔坐标系下的XY坐标点
 **************************************************************************************'''*/    
-void MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback(nav_msgs::msg::Path::SharedPtr msg){
+void MpcTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::msg::Path::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiving planner frenet_path %lu", msg->poses.size());
-    
     int path_length = msg->poses.size();
-
     planner_path_s.clear();
     planner_path_v.clear();
-
     for (int i = 0; i < path_length; i++){
         planner_path_s.push_back(msg->poses[i].pose.position.x);
         planner_path_v.push_back(msg->poses[i].pose.position.y);
     }
-
     is_planner_frenet_path_received = true;
 }
 
@@ -152,30 +156,15 @@ void MpcTrajectoryTrackingPublisher::palnner_frenet_path_receive_callback(nav_ms
 - Function    : None
 - Inputs      : None
 - Outputs     : None
-- Comments    : None
-**************************************************************************************'''*/
-void MpcTrajectoryTrackingPublisher::target_velocity_from_csv_receive_callback(std_msgs::msg::Float32::SharedPtr msg){
-    // target_v = 5;
-    // target_v = msg->data/3.6;
-
-    // cout << "!@#$%^&*~~~~~~~~~~~~~~~~~~ velocity form CSV : " << target_v << endl;
-}
-
-
-/*'''**************************************************************************************
-- FunctionName: None
-- Function    : None
-- Inputs      : None
-- Outputs     : None
 - Comments    : 
 **************************************************************************************'''*/    
-void MpcTrajectoryTrackingPublisher::vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg){
+void MpcTrajectoryTracking::vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg){
     is_vehicle_longitudinal_received = true;
     vehicle_longitudinal_feedback_msg = msg;
     // RCLCPP_INFO(this->get_logger(), "current gear %d", vehicle_longitudinal_feedback_msg->wvcu_gear_stat);
 }
 
-void MpcTrajectoryTrackingPublisher::palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg){
+void MpcTrajectoryTracking::palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiving planner cartesian path %lu", msg->points.size());
     int path_length = msg->points.size();
     planner_path_x.clear();
@@ -193,7 +182,7 @@ void MpcTrajectoryTrackingPublisher::palnner_cartesian_path_receive_callback(vis
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void MpcTrajectoryTrackingPublisher::global_path_callback(nav_msgs::msg::Path::SharedPtr msg){
+void MpcTrajectoryTracking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiveing global path %lu", msg->poses.size());
     int path_length = msg->poses.size();
     global_path_x.clear();
@@ -204,6 +193,7 @@ void MpcTrajectoryTrackingPublisher::global_path_callback(nav_msgs::msg::Path::S
     }
     is_global_path_received = true;
 }
+
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -211,8 +201,8 @@ void MpcTrajectoryTrackingPublisher::global_path_callback(nav_msgs::msg::Path::S
 - Outputs     : None
 - Comments    : 这个回调函数发出去的psi的值应该是弧度单位的
 **************************************************************************************'''*/
-void MpcTrajectoryTrackingPublisher::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg){
-    if (is_global_path_received){
+void MpcTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg){
+    if (is_global_path_received && working_mode == 2){
         rclcpp::Time now = this->now();
         ins_data_arrive_at_mpc_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
         // RCLCPP_INFO(this->get_logger(),"got imu data at: %f", this->now().seconds()); // this->now().nanoseconds()/1000000000
@@ -243,12 +233,49 @@ void MpcTrajectoryTrackingPublisher::ins_data_receive_callback(nav_msgs::msg::Od
         vector<double> car_s_d = cartesian_to_frenet(px, py, psi, global_path_x, global_path_y);
         car_s = car_s_d[0];
         car_d = car_s_d[1];
-
-        fake_velocity.data = v_longitudinal * 1.05 * 3.6;
-
-        fake_velocity_vis_publisher->publish(fake_velocity);
     }
 }
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : the x direction of msg is longitudinal
+**************************************************************************************'''*/
+void MpcTrajectoryTracking::carla_odom_callback(nav_msgs::msg::Odometry::SharedPtr msg){       
+    if (is_global_path_received && working_mode == 1){        
+        is_ins_data_received = true;
+        is_vehicle_longitudinal_received = true;
+        rclcpp::Time now = this->now();
+        ins_data_arrive_at_mpc_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
+        RCLCPP_INFO(LOGGER, "Got ODOM data!!!");
+        // 将orientation(四元数)转换为欧拉角(roll, pitch, yaw) 
+        tf2::Quaternion quat_tf;
+        tf2::convert(msg->pose.pose.orientation, quat_tf);
+        tf2::Matrix3x3(quat_tf).getRPY(vehicleState_.roll, vehicleState_.pitch, vehicleState_.yaw);
+
+        if (firstRecord_) {
+            vehicleState_.start_point_x = msg->pose.pose.position.x;
+            vehicleState_.start_point_y = msg->pose.pose.position.y;
+            firstRecord_ = false;
+        }
+        vehicleState_.x = msg->pose.pose.position.x;
+        vehicleState_.y = msg->pose.pose.position.y;
+        vehicleState_.vx = msg->twist.twist.linear.x;
+        vehicleState_.vy = msg->twist.twist.linear.y;
+        vehicleState_.vz = msg->twist.twist.linear.z;
+        vehicleState_.velocity = std::sqrt(vehicleState_.vx * vehicleState_.vx + vehicleState_.vy * vehicleState_.vy + vehicleState_.vz * vehicleState_.vz) * 3.6;    // 本车速度
+        vehicleState_.heading = vehicleState_.yaw;
+
+        px = msg->pose.pose.position.x;
+        py = msg->pose.pose.position.y;
+        psi = vehicleState_.yaw;
+        v_longitudinal = msg->twist.twist.linear.x;
+        v_lateral = msg->twist.twist.linear.y;
+        }
+}
+
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -256,7 +283,26 @@ void MpcTrajectoryTrackingPublisher::ins_data_receive_callback(nav_msgs::msg::Od
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void MpcTrajectoryTrackingPublisher::eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg){
+void MpcTrajectoryTracking::carla_imu_callback(sensor_msgs::msg::Imu::SharedPtr msg){
+    if (is_global_path_received && working_mode == 1){
+        RCLCPP_INFO(LOGGER, "Got IMU data!!!");
+        vehicleState_.angular_velocity = msg->angular_velocity.z;                                                                                                // 平面角速度(绕z轴转动的角速度)
+        vehicleState_.acceleration = sqrt(msg->linear_acceleration.x * msg->linear_acceleration.x + msg->linear_acceleration.y * msg->linear_acceleration.y);    // 加速度
+
+        a_longitudinal = msg->linear_acceleration.x;
+        a_lateral = msg->linear_acceleration.y;
+        yaw_rate = msg->angular_velocity.z;
+    }
+}
+
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+void MpcTrajectoryTracking::eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg){
     delta = deg2rad(msg->wvcu_str_whl_ang_stat) / steering_ratio;
     // RCLCPP_INFO(this->get_logger(), "receiving eps angel: %f", delta);
     is_eps_received = true;
@@ -267,15 +313,31 @@ void MpcTrajectoryTrackingPublisher::eps_feedback_callback(chassis_msg::msg::WVC
 - Function    : None
 - Inputs      : None
 - Outputs     : None
+- Comments    : 为了在rqt里面，一个plot里面查看目标速度和实际速度
+**************************************************************************************'''*/
+void MpcTrajectoryTracking::carla_vehicle_status_callback(carla_msgs::msg::CarlaEgoVehicleStatus::SharedPtr msg){
+    vehicle_control_target_velocity.header.stamp = msg->header.stamp;
+    delta = deg2rad(msg->control.steer * 30 );    // [-1, 1] from carla 30这里当做前轮最大转角
+    is_eps_received = true;
+}
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
+void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
     // 直接发控制信号给底盘，测试底盘是否正常
     // vehicle_control_gas_brake_steer_msg.adu_gear_req = 3;
     // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
     // vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 40;
     // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 100;
     vehicle_control_gear_msg.gear_request = 3;
+    carla_control_cmd.steer = 0.0;
+    // carla_control_cmd.throttle = 0.2;
+    // carla_control_cmd.brake = 0;
+    // carla_control_cmd.gear = 1;
 
     rclcpp::Time start_mpc;
     rclcpp::Time end_mpc;
@@ -384,11 +446,11 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                     for (uint i = 0; i < planner_path_s.size(); i++){
                         _planner_path_s[i] = planner_path_s[i];
                         _planner_path_v[i] = planner_path_v[i];
-                        cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
+                        // cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
-                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
+                    // cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
                     // target_v = 4;
                 }
 
@@ -440,6 +502,42 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                                     kinamatic_para_Lf,
                                     a_lateral,
                                     steering_ratio);
+                old_steer_value = vars[0]; 
+                old_throttle_value = vars[1];
+
+                /* ------------------------------------------------------------------------- Carla 控制接口 ------------------------------------------------------------------------- */
+                carla_control_cmd.header.stamp = this->now();
+
+                if (vars[0] >= 1.0) {
+                    vars[0] = 0.0;
+                }
+                if (vars[0] <= -1) {
+                    vars[0] = -0.0;
+                }
+                if (isnan(old_steer_value)) {
+                    carla_control_cmd.steer = 0;
+                } else {
+                    carla_control_cmd.steer = rad2deg(vars[0]) / 30;
+                }
+
+                if (vars[1] >= 1.0) {
+                    vars[1] = 1.0;
+                }
+                if (vars[1] <= -1) {
+                    vars[1] = -1.0;
+                }
+                if (vars[1] <= 0) {
+                    carla_control_cmd.brake = -vars[1];
+                    carla_control_cmd.throttle = 0;
+                } else {
+                    carla_control_cmd.throttle = vars[1];
+                    carla_control_cmd.brake = 0;
+                }
+            
+                carla_control_cmd.reverse = false;
+                carla_control_cmd.hand_brake = false;
+                carla_control_cmd.manual_gear_shift = false;
+
                 /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
                 steer_value = 1 * rad2deg((vars[0] / 1)); 
                 vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
@@ -451,10 +549,8 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                 /* ----------------------------------------------------------------------------- 纵向控制信号 ----------------------------------------------------------------------------- */
                 // determining if brake or throttle
                 throttle_value = vars[1];
-                // cout << "throttle_value:::::::::::::::::::::::::" << throttle_value << endl;
                 if (throttle_value <= -0.01){
                     vehicle_control_gas_brake_steer_msg.adu_gas_stoke_req = 0;
-                    // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = max_mpc(0, min_mpc(100, -9.03 * throttle_value - 9.548));0.3892 x - 5.072 x - 0.7559
                     vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 3.8 * max_mpc(0, min_mpc(100, 0.3892 * throttle_value  * throttle_value - throttle_value *  5.072 - 0.7559));
                 }
                 else if (throttle_value > -0.02 && throttle_value <=0 ){
@@ -512,7 +608,6 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                         reference_path.points.push_back(p);
                     }
                 }
-
                 // mpc_output_path;
                 mpc_output_path.id = reference_path_id;
                 mpc_output_path.header.frame_id = "base_link";
@@ -539,16 +634,23 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
                     }
                 }
             }
+            mpc_reference_path_publisher->publish(reference_path);
+            mpc_output_path_publisher->publish(mpc_output_path);
         }
         
-        mpc_reference_path_publisher->publish(reference_path);
-        mpc_output_path_publisher->publish(mpc_output_path);
-        if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
-            mpc_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
+        if(working_mode == 2){
+            if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
+                mpc_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
+            }
+            else{
+                mpc_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
+            }
         }
-        else{
-            mpc_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
-        }
+        if(working_mode == 1){
+            carla_vehicle_control_publisher->publish(carla_control_cmd);
+            vehicle_control_target_velocity.velocity = target_v;
+            vehicle_control_target_velocity_publisher->publish(vehicle_control_target_velocity);
+        }   
         end_mpc = this->now();
         iteration_time_length = (end_mpc - start_mpc).nanoseconds();
         mpc_iteration_duration_msg.data = iteration_time_length / 1000000;
@@ -566,7 +668,7 @@ void MpcTrajectoryTrackingPublisher::mpc_tracking_iteration_callback(){
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto n = std::make_shared<MpcTrajectoryTrackingPublisher>(); 
+    auto n = std::make_shared<MpcTrajectoryTracking>(); 
     rclcpp::spin(n);
     rclcpp::shutdown();
     return 0;
