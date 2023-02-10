@@ -1,0 +1,64 @@
+stanley_pid_trajectory_tracking_node:
+  ros__parameters:
+    vehicle_ref_v: 14.0 # km/h // 只有在纯跟踪的时候才有用，和规划器联通后，车辆的w期望速度来自规划器
+
+
+
+    # vehicle_steering_ratio_double: 22.0 
+    # vehicle_Lf_double: 1.6
+
+    # stanley_pid_control_horizon_length_int: 20 
+    # stanley_pid_control_step_length_double: 0.12
+    # stanley_pid_former_point_of_current_position: 0 # 这个值可以将启始点向前推进一定的点的数量，但是不能太多，否则会出现找点错误的问题。
+
+    # stanley_pid_tracking_enable_bool: true
+
+    # # stanley_pid 目标函数里面可以调节的权重
+    # stanley_pid_cte_weight_int:  160
+    # stanley_pid_epsi_weight_int: 160
+    # stanley_pid_v_weight_int: 60
+    # # 控制量幅值代价权重
+    # stanley_pid_steer_actuator_cost_weight_int: 10 
+    # stanley_pid_acc_actuator_cost_weight_int: 10 
+
+    # # 前后两次控制量变化的代价权重
+    # stanley_pid_change_steer_cost_weight_int: 40
+    # stanley_pid_change_accel_cost_weight_int: 10 
+
+
+    # vehicle_steering_ratio_double: 16.6 # ok
+    vehicle_steering_ratio_double: 22.0 # ok
+    vehicle_Lf_double: 1.6
+
+    stanley_pid_control_horizon_length_int: 20 # okq
+    stanley_pid_control_step_length_double: 0.04
+    stanley_pid_former_point_of_current_position: 0 # 这个值可以将启始点向前推进一定的点的数量，但是不能太多，否则会出现找点错误的问题。
+
+    stanley_pid_tracking_enable_bool: true
+
+    # stanley_pid 目标函数里面可以调节的权重
+    stanley_pid_cte_weight_int:  100 # ok
+    stanley_pid_epsi_weight_int: 100 # ok
+    stanley_pid_v_weight_int: 100 # ok real 100
+    # 控制量幅值代价权重
+    stanley_pid_steer_actuator_cost_weight_int: 100 # ok
+    stanley_pid_acc_actuator_cost_weight_int: 100 # ok
+    # 前后两次控制量变化的代价权重
+    stanley_pid_change_steer_cost_weight_int: 1000 # ok
+    stanley_pid_change_accel_cost_weight_int: 1000 # ok
+
+
+    # stanley_pid 里面拟合前方参考路径的时候使用的路点的数量
+    stanley_pid_reference_path_length: 80.0
+    # 控制信号延时补偿
+    stanley_pid_controller_delay_compensation: 0.05
+
+    stanley_pid_working_mode: 1 # 1: simulation 2: real vehicle.
+
+    stanley_pid_with_planner_flag: 1   # stanley_pid做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通 #TODO:
+
+
+    goal_tolerance : 0.5
+    speed_P : 0.16
+    speed_I : 0.02
+    speed_D : 0.01

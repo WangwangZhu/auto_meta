@@ -4,13 +4,13 @@
 # Comments    : 
 *****************************************************************************************************'''*/
 
-#include "lqr_pid_trajectory_tracking/spline.h"
-#include "lqr_pid_trajectory_tracking/helpers.h"
-#include "lqr_pid_trajectory_tracking/coordinate_transform.h"
-#include "lqr_pid_trajectory_tracking/lqr_pid_trajectory_tracking_controller.h"
-#include "lqr_pid_trajectory_tracking/lqr_pid_trajectory_tracking.h"
+#include "stanley_pid_trajectory_tracking/spline.h"
+#include "stanley_pid_trajectory_tracking/helpers.h"
+#include "stanley_pid_trajectory_tracking/coordinate_transform.h"
+#include "stanley_pid_trajectory_tracking/stanley_pid_trajectory_tracking_controller.h"
+#include "stanley_pid_trajectory_tracking/stanley_pid_trajectory_tracking.h"
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("lqr_pid_trajectory_tracking");
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("stanley_pid_trajectory_tracking");
 
 double inline min_calculation(double a, double b) { return (a < b) ? a : b; }
 double inline max_calculation(double a, double b) { return (a > b) ? a : b; }
@@ -22,27 +22,27 @@ double inline max_calculation(double a, double b) { return (a > b) ? a : b; }
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_tracking") // 使用初始化列表来初始化字段
+StanleyPIDTrajectoryTracking::StanleyPIDTrajectoryTracking() : Node("stanley_pid_trajectory_tracking") // 使用初始化列表来初始化字段
 {
     // Declare and initialize a parameter, return the effective value.
     this->declare_parameter<double>("vehicle_ref_v", target_v);
     this->declare_parameter<double>("vehicle_steering_ratio_double", steering_ratio);
     this->declare_parameter<double>("vehicle_Lf_double", kinamatic_para_Lf);
-    this->declare_parameter<int>("lqr_pid_control_horizon_length_int", lqr_pid_control_horizon_length);
-    this->declare_parameter<double>("lqr_pid_control_step_length_double", lqr_pid_control_step_length);
-    this->declare_parameter<bool>("lqr_pid_tracking_enable_bool", lqr_pid_tracking_enable_bool);
-    this->declare_parameter<int>("lqr_pid_cte_weight_int", lqr_pid_cte_weight_int);
-    this->declare_parameter<int>("lqr_pid_epsi_weight_int", epsi_weight);
-    this->declare_parameter<int>("lqr_pid_v_weight_int", v_weight);
-    this->declare_parameter<int>("lqr_pid_steer_actuator_cost_weight_int", steer_actuator_cost_weight);
-    this->declare_parameter<int>("lqr_pid_acc_actuator_cost_weight_int", acc_actuator_cost_weight);
-    this->declare_parameter<int>("lqr_pid_change_steer_cost_weight_int", change_steer_cost_weight);
-    this->declare_parameter<int>("lqr_pid_change_accel_cost_weight_int", change_accel_cost_weight);
-    this->declare_parameter<double>("lqr_pid_reference_path_length", reference_path_length);
-    this->declare_parameter<double>("lqr_pid_controller_delay_compensation", controller_delay_compensation);
-    this->declare_parameter<int>("lqr_pid_former_point_of_current_position", former_point_of_current_position);
-    this->declare_parameter<int>("lqr_pid_working_mode", working_mode);
-    this->declare_parameter<int> ("lqr_pid_with_planner_flag", with_planner_flag);
+    this->declare_parameter<int>("stanley_pid_control_horizon_length_int", stanley_pid_control_horizon_length);
+    this->declare_parameter<double>("stanley_pid_control_step_length_double", stanley_pid_control_step_length);
+    this->declare_parameter<bool>("stanley_pid_tracking_enable_bool", stanley_pid_tracking_enable_bool);
+    this->declare_parameter<int>("stanley_pid_cte_weight_int", stanley_pid_cte_weight_int);
+    this->declare_parameter<int>("stanley_pid_epsi_weight_int", epsi_weight);
+    this->declare_parameter<int>("stanley_pid_v_weight_int", v_weight);
+    this->declare_parameter<int>("stanley_pid_steer_actuator_cost_weight_int", steer_actuator_cost_weight);
+    this->declare_parameter<int>("stanley_pid_acc_actuator_cost_weight_int", acc_actuator_cost_weight);
+    this->declare_parameter<int>("stanley_pid_change_steer_cost_weight_int", change_steer_cost_weight);
+    this->declare_parameter<int>("stanley_pid_change_accel_cost_weight_int", change_accel_cost_weight);
+    this->declare_parameter<double>("stanley_pid_reference_path_length", reference_path_length);
+    this->declare_parameter<double>("stanley_pid_controller_delay_compensation", controller_delay_compensation);
+    this->declare_parameter<int>("stanley_pid_former_point_of_current_position", former_point_of_current_position);
+    this->declare_parameter<int>("stanley_pid_working_mode", working_mode);
+    this->declare_parameter<int> ("stanley_pid_with_planner_flag", with_planner_flag);
 
     this->declare_parameter<double>("goal_tolerance", goalTolerance_);     //读取目标速度
     this->declare_parameter<double>("speed_P", speed_P);                   //读取PID参数
@@ -53,21 +53,21 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     this->get_parameter<double>("vehicle_ref_v", this->target_v);
     this->get_parameter<double>("vehicle_steering_ratio_double", this->steering_ratio);
     this->get_parameter<double>("vehicle_Lf_double", this->kinamatic_para_Lf);
-    this->get_parameter<int>("lqr_pid_control_horizon_length_int", this->lqr_pid_control_horizon_length);
-    this->get_parameter<double>("lqr_pid_control_step_length_double", this->lqr_pid_control_step_length);
-    this->get_parameter<bool>("lqr_pid_tracking_enable_bool", this->lqr_pid_enable_signal);
-    this->get_parameter<int>("lqr_pid_cte_weight_int", this->cte_weight);
-    this->get_parameter<int>("lqr_pid_epsi_weight_int", this->epsi_weight);
-    this->get_parameter<int>("lqr_pid_v_weight_int", this->v_weight);
-    this->get_parameter<int>("lqr_pid_steer_actuator_cost_weight_int", this->steer_actuator_cost_weight);
-    this->get_parameter<int>("lqr_pid_acc_actuator_cost_weight_int", this->acc_actuator_cost_weight);
-    this->get_parameter<int>("lqr_pid_change_steer_cost_weight_int", this->change_steer_cost_weight);
-    this->get_parameter<int>("lqr_pid_change_accel_cost_weight_int", this->change_accel_cost_weight);
-    this->get_parameter<double>("lqr_pid_reference_path_length", this->reference_path_length);
-    this->get_parameter<double>("lqr_pid_controller_delay_compensation", this->controller_delay_compensation);
-    this->get_parameter<int>("lqr_pid_former_point_of_current_position", this->former_point_of_current_position);
-    this->get_parameter<int>("lqr_pid_working_mode", this->working_mode);
-    this->get_parameter<int>("lqr_pid_with_planner_flag", this->with_planner_flag);
+    this->get_parameter<int>("stanley_pid_control_horizon_length_int", this->stanley_pid_control_horizon_length);
+    this->get_parameter<double>("stanley_pid_control_step_length_double", this->stanley_pid_control_step_length);
+    this->get_parameter<bool>("stanley_pid_tracking_enable_bool", this->stanley_pid_enable_signal);
+    this->get_parameter<int>("stanley_pid_cte_weight_int", this->cte_weight);
+    this->get_parameter<int>("stanley_pid_epsi_weight_int", this->epsi_weight);
+    this->get_parameter<int>("stanley_pid_v_weight_int", this->v_weight);
+    this->get_parameter<int>("stanley_pid_steer_actuator_cost_weight_int", this->steer_actuator_cost_weight);
+    this->get_parameter<int>("stanley_pid_acc_actuator_cost_weight_int", this->acc_actuator_cost_weight);
+    this->get_parameter<int>("stanley_pid_change_steer_cost_weight_int", this->change_steer_cost_weight);
+    this->get_parameter<int>("stanley_pid_change_accel_cost_weight_int", this->change_accel_cost_weight);
+    this->get_parameter<double>("stanley_pid_reference_path_length", this->reference_path_length);
+    this->get_parameter<double>("stanley_pid_controller_delay_compensation", this->controller_delay_compensation);
+    this->get_parameter<int>("stanley_pid_former_point_of_current_position", this->former_point_of_current_position);
+    this->get_parameter<int>("stanley_pid_working_mode", this->working_mode);
+    this->get_parameter<int>("stanley_pid_with_planner_flag", this->with_planner_flag);
 
     this->get_parameter<double>("goal_tolerance", goalTolerance_);     //读取目标速度
     this->get_parameter<double>("speed_P", speed_P);                   //读取PID参数
@@ -80,8 +80,8 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
     vehicle_control_gear_msg.gear_request = 1;
 
-    lqr_pid_control_signals_gas_brake_steer_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals_gas_brake_steer", qos_);
-    lqr_pid_control_signals_gear_publisher = this->create_publisher<chassis_msg::msg::ADUGearRequest>("vehicle_control_signals_gear_request", qos_);
+    stanley_pid_control_signals_gas_brake_steer_publisher = this->create_publisher<chassis_msg::msg::ADUDriveCmd>("vehicle_control_signals_gas_brake_steer", qos_);
+    stanley_pid_control_signals_gear_publisher = this->create_publisher<chassis_msg::msg::ADUGearRequest>("vehicle_control_signals_gear_request", qos_);
     carla_vehicle_control_publisher = this->create_publisher<carla_msgs::msg::CarlaEgoVehicleControl>("/carla/ego_vehicle/vehicle_control_cmd", 10);
     carla_control_cmd.header.stamp = this->now();
     carla_control_cmd.gear = 1;
@@ -89,52 +89,52 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     carla_control_cmd.reverse = false;
     carla_control_cmd.hand_brake = false;
     
-    lqr_pid_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("controller_reference_path", qos_);
-    lqr_pid_output_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("controller_output_path", qos_);
-    lqr_pid_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("controller_iteration_duration", qos_); // 用于统计lqr_pid求解时间的广播器
+    stanley_pid_reference_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("controller_reference_path", qos_);
+    stanley_pid_output_path_publisher = this->create_publisher<visualization_msgs::msg::Marker>("controller_output_path", qos_);
+    stanley_pid_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("controller_iteration_duration", qos_); // 用于统计stanley_pid求解时间的广播器
     vehicle_control_target_velocity_publisher = this->create_publisher<carla_msgs::msg::CarlaVehicleTargetVelocity>("/carla/ego_vehicle/target_velocity", 10);
 
-    // lqr_pid 求解所需要的车辆信息
-    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&LQRPIDTrajectoryTracking::ins_data_receive_callback, this, _1));
-    // eps_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCUHorizontalStatus>("wvcu_horizontal_status", qos_, std::bind(&LQRPIDTrajectoryTracking::eps_feedback_callback, this, _1));
-    global_path_subscription = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&LQRPIDTrajectoryTracking::global_path_callback, this, _1));
-    lqr_pid_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_, std::bind(&LQRPIDTrajectoryTracking::palnner_frenet_path_receive_callback, this, _1));
-    lqr_pid_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&LQRPIDTrajectoryTracking::palnner_cartesian_path_receive_callback, this, _1));
-    vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&LQRPIDTrajectoryTracking::vehicle_status_feedback_callback, this, _1));
-    carla_localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LQRPIDTrajectoryTracking::carla_odom_callback, this, _1));
-    carla_lacalization_data_imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&LQRPIDTrajectoryTracking::carla_imu_callback, this, _1));
+    // stanley_pid 求解所需要的车辆信息
+    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&StanleyPIDTrajectoryTracking::ins_data_receive_callback, this, _1));
+    // eps_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCUHorizontalStatus>("wvcu_horizontal_status", qos_, std::bind(&StanleyPIDTrajectoryTracking::eps_feedback_callback, this, _1));
+    global_path_subscription = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&StanleyPIDTrajectoryTracking::global_path_callback, this, _1));
+    stanley_pid_planner_frenet_path_subscription = this->create_subscription<nav_msgs::msg::Path>("lattice_planner_path_frenet", qos_, std::bind(&StanleyPIDTrajectoryTracking::palnner_frenet_path_receive_callback, this, _1));
+    stanley_pid_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&StanleyPIDTrajectoryTracking::palnner_cartesian_path_receive_callback, this, _1));
+    vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&StanleyPIDTrajectoryTracking::vehicle_status_feedback_callback, this, _1));
+    carla_localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&StanleyPIDTrajectoryTracking::carla_odom_callback, this, _1));
+    carla_lacalization_data_imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&StanleyPIDTrajectoryTracking::carla_imu_callback, this, _1));
 
     vehicle_control_target_velocity.header.stamp = this->now();
     vehicle_control_target_velocity.velocity = 0.0;
-    // carla_status_subscription = this->create_subscription<carla_msgs::msg::CarlaEgoVehicleStatus>("/carla/ego_vehicle/vehicle_status", 10, std::bind(&LQRPIDTrajectoryTracking::carla_vehicle_status_callback, this, _1));
+    // carla_status_subscription = this->create_subscription<carla_msgs::msg::CarlaEgoVehicleStatus>("/carla/ego_vehicle/vehicle_status", 10, std::bind(&StanleyPIDTrajectoryTracking::carla_vehicle_status_callback, this, _1));
 
-    // 定频调用求解器，时间必须大于lqr_pid单次求解耗时
-    lqr_pid_iteration_timer_ = this->create_wall_timer(10ms, std::bind(&LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback, this));
+    // 定频调用求解器，时间必须大于stanley_pid单次求解耗时
+    stanley_pid_iteration_timer_ = this->create_wall_timer(10ms, std::bind(&StanleyPIDTrajectoryTracking::stanley_pid_tracking_iteration_callback, this));
 
     pid_controller_longitudinal = std::make_unique<zww::control::PIDController>(speed_P, speed_I, speed_D);
 
-    lqr_controller_lateral = std::make_unique<zww::control::LqrController>();
-    lqr_controller_lateral->LoadControlConf();
-    lqr_controller_lateral->Init();
+    stanley_controller_lateral = std::make_unique<zww::control::StanleyController>();
+    stanley_controller_lateral->LoadControlConf();
+    stanley_controller_lateral->Init();
 
     RCLCPP_INFO(this->get_logger(), "target_v %f", this->target_v);
     RCLCPP_INFO(this->get_logger(), "vehicle_steering_ratio_double %f", this->steering_ratio);
     RCLCPP_INFO(this->get_logger(), "vehicle_Lf_double %f", this->kinamatic_para_Lf);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_control_horizon_length_int %d", this->lqr_pid_control_horizon_length);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_control_step_length_double %f", this->lqr_pid_control_step_length);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_tracking_enable_bool %d", int(this->lqr_pid_enable_signal));
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_cte_weight_int %d", this->cte_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_epsi_weight_int %d", this->epsi_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_v_weight_int %d", this->v_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_steer_actuator_cost_weight_int %d", this->steer_actuator_cost_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_acc_actuator_cost_weight_int %d", this->acc_actuator_cost_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_change_steer_cost_weight_int %d", this->change_steer_cost_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_change_accel_cost_weight_int %d", this->change_accel_cost_weight);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_reference_path_length %f", this->reference_path_length);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_controller_delay_compensation %f", this->controller_delay_compensation);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_former_point_of_current_position %d", this->former_point_of_current_position);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_working_mode %d", this->working_mode);
-    RCLCPP_INFO(this->get_logger(), "lqr_pid_with_planner_flag %d", this->with_planner_flag);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_control_horizon_length_int %d", this->stanley_pid_control_horizon_length);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_control_step_length_double %f", this->stanley_pid_control_step_length);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_tracking_enable_bool %d", int(this->stanley_pid_enable_signal));
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_cte_weight_int %d", this->cte_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_epsi_weight_int %d", this->epsi_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_v_weight_int %d", this->v_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_steer_actuator_cost_weight_int %d", this->steer_actuator_cost_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_acc_actuator_cost_weight_int %d", this->acc_actuator_cost_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_change_steer_cost_weight_int %d", this->change_steer_cost_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_change_accel_cost_weight_int %d", this->change_accel_cost_weight);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_reference_path_length %f", this->reference_path_length);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_controller_delay_compensation %f", this->controller_delay_compensation);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_former_point_of_current_position %d", this->former_point_of_current_position);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_working_mode %d", this->working_mode);
+    RCLCPP_INFO(this->get_logger(), "stanley_pid_with_planner_flag %d", this->with_planner_flag);
 
     RCLCPP_WARN(this->get_logger(), "INIT DONE~~~~~");
 }
@@ -146,7 +146,7 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-LQRPIDTrajectoryTracking::~LQRPIDTrajectoryTracking() {}
+StanleyPIDTrajectoryTracking::~StanleyPIDTrajectoryTracking() {}
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -154,7 +154,7 @@ LQRPIDTrajectoryTracking::~LQRPIDTrajectoryTracking() {}
 - Outputs     : None
 - Comments    : 规划器规划结果订阅器，规划器给的结果是全局笛卡尔坐标系下的XY坐标点
 **************************************************************************************'''*/    
-void LQRPIDTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::msg::Path::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::msg::Path::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiving planner frenet_path %lu", msg->poses.size());
     int path_length = msg->poses.size();
     planner_path_s.clear();
@@ -173,13 +173,13 @@ void LQRPIDTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::ms
 - Outputs     : None
 - Comments    : 
 **************************************************************************************'''*/    
-void LQRPIDTrajectoryTracking::vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::vehicle_status_feedback_callback(chassis_msg::msg::WVCULongitudinalStatus::SharedPtr msg){
     is_vehicle_longitudinal_received = true;
     vehicle_longitudinal_feedback_msg = msg;
     // RCLCPP_INFO(this->get_logger(), "current gear %d", vehicle_longitudinal_feedback_msg->wvcu_gear_stat);
 }
 
-void LQRPIDTrajectoryTracking::palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiving planner cartesian path %lu", msg->points.size());
     int path_length = msg->points.size();
     planner_path_x.clear();
@@ -241,7 +241,7 @@ void LQRPIDTrajectoryTracking::palnner_cartesian_path_receive_callback(visualiza
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void LQRPIDTrajectoryTracking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiveing global path %lu", msg->poses.size());
     int path_length = msg->poses.size();
     global_path_x.clear();
@@ -311,14 +311,14 @@ void LQRPIDTrajectoryTracking::global_path_callback(nav_msgs::msg::Path::SharedP
 - Outputs     : None
 - Comments    : 这个回调函数发出去的psi的值应该是弧度单位的
 **************************************************************************************'''*/
-void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg){
     if (is_global_path_received && working_mode == 2){
 
         ins_frame_arrive_time = msg->header.stamp;
         ins_arrive_at_rs232_buffer = this->ins_frame_arrive_time.seconds(); 
 
         rclcpp::Time now = this->now();
-        ins_data_arrive_at_lqr_pid_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
+        ins_data_arrive_at_stanley_pid_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
 
         // RCLCPP_INFO(this->get_logger(),"got imu data at: %f", this->now().seconds()); // this->now().nanoseconds()/1000000000
 
@@ -360,12 +360,12 @@ void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry
 - Outputs     : None
 - Comments    : the x direction of msg is longitudinal
 **************************************************************************************'''*/
-void LQRPIDTrajectoryTracking::carla_odom_callback(nav_msgs::msg::Odometry::SharedPtr msg){       
+void StanleyPIDTrajectoryTracking::carla_odom_callback(nav_msgs::msg::Odometry::SharedPtr msg){       
     if (is_global_path_received && working_mode == 1){        
         is_ins_data_received = true;
         is_vehicle_longitudinal_received = true;
         rclcpp::Time now = this->now();
-        ins_data_arrive_at_lqr_pid_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
+        ins_data_arrive_at_stanley_pid_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
         RCLCPP_INFO(LOGGER, "Got ODOM data!!!");
         // 将orientation(四元数)转换为欧拉角(roll, pitch, yaw) 
         tf2::Quaternion quat_tf;
@@ -400,7 +400,7 @@ void LQRPIDTrajectoryTracking::carla_odom_callback(nav_msgs::msg::Odometry::Shar
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void LQRPIDTrajectoryTracking::carla_imu_callback(sensor_msgs::msg::Imu::SharedPtr msg){
+void StanleyPIDTrajectoryTracking::carla_imu_callback(sensor_msgs::msg::Imu::SharedPtr msg){
     if (is_global_path_received && working_mode == 1){
         RCLCPP_INFO(LOGGER, "Got IMU data!!!");
         vehicleState_.angular_velocity = msg->angular_velocity.z;                                                                                                // 平面角速度(绕z轴转动的角速度)
@@ -419,7 +419,7 @@ void LQRPIDTrajectoryTracking::carla_imu_callback(sensor_msgs::msg::Imu::SharedP
 // - Outputs     : None
 // - Comments    : None
 // **************************************************************************************'''*/
-// void LQRPIDTrajectoryTracking::eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg){
+// void StanleyPIDTrajectoryTracking::eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg){
 //     delta = deg2rad(msg->wvcu_str_whl_ang_stat) / steering_ratio;
 //     // RCLCPP_INFO(this->get_logger(), "receiving eps angel: %f", delta);
 //     is_eps_received = true;
@@ -432,13 +432,13 @@ void LQRPIDTrajectoryTracking::carla_imu_callback(sensor_msgs::msg::Imu::SharedP
 // - Outputs     : None
 // - Comments    : 为了在rqt里面，一个plot里面查看目标速度和实际速度
 // **************************************************************************************'''*/
-// void LQRPIDTrajectoryTracking::carla_vehicle_status_callback(carla_msgs::msg::CarlaEgoVehicleStatus::SharedPtr msg){
+// void StanleyPIDTrajectoryTracking::carla_vehicle_status_callback(carla_msgs::msg::CarlaEgoVehicleStatus::SharedPtr msg){
 //     vehicle_control_target_velocity.header.stamp = msg->header.stamp;
 //     delta = deg2rad(msg->control.steer * 30 );    // [-1, 1] from carla 30这里当做前轮最大转角
 //     is_eps_received = true;
 // }
 
-double LQRPIDTrajectoryTracking::PointDistanceSquare(const TrajectoryPoint& point, const double x, const double y)
+double StanleyPIDTrajectoryTracking::PointDistanceSquare(const TrajectoryPoint& point, const double x, const double y)
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : 两点之间的距离
@@ -452,7 +452,7 @@ double LQRPIDTrajectoryTracking::PointDistanceSquare(const TrajectoryPoint& poin
     return dx * dx + dy * dy;
 }
 
-TrajectoryPoint LQRPIDTrajectoryTracking::QueryNearestPointByPosition(const double x, const double y)
+TrajectoryPoint StanleyPIDTrajectoryTracking::QueryNearestPointByPosition(const double x, const double y)
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -481,7 +481,7 @@ TrajectoryPoint LQRPIDTrajectoryTracking::QueryNearestPointByPosition(const doub
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
+void StanleyPIDTrajectoryTracking::stanley_pid_tracking_iteration_callback(){
     // 直接发控制信号给底盘，测试底盘是否正常
     // vehicle_control_gas_brake_steer_msg.adu_gear_req = 3;
     // vehicle_control_gas_brake_steer_msg.adu_brk_stoke_req = 0;
@@ -493,9 +493,9 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     // carla_control_cmd.brake = 0;
     // carla_control_cmd.gear = 1;
 
-    rclcpp::Time start_lqr_pid;
-    rclcpp::Time end_lqr_pid;
-    start_lqr_pid = this->now();
+    rclcpp::Time start_stanley_pid;
+    rclcpp::Time end_stanley_pid;
+    start_stanley_pid = this->now();
     double iteration_time_length;
 
     ControlCmd cmd;
@@ -506,7 +506,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
         if (rclcpp::ok())
         // if (0) // 失能跟踪功能，测试控制信号是否起效
         {
-            // this->reference_path_length = max_calculation(floor(this->lqr_pid_control_horizon_length * this->lqr_pid_control_step_length * this->v_longitudinal) + 1, 10.0);
+            // this->reference_path_length = max_calculation(floor(this->stanley_pid_control_horizon_length * this->stanley_pid_control_step_length * this->v_longitudinal) + 1, 10.0);
             // this->reference_path_length = 30;
             // RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
 
@@ -522,7 +522,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 double ins_parse_now = now.seconds(); 
                 // 定位延迟补偿发生在将全局路径转换到车辆坐标系下之前,用来补偿定位信息到达早于被使用而引起的定位误差
                 if (working_mode == 1){
-                    ins_delay = ins_parse_now - ins_data_arrive_at_lqr_pid_through_callback + 0.005;
+                    ins_delay = ins_parse_now - ins_data_arrive_at_stanley_pid_through_callback + 0.005;
                 }
                 else if (working_mode == 2){
                     ins_delay = ins_parse_now - ins_arrive_at_rs232_buffer + 0.005;
@@ -538,7 +538,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 car_s = car_s_d[0];
                 car_d = car_s_d[1];
 
-                // LQR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // Stanley ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 TrajectoryPoint target_point_;
                 target_point_ = this->QueryNearestPointByPosition(vehicleState_.x, vehicleState_.y);
                 // double v_err = target_point_.v - vehicleState_.velocity;           // 速度误差
@@ -606,7 +606,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     isReachGoal_ = true;
                 }
                 if (!isReachGoal_) {
-                    lqr_controller_lateral->ComputeControlCommand(this->vehicleState_, this->local_reference_trajectory, cmd);
+                    stanley_controller_lateral->ComputeControlCommand(this->vehicleState_, this->local_reference_trajectory, cmd);
                 }
                 double acceleration_cmd = pid_controller_longitudinal->Control(v_err, 0.01);
                 
@@ -672,11 +672,11 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 // /* Feed in the predicted state values.  这里传入的是车辆坐标系下的控制器时延模型*/
                 // Eigen::VectorXd state(8);
                 // state << pred_px, pred_py, pred_psi, pred_v_longitudinal, pred_v_lateral, pred_omega, pred_cte, pred_epsi;
-                // if (target_v <= 0.1) // TODO：超过这个速度极限，lqr_pid就不工作了，直接停车
+                // if (target_v <= 0.1) // TODO：超过这个速度极限，stanley_pid就不工作了，直接停车
                 // {
                 //     target_v = 0;
                 // }
-                // auto vars = lqr_pid.Solve(state,
+                // auto vars = stanley_pid.Solve(state,
                 //                     coeffs,
                 //                     target_v,
                 //                     cte_weight,
@@ -686,8 +686,8 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 //                     acc_actuator_cost_weight,
                 //                     change_steer_cost_weight,
                 //                     change_accel_cost_weight,
-                //                     lqr_pid_control_horizon_length,
-                //                     lqr_pid_control_step_length,
+                //                     stanley_pid_control_horizon_length,
+                //                     stanley_pid_control_step_length,
                 //                     kinamatic_para_Lf,
                 //                     a_lateral,
                 //                     steering_ratio);
@@ -730,7 +730,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 // /* ----------------------------------------------------------------------------- 横向控制信号 ----------------------------------------------------------------------------- */
                 // steer_value = 1 * rad2deg((vars[0] / 1)); 
                 // vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = -steer_value;
-                // if (target_v <= 1) // TODO：超过这个速度极限，lqr_pid就不工作了，直接停车
+                // if (target_v <= 1) // TODO：超过这个速度极限，stanley_pid就不工作了，直接停车
                 // {
                 //    vehicle_control_gas_brake_steer_msg.adu_str_whl_ang_req = 0;
                 // } 
@@ -797,21 +797,21 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
             //             reference_path.points.push_back(p);
             //         }
             //     }
-            //     // lqr_pid_output_path;
-            //     lqr_pid_output_path.id = reference_path_id + 1;
-            //     lqr_pid_output_path.header.frame_id = "base_link";
-            //     lqr_pid_output_path.header.stamp = this->get_clock()->now();
-            //     lqr_pid_output_path.type = visualization_msgs::msg::Marker::LINE_STRIP;
-            //     lqr_pid_output_path.action = visualization_msgs::msg::Marker::ADD;
-            //     lqr_pid_output_path.lifetime = rclcpp::Duration(20ms);
-            //     // lqr_pid_output_path.lifetime = rclcpp::Duration(200000ms);
-            //     lqr_pid_output_path.scale.x = 0.04;
-            //     lqr_pid_output_path.scale.y = 0.04;
-            //     lqr_pid_output_path.scale.z = 0.04;
-            //     lqr_pid_output_path.color.r = 1.0;
-            //     lqr_pid_output_path.color.a = 1.0;
+            //     // stanley_pid_output_path;
+            //     stanley_pid_output_path.id = reference_path_id + 1;
+            //     stanley_pid_output_path.header.frame_id = "base_link";
+            //     stanley_pid_output_path.header.stamp = this->get_clock()->now();
+            //     stanley_pid_output_path.type = visualization_msgs::msg::Marker::LINE_STRIP;
+            //     stanley_pid_output_path.action = visualization_msgs::msg::Marker::ADD;
+            //     stanley_pid_output_path.lifetime = rclcpp::Duration(20ms);
+            //     // stanley_pid_output_path.lifetime = rclcpp::Duration(200000ms);
+            //     stanley_pid_output_path.scale.x = 0.04;
+            //     stanley_pid_output_path.scale.y = 0.04;
+            //     stanley_pid_output_path.scale.z = 0.04;
+            //     stanley_pid_output_path.color.r = 1.0;
+            //     stanley_pid_output_path.color.a = 1.0;
 
-            //     lqr_pid_output_path.points.clear();
+            //     stanley_pid_output_path.points.clear();
             //     geometry_msgs::msg::Point pp;
             //     // 可视化原始点
             //     for (uint i = 2; i < vars.size(); i++){
@@ -820,20 +820,20 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
             //         }
             //         else{
             //             pp.y = vars[i];
-            //             lqr_pid_output_path.points.push_back(pp);
+            //             stanley_pid_output_path.points.push_back(pp);
             //         }
             //     }
             }
-            // lqr_pid_reference_path_publisher->publish(reference_path);
-            // lqr_pid_output_path_publisher->publish(lqr_pid_output_path);
+            // stanley_pid_reference_path_publisher->publish(reference_path);
+            // stanley_pid_output_path_publisher->publish(stanley_pid_output_path);
         }
         
         if(working_mode == 2){
             if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
-                lqr_pid_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
+                stanley_pid_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
             }
             else{
-                lqr_pid_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
+                stanley_pid_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
             }
         }
         if(working_mode == 1){
@@ -841,11 +841,11 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
             vehicle_control_target_velocity.velocity = target_v;
             vehicle_control_target_velocity_publisher->publish(vehicle_control_target_velocity);
         }   
-        end_lqr_pid = this->now();
-        iteration_time_length = (end_lqr_pid - start_lqr_pid).nanoseconds();
-        lqr_pid_iteration_duration_msg.data = iteration_time_length / 1000000;
-        lqr_pid_iteration_time_publisher->publish(lqr_pid_iteration_duration_msg);
-        cout << "~~~ lqr_pid iteration time: " <<  iteration_time_length / 1000000 << "ms ~~~" << endl;
+        end_stanley_pid = this->now();
+        iteration_time_length = (end_stanley_pid - start_stanley_pid).nanoseconds();
+        stanley_pid_iteration_duration_msg.data = iteration_time_length / 1000000;
+        stanley_pid_iteration_time_publisher->publish(stanley_pid_iteration_duration_msg);
+        cout << "~~~ stanley_pid iteration time: " <<  iteration_time_length / 1000000 << "ms ~~~" << endl;
         
     }
 }
@@ -859,7 +859,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto n = std::make_shared<LQRPIDTrajectoryTracking>(); 
+    auto n = std::make_shared<StanleyPIDTrajectoryTracking>(); 
     rclcpp::spin(n);
     rclcpp::shutdown();
     return 0;

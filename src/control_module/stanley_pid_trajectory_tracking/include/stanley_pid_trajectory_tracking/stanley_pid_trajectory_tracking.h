@@ -1,5 +1,5 @@
-#ifndef LQR_PID_TRAJECTORY_TRACKING_H_
-#define LQR_PID_TRAJECTORY_TRACKING_H_
+#ifndef STANLEY_PID_TRAJECTORY_TRACKING_H_
+#define STANLEY_PID_TRAJECTORY_TRACKING_H_
 
 #include <vector>
 #include <chrono>     // 时间库
@@ -45,7 +45,7 @@
 #include <tf2/transform_datatypes.h>
 #include <tf2_ros/transform_broadcaster.h>
 
-#include "lqr_pid_trajectory_tracking_controller.h"
+#include "stanley_pid_trajectory_tracking_controller.h"
 #include "common.h"
 
 #include "carla_msgs/msg/carla_ego_vehicle_control.hpp"
@@ -68,12 +68,12 @@ using Eigen::VectorXd;
 # FileFunction: 
 # Comments    :
 *****************************************************************************************************'''*/
-class LQRPIDTrajectoryTracking : public rclcpp::Node
+class StanleyPIDTrajectoryTracking : public rclcpp::Node
 {
 public:
-    LQRPIDTrajectoryTracking();
-    ~LQRPIDTrajectoryTracking();
-    void lqr_pid_tracking_iteration_callback();
+    StanleyPIDTrajectoryTracking();
+    ~StanleyPIDTrajectoryTracking();
+    void stanley_pid_tracking_iteration_callback();
     void ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); // 后面加 const表示函数不可以修改class的成员
     void eps_feedback_callback(chassis_msg::msg::WVCUHorizontalStatus::SharedPtr msg);
     void global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
@@ -81,20 +81,20 @@ public:
     void palnner_cartesian_path_receive_callback(visualization_msgs::msg::Marker::SharedPtr msg);
 
 public:
-    rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr lqr_pid_control_signals_gas_brake_steer_publisher;
+    rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr stanley_pid_control_signals_gas_brake_steer_publisher;
     int working_mode;
     chassis_msg::msg::ADUDriveCmd vehicle_control_gas_brake_steer_msg = chassis_msg::msg::ADUDriveCmd();
 
-    rclcpp::Publisher<chassis_msg::msg::ADUGearRequest>::SharedPtr lqr_pid_control_signals_gear_publisher;
+    rclcpp::Publisher<chassis_msg::msg::ADUGearRequest>::SharedPtr stanley_pid_control_signals_gear_publisher;
     chassis_msg::msg::ADUGearRequest vehicle_control_gear_msg;
 
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr lqr_pid_iteration_time_publisher;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr stanley_pid_iteration_time_publisher;
 
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr fake_velocity_vis_publisher;
     std_msgs::msg::Float32 fake_velocity;
 
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lqr_pid_reference_path_publisher;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lqr_pid_output_path_publisher;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr stanley_pid_reference_path_publisher;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr stanley_pid_output_path_publisher;
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ins_data_subscription_;
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr velocity_from_csv_subscription;
@@ -106,8 +106,8 @@ public:
     chassis_msg::msg::WVCULongitudinalStatus::SharedPtr vehicle_longitudinal_feedback_msg;
     
 
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr lqr_pid_planner_frenet_path_subscription;
-    rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr lqr_pid_planner_cartesian_path_subscription;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr stanley_pid_planner_frenet_path_subscription;
+    rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr stanley_pid_planner_cartesian_path_subscription;
 
     rclcpp::Publisher<carla_msgs::msg::CarlaEgoVehicleControl>::SharedPtr carla_vehicle_control_publisher;
     carla_msgs::msg::CarlaEgoVehicleControl carla_control_cmd;
@@ -134,14 +134,14 @@ public:
     // VehicleState vehicleState_;
     // bool firstRecord_ = true;
 
-    // lqr_pid_controller lqr_pid;
+    // stanley_pid_controller stanley_pid;
     tf2::Quaternion ins_quaternion_transform;
-    rclcpp::TimerBase::SharedPtr lqr_pid_iteration_timer_;
+    rclcpp::TimerBase::SharedPtr stanley_pid_iteration_timer_;
 
     visualization_msgs::msg::Marker reference_path;
-    visualization_msgs::msg::Marker lqr_pid_output_path;
+    visualization_msgs::msg::Marker stanley_pid_output_path;
 
-    std_msgs::msg::Float32 lqr_pid_iteration_duration_msg = std_msgs::msg::Float32();
+    std_msgs::msg::Float32 stanley_pid_iteration_duration_msg = std_msgs::msg::Float32();
 
     rclcpp::TimerBase::SharedPtr parameter_reconfigure_timer_;
 
@@ -150,41 +150,41 @@ public:
     double vehicle_steering_ratio_double;
     double vehicle_Lf_double;
 
-    int lqr_pid_control_horizon_length_int;
-    double lqr_pid_control_step_length_double;
+    int stanley_pid_control_horizon_length_int;
+    double stanley_pid_control_step_length_double;
 
-    bool lqr_pid_tracking_enable_bool;
+    bool stanley_pid_tracking_enable_bool;
 
     double old_steer_value;
     double old_throttle_value;
 
-    int lqr_pid_cte_weight_int;
-    int lqr_pid_epsi_weight_int;
-    int lqr_pid_v_weight_int;
-    int lqr_pid_steer_actuator_cost_weight_int;
-    int lqr_pid_acc_actuator_cost_weight_int;
-    int lqr_pid_change_steer_cost_weight_int;
-    int lqr_pid_change_accel_cost_weight_int;
+    int stanley_pid_cte_weight_int;
+    int stanley_pid_epsi_weight_int;
+    int stanley_pid_v_weight_int;
+    int stanley_pid_steer_actuator_cost_weight_int;
+    int stanley_pid_acc_actuator_cost_weight_int;
+    int stanley_pid_change_steer_cost_weight_int;
+    int stanley_pid_change_accel_cost_weight_int;
 
     int reference_path_id = 101;
 
-    int lqr_pid_reference_path_length;
-    double lqr_pid_controller_delay_compensation;
-    double lqr_pid_point_distance_of_reference_line_visualization;
-    int lqr_pid_points_number_of_reference_line_visualization;
-    int lqr_pid_working_mode;
+    int stanley_pid_reference_path_length;
+    double stanley_pid_controller_delay_compensation;
+    double stanley_pid_point_distance_of_reference_line_visualization;
+    int stanley_pid_points_number_of_reference_line_visualization;
+    int stanley_pid_working_mode;
 
     double target_v; // km/h
-    int with_planner_flag; // lqr_pid做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通
+    int with_planner_flag; // stanley_pid做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通
 
     // 考虑道路曲率的车辆运动学模型里面可以设置的参数
     double steering_ratio;
     double kinamatic_para_Lf;
 
-    // lqr_pid预测模型里可以调节的参数
-    int lqr_pid_control_horizon_length; // lqr_pid求解的时候,一次求解里面 lqr_pid 预测的步数,乘以步长,就是 lqr_pid 一次求解考虑的未来的范围大小.
-    double lqr_pid_control_step_length; //Original 0.1 不是控制步长,而是模型离散化后进行预测时的预测步长
-    // lqr_pid 目标函数里面可以调节的权重
+    // stanley_pid预测模型里可以调节的参数
+    int stanley_pid_control_horizon_length; // stanley_pid求解的时候,一次求解里面 stanley_pid 预测的步数,乘以步长,就是 stanley_pid 一次求解考虑的未来的范围大小.
+    double stanley_pid_control_step_length; //Original 0.1 不是控制步长,而是模型离散化后进行预测时的预测步长
+    // stanley_pid 目标函数里面可以调节的权重
     int cte_weight; //Original2000
     int epsi_weight;
     int v_weight;
@@ -195,7 +195,7 @@ public:
 
     double ins_delay;
 
-    // lqr_pid 里面拟合前方参考路径的时候使用的路点的数量，这个意义更新为使用的前方多少距离内的点
+    // stanley_pid 里面拟合前方参考路径的时候使用的路点的数量，这个意义更新为使用的前方多少距离内的点
     double reference_path_length;
 
     int reference_path_points_number;
@@ -205,7 +205,7 @@ public:
     // 在 RVIZ 里面可视化根据参考路径拟合得到的多项式表达的曲线时,显示的点的数量和点的距离参数
     double point_distance_of_reference_line_visualization; // step on x
     int points_number_of_reference_line_visualization;     /* how many point "int the future" to be plotted. */
-    bool lqr_pid_enable_signal = true;
+    bool stanley_pid_enable_signal = true;
 
     double steer_value;
     double throttle_value;
@@ -255,7 +255,7 @@ public:
     vector<double> planner_path_remap_y;
 
     double roll_current, pitch_current, heading_current;
-    double ins_data_arrive_at_lqr_pid_through_callback;
+    double ins_data_arrive_at_stanley_pid_through_callback;
 
     VectorXd coeffs;
     double cte;
@@ -265,7 +265,7 @@ public:
 
     int qos_=2;
 
-    // 以下是从lqr移植过来的时候新增的
+    // 以下是从stanley移植过来的时候新增的
 
     //计算两点之间的距离
     double pointDistance(const TrajectoryPoint &point, const double x, const double y) {
@@ -311,7 +311,7 @@ public:
 
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_gps_vehicle;
     std::unique_ptr<zww::control::PIDController> pid_controller_longitudinal;
-    std::unique_ptr<zww::control::LqrController> lqr_controller_lateral;
+    std::unique_ptr<zww::control::StanleyController> stanley_controller_lateral;
 
 
 };

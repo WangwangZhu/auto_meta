@@ -77,7 +77,8 @@
         "mprealsupport": "cpp",
         "splines": "cpp",
         "spline.h": "c",
-        "wvcu_longitudinalstatus": "cpp"
+        "wvcu_longitudinalstatus": "cpp",
+        "*.ipp": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages",
