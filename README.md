@@ -232,8 +232,8 @@ NeZha: 顺时针为负
 3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
 4. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
 5. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
-6. source ros2_terminal_setup.sh + ros2 launch launch_manager lattice_planner_launch.py
-7. source ros2_terminal_setup.sh + ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+6. source ros2_terminal_setup.sh + ros2 launch lattice_planner lattice_planner_launch.py 
+7. source ros2_terminal_setup.sh + ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
 
 # Carla仿真 到 实车测试的改动
 
