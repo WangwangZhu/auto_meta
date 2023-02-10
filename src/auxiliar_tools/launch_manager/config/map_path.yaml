@@ -1,5 +1,6 @@
 global_path_visualization:
   ros__parameters:
     # global_map_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/2022_12_28_18_38_28_ins_data_map_after_preprocess.csv"
+    # global_map_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/2023_02_01_09_19_01_ins_data_map.csv"
     global_map_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/2022_12_28_18_38_28_ins_data_map_after_preprocess.csv"
     velocity_curve_name_parameter: "/src/location_modules/integrated_navigation_system/map_after_preprocess/acc_40.csv"

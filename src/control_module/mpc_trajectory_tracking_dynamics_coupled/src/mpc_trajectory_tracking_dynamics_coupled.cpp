@@ -349,6 +349,7 @@ void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
         // if (0) // 失能跟踪功能，测试控制信号是否起效
         {
             this->reference_path_length = max_mpc(floor(this->mpc_control_horizon_length * this->mpc_control_step_length * this->v_longitudinal) + 1, 10.0);
+            // this->reference_path_length = 30;
             RCLCPP_INFO(this->get_logger(), "reference_path_length: %f", this->reference_path_length);
 
             if (is_eps_received && is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
@@ -431,7 +432,7 @@ void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
                                                                     planner_path_y[reference_path_points_number+1]);
                         reference_path_points_number ++;
                     }
-                    // cout << "reference_path_points_number: " << reference_path_points_number << endl;
+                    cout << "reference_path_points_number: " << reference_path_points_number << endl;
                     rclcpp::Time here1 = this->now();
                     double *ptrx = &planner_path_remap_x[planner_path_former_point_of_current_position];
                     Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, reference_path_points_number);
@@ -580,10 +581,10 @@ void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
                     next_y_vals.push_back(future_y);
                 }
 
-                reference_path_id ++ ;
-                if (reference_path_id > 10000){
-                    reference_path_id = 100;
-                }
+                // reference_path_id ++ ;
+                // if (reference_path_id > 10000){
+                //     reference_path_id = 100;
+                // }
                 reference_path.id = reference_path_id;
                 reference_path.header.frame_id = "base_link";
                 reference_path.header.stamp = this->get_clock()->now();
@@ -609,12 +610,13 @@ void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
                     }
                 }
                 // mpc_output_path;
-                mpc_output_path.id = reference_path_id;
+                mpc_output_path.id = reference_path_id + 1;
                 mpc_output_path.header.frame_id = "base_link";
                 mpc_output_path.header.stamp = this->get_clock()->now();
                 mpc_output_path.type = visualization_msgs::msg::Marker::LINE_STRIP;
                 mpc_output_path.action = visualization_msgs::msg::Marker::ADD;
                 mpc_output_path.lifetime = rclcpp::Duration(20ms);
+                // mpc_output_path.lifetime = rclcpp::Duration(200000ms);
                 mpc_output_path.scale.x = 0.04;
                 mpc_output_path.scale.y = 0.04;
                 mpc_output_path.scale.z = 0.04;

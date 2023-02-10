@@ -23,8 +23,7 @@ FG_eval::FG_eval(const Eigen::VectorXd &state,
                  const double &mpc_control_step_length,
                  const double &kinamatic_para_Lf,
                  const double &a_lateral,
-                 const double &steer_ratio)
-{
+                 const double &steer_ratio){
     this->steer_ratio = steer_ratio;
     this->coeffs = coeffs;
     this->ref_v = target_v;
@@ -181,7 +180,6 @@ void FG_eval::operator()(ADvector &fg, ADvector &vars)
         fg[1 + cte_start + t] = cte_1 - (f_0 - y_0 + v_longitudinal_0 * CppAD::tan(epsi_0) * dt);
         /* 航向跟踪误差 */
         fg[1 + epsi_start + t] = epsi_1 - (psi_0 - psi_des_0 - v_longitudinal_0 * (front_wheel_angle_0 / steer_ratio) / Lf * dt);
-
     }
 }
 
