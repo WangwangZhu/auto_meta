@@ -288,7 +288,6 @@ public:
     double goalTolerance_ = 0.5;                    //到终点的容忍距离
     bool isReachGoal_ = false;
     bool firstRecord_ = true;
-    int cnt;
 
     std::string _line;
     std::vector<std::pair<double, double>> xy_points;
@@ -312,6 +311,22 @@ public:
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_gps_vehicle;
     std::unique_ptr<zww::control::PIDController> pid_controller_longitudinal;
     std::unique_ptr<zww::control::StanleyController> stanley_controller_lateral;
+
+    double V_set_;
+    double T_gap_;
+
+    bool first_record_;
+    bool cout_distance_;
+    bool cout_speed_;
+
+    double wheelbase_;
+    double car_length_;
+
+    int cnt;
+    int qos;
+
+    // Input
+    VehicleState vehicle_state_;
 
 
 };

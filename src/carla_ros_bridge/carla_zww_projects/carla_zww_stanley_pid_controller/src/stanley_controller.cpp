@@ -24,6 +24,7 @@ double PointDistanceSquare(const TrajectoryPoint &point, const double x, const d
     return dx * dx + dy * dy;
 }
 
+// TODO 可调节参数
 void StanleyController::LoadControlConf() { k_y_ = 0.5; }
 
 // /** to-do **/ 计算需要的控制命令, 实现对应的stanley模型,并将获得的控制命令传递给汽车
@@ -73,7 +74,7 @@ void StanleyController::ComputeControlCmd(const VehicleState &vehicle_state, con
         kappa_factor_angle = -current_closest_point.kappa;
     }
 
-    double raw_steering_control = e_y + 0.5 * e_theta_pd + 2.6 * kappa_factor_angle;
+    double raw_steering_control = e_y + 0.5 * e_theta_pd + 2.6 * kappa_factor_angle; // TODO 可调节参数
 
     // 限制前轮转角的取值区间
     if (raw_steering_control > M_PI) {

@@ -115,7 +115,16 @@ StanleyPIDTrajectoryTracking::StanleyPIDTrajectoryTracking() : Node("stanley_pid
 
     stanley_controller_lateral = std::make_unique<zww::control::StanleyController>();
     stanley_controller_lateral->LoadControlConf();
-    stanley_controller_lateral->Init();
+    // stanley_controller_lateral->Init();
+
+    // first_record_ = false;
+    // V_set_ = 5.0; // m/s
+    wheelbase_ = 2.852;
+    car_length_ = 2.852;
+
+    V_set_ = 30;    // km/h
+    // first_record_ = true;
+    cnt = 0;
 
     RCLCPP_INFO(this->get_logger(), "target_v %f", this->target_v);
     RCLCPP_INFO(this->get_logger(), "vehicle_steering_ratio_double %f", this->steering_ratio);
@@ -547,44 +556,14 @@ void StanleyPIDTrajectoryTracking::stanley_pid_tracking_iteration_callback(){
 
                 // -------------------- 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用) --------------------
                 if (with_planner_flag == 0){
+                    cout << "pure tracking running..." << endl;
                     this->local_reference_trajectory = this->global_reference_trajectory;
                     v_err = target_point_.v - vehicleState_.velocity;           // 速度误差
                 }
                 // -------------------- 使用规划器重规划路径作为跟踪控制器的参考路径 --------------------
                 else{
+                    cout << "using planner running..." << endl;
                     this->local_reference_trajectory = this->from_planner_reference_trajectory;
-                    // reference_path_points_number = 0;
-                    // int planner_path_former_point_of_current_position = 0;
-                    // for (size_t i = 0; i < planner_path_x.size() - 1; i++){
-                    //     double shift_x = planner_path_x[i] - px;
-                    //     double shift_y = planner_path_y[i] - py;
-                    //     planner_path_remap_x.push_back(  shift_x * cos(psi) + shift_y * sin(psi));
-                    //     planner_path_remap_y.push_back(- shift_x * sin(psi) + shift_y * cos(psi));
-                    // }
-                    // // 从局部路径中，找到距离当前位置最近的前方的点。
-                    // for (size_t i = planner_path_former_point_of_current_position; i < planner_path_remap_x.size(); i++){
-                    //     if (planner_path_remap_x[i] > 0.0){
-                    //         planner_path_former_point_of_current_position = i;
-                    //         break;
-                    //     }            
-                    // }
-                    // double temp_total_distance = 0;
-                    // while (temp_total_distance <= this->reference_path_length){
-                    //     temp_total_distance += distance_two_point(planner_path_x[reference_path_points_number], 
-                    //                                                 planner_path_y[reference_path_points_number], 
-                    //                                                 planner_path_x[reference_path_points_number+1], 
-                    //                                                 planner_path_y[reference_path_points_number+1]);
-                    //     reference_path_points_number ++;
-                    // }
-                    // cout << "reference_path_points_number: " << reference_path_points_number << endl;
-                    // rclcpp::Time here1 = this->now();
-                    // double *ptrx = &planner_path_remap_x[planner_path_former_point_of_current_position];
-                    // Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, reference_path_points_number);
-                    // double *ptry = &planner_path_remap_y[planner_path_former_point_of_current_position];
-                    // Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, reference_path_points_number);            
-                    // coeffs = polyfit(ptsx_transform, ptsy_transform, 5);
-                    // cte    = polyeval(coeffs, 0); // 在车辆坐标系下，当前时刻的位置偏差就是期望轨迹在车辆坐标系中的截距
-                    
                     // 速度                
                     Eigen::VectorXd _planner_path_s(planner_path_s.size());
                     Eigen::VectorXd _planner_path_v(planner_path_v.size());
@@ -606,10 +585,10 @@ void StanleyPIDTrajectoryTracking::stanley_pid_tracking_iteration_callback(){
                     isReachGoal_ = true;
                 }
                 if (!isReachGoal_) {
-                    stanley_controller_lateral->ComputeControlCommand(this->vehicleState_, this->local_reference_trajectory, cmd);
+                    // stanley_controller_lateral->ComputeControlCommand(this->vehicleState_, this->local_reference_trajectory, cmd);
+                    stanley_controller_lateral->ComputeControlCmd(this->vehicleState_, this->local_reference_trajectory, cmd);
                 }
                 double acceleration_cmd = pid_controller_longitudinal->Control(v_err, 0.01);
-                
 
                 carla_control_cmd.header.stamp = this->now();
                 if (acceleration_cmd >= 1.0) {
