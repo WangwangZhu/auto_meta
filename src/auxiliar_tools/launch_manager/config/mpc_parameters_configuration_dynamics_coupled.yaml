@@ -55,4 +55,4 @@ mpc_trajectory_tracking_dynamics_coupled_node:
 
     mpc_working_mode: 1 # 1: simulation 2: real vehicle.
 
-    mpc_with_planner_flag: 0   # MPC做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通 #TODO:
+    mpc_with_planner_flag: 1   # MPC做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通 #TODO:

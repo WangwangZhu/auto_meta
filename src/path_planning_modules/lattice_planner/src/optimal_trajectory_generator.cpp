@@ -21,12 +21,12 @@
 #define MAX_ROAD_WIDTH 7.0         // maximum road width [m]
 #define D_ROAD_W 1.0               // road width sampling length [m]
 #define DT 0.2                     // time tick [s]
-#define MAXT 5.0                   // max prediction time [s]
-#define MINT 3.0                   // min prediction time [s]
+#define MAXT 8.0                   // max prediction time [s]
+#define MINT 4.0                   // min prediction time [s]
 #define TARGET_SPEED 17.0 / 3.6    // target speed [m/s]
 #define D_T_S 5.0 / 3.6            // target speed sampling length [m/s]
 #define N_S_SAMPLE 1               // sampling number of target speed
-#define ROBOT_RADIUS 2.5           // robot radius [m]
+#define ROBOT_RADIUS 3           // robot radius [m]
 
 #define KJ 1
 #define KT 0.1
@@ -51,7 +51,7 @@ Vec_Path FrenetOptimalTrajectory::calc_frenet_paths(float c_speed, float c_d, fl
     // 根据 当前车辆的速度，当前车辆在frenet坐标系中的s坐标，l坐标，l坐标的一阶导数和二阶导数来采样生成备选轨迹
     // 先遍历 d 方向，再遍历 t 方向，这样可以生成 d-t 曲线，每个d-t曲线下，再遍历备选速度，生成 s-t 曲线，这种方法其实只适用终点 s 自由的方式
     // 完成轨迹采样
-    for (float di = -5; di <= 5; di += D_ROAD_W) {
+    for (float di = 0; di <= 5; di += D_ROAD_W) {
         for (float ti = MINT; ti <= MAXT; ti += DT) {
             FrenetPath fp_without_s;
             // std::cout << "采样过程中的c_d: " << c_d << std::endl;

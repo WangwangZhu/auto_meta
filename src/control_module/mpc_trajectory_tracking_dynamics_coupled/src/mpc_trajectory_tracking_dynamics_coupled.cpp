@@ -447,11 +447,11 @@ void MpcTrajectoryTracking::mpc_tracking_iteration_callback(){
                     for (uint i = 0; i < planner_path_s.size(); i++){
                         _planner_path_s[i] = planner_path_s[i];
                         _planner_path_v[i] = planner_path_v[i];
-                        // cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
+                        cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
-                    // cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
+                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
                     // target_v = 4;
                 }
 

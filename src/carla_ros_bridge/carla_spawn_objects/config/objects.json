@@ -26,6 +26,16 @@
             "id": "obstacle_none",
             "spawn_point": {"x": -953.233, "y": -145.335, "z": 1.0, "roll": 0.0, "pitch": 0.0, "yaw": 200}
         },
+        {
+            "type": "vehicle.tesla.model3",
+            "id": "obstacle_1",
+            "spawn_point": {"x": 144.414898618473, "y": 250.23, "z": 1.0, "roll": 0.0, "pitch": 0.0, "yaw": 200}
+        },
+        {
+            "type": "vehicle.tesla.model3",
+            "id": "obstacle_2",
+            "spawn_point": {"x": 40.1, "y": 212.7, "z": 1.0, "roll": 0.0, "pitch": 0.0, "yaw": 200}
+        },
 
 
         {

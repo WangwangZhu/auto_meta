@@ -886,8 +886,8 @@ void LatticePlanner::UpdateStaticObstacle()
 - Comments    : None
 **************************************************************************************'''*/
 {
-    // std::vector<Poi_f> obstcles{{144.414, 250.23}, {40.1, 212.7}}; //TODO 
-    std::vector<Poi_f> obstcles{};
+    std::vector<Poi_f> obstcles{{144.414, 250.23}, {40.1, 212.7}}; //TODO 
+    // std::vector<Poi_f> obstcles{};
     // std::vector<Poi_f> obstcles{};
     obstcle_list_ = obstcles;
 }

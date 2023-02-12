@@ -619,8 +619,9 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
-                    v_err = 12 - vehicleState_.velocity;
-                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << ",  current car_s" << car_s << endl;
+                    v_err = _planner_path_v[int(_planner_path_v.size()/2)] - vehicleState_.velocity; // TODO  10是没办法的办法，如果直接用当前位置的目标速度，那车无法产生足够的加速度请求
+                    cout << "current_index ___________ :: " << current_index << endl;
+                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << _planner_path_v[current_index + 1] << ",  current car_s" << car_s << endl;
                     // target_v = 4;
                 }
 
