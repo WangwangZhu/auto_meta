@@ -339,10 +339,10 @@ void StanleyPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odom
         vehicleState_.vy = msg->twist.twist.linear.y;
         vehicleState_.velocity = std::sqrt(vehicleState_.vx * vehicleState_.vx + vehicleState_.vy * vehicleState_.vy + vehicleState_.vz * vehicleState_.vz);    // 本车速度
         vehicleState_.angular_velocity = msg->twist.twist.angular.z;
-        if (vehicleState_.vx < 0.4/3.6){
-            vehicleState_.vy = 0;
-            vehicleState_.angular_velocity = 0;
-        }
+        // if (vehicleState_.vx < 0.4/3.6){
+        //     vehicleState_.vy = 0;
+        //     vehicleState_.angular_velocity = 0;
+        // }
 
         // RCLCPP_INFO(this->get_logger(), "velocity receiveing from ins: %f", this->v_longitudinal);
 

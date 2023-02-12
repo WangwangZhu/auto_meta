@@ -48,6 +48,10 @@
 
 #include <eigen3/unsupported/Eigen/Splines>
 
+#include "optimal_trajectory_generator.h"
+
+#include "common.h"
+
 
 // #include <boost/math/interpolators/makima.hpp>
 
@@ -173,6 +177,74 @@ public:
     double ref_x;
     double ref_y;
     double ref_yaw;
+
+    double target_v; // km/h
+    // float c_speed_, c_d_, c_d_d_, c_d_dd_, s0_;
+
+    void GetWayPoints();
+    Vec_f wx_, wy_;
+    Spline2D *csp_obj_;
+    void GenerateGlobalPath();
+    int GetNearestReferenceIndex(const VehicleState &ego_state);    // 根据车辆的当前位置，获取与参考路劲最近点的id
+    void UpdateStaticObstacle();
+    double GetNearestReferenceLength(const VehicleState &ego_state);
+    double GetNearestReferenceLatDist(const VehicleState &ego_state);
+    bool LeftOfLine(const VehicleState &p, const geometry_msgs::msg::PoseStamped &p1, const geometry_msgs::msg::PoseStamped &p2);
+    // nav_msgs::msg::Path global_plan_;
+    // double end_x_, end_y_, end_s_;
+    auto createQuaternionMsgFromYaw(double yaw) {
+        tf2::Quaternion q;
+        q.setRPY(0, 0, yaw);
+        return tf2::toMsg(q);
+    };
+    std::vector<Poi_f> obstcle_list_;
+    rclcpp::TimerBase::SharedPtr lattice_planner_timer;
+    void LatticePlannerCallback();
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr replan_path_publisher_;
+    TrajectoryData GetTrajectoryFromFrenetPath(const FrenetPath &path);
+    float c_speed_ = 10.0 / 3.6;
+    float c_d_ = 0;
+    float c_d_d_ = 0.0;
+    float c_d_dd_ = 0.0;
+    float s0_ = 0.0;
+    nav_msgs::msg::Path global_plan_;
+    double end_x_, end_y_, end_s_;
+    bool near_goal_ = false;
+    bool use_reference_line_ = false;
+    TrajectoryData planningPublishedTrajectoryDebug_;    //规划下发的轨迹
+    TrajectoryData last_trajectory_;                     //规划下发的轨迹
+    bool plannerFlag_ = false;
+
+    private:
+    double targetSpeed_ = 5;
+    double controlFrequency_ = 100;                 //控制频率
+    double goalTolerance_ = 0.5;                    //到终点的容忍距离
+    bool isReachGoal_ = false;
+    bool firstRecord_ = true;
+    int cnt;
+
+    std::string _line;
+    std::vector<std::pair<double, double>> xy_points;
+    std::vector<double> v_points;
+
+    TrajectoryData planning_published_trajectory;
+    TrajectoryPoint goal_point;
+    std::vector<TrajectoryPoint> trajectory_points_;
+
+    std::string roadmap_path;
+    double speed_P, speed_I, speed_D, target_speed;
+
+    VehicleState vehicleState_;
+
+    TrajectoryData global_reference_trajectory;
+
+    bool first_receive_global_path = true;
+
+    template <typename U, typename V>
+    double DistanceXY(const U &u, const V &v) {
+        return std::hypot(u.x - v.x, u.y - v.y);
+}
+
 };
 
 #endif

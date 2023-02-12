@@ -9,7 +9,7 @@
     <color rgba="0.0 0.0 0.0 1.0"/>
   </material>
   <material name="RRBOT/blue">
-    <color rgba="0.255 0.4112 0.8823 0.4"/>
+    <color rgba="0.255 0.4112 0.8823 0.6"/>
   </material>
   <material name="RRBOT/green">
     <color rgba="0.0 0.8 0.0 1.0"/>

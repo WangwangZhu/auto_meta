@@ -78,7 +78,8 @@
         "splines": "cpp",
         "spline.h": "c",
         "wvcu_longitudinalstatus": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "hash_set": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages",

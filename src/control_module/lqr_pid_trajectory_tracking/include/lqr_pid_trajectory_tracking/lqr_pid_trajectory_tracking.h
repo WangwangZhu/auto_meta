@@ -280,6 +280,7 @@ public:
     }
 
     TrajectoryPoint QueryNearestPointByPosition(const double x, const double y);
+    int QueryNearestPointByPosition(const double x, const double y, std::vector<TrajectoryPoint> current_trajectory );
     double PointDistanceSquare(const TrajectoryPoint &point, const double x, const double y);
 
        private:

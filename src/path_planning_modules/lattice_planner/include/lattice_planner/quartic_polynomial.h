@@ -47,8 +47,7 @@ class QuarticPolynomial {
   };
 
   float calc_point(float t) {
-    return a0 + a1 * t + a2 * std::pow(t, 2) + a3 * std::pow(t, 3) +
-           a4 * std::pow(t, 4);
+    return a0 + a1 * t + a2 * std::pow(t, 2) + a3 * std::pow(t, 3) + a4 * std::pow(t, 4);
   };
 
   float calc_first_derivative(float t) {

@@ -29,7 +29,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(custom_interfaces REQUIRED)
 
 
-add_executable(${PROJECT_NAME}_node src/lattice_planner.cpp)
+add_executable(${PROJECT_NAME}_node src/lattice_planner.cpp src/optimal_trajectory_generator.cpp src/reference_line.cpp)
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -50,6 +50,5 @@ install(DIRECTORY
   config
   DESTINATION share/${PROJECT_NAME}/
 )
-
 
 ament_package()

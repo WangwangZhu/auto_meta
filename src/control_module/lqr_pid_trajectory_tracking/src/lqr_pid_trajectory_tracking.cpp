@@ -162,6 +162,7 @@ void LQRPIDTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::ms
     for (int i = 0; i < path_length; i++){
         planner_path_s.push_back(msg->poses[i].pose.position.x);
         planner_path_v.push_back(msg->poses[i].pose.position.y);
+        cout << "planner_path_vplanner_path_vplanner_path_v::: " << msg->poses[i].pose.position.y << endl;
     }
     is_planner_frenet_path_received = true;
 }
@@ -330,10 +331,10 @@ void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry
         vehicleState_.vy = msg->twist.twist.linear.y;
         vehicleState_.velocity = std::sqrt(vehicleState_.vx * vehicleState_.vx + vehicleState_.vy * vehicleState_.vy + vehicleState_.vz * vehicleState_.vz);    // 本车速度
         vehicleState_.angular_velocity = msg->twist.twist.angular.z;
-        if (vehicleState_.vx < 0.4/3.6){
-            vehicleState_.vy = 0;
-            vehicleState_.angular_velocity = 0;
-        }
+        // if (vehicleState_.vx < 0.4/3.6){
+        //     vehicleState_.vy = 0;
+        //     vehicleState_.angular_velocity = 0;
+        // }
 
         // RCLCPP_INFO(this->get_logger(), "velocity receiveing from ins: %f", this->v_longitudinal);
 
@@ -382,7 +383,7 @@ void LQRPIDTrajectoryTracking::carla_odom_callback(nav_msgs::msg::Odometry::Shar
         vehicleState_.vx = msg->twist.twist.linear.x;
         vehicleState_.vy = msg->twist.twist.linear.y;
         vehicleState_.vz = msg->twist.twist.linear.z;
-        vehicleState_.velocity = std::sqrt(vehicleState_.vx * vehicleState_.vx + vehicleState_.vy * vehicleState_.vy + vehicleState_.vz * vehicleState_.vz) * 3.6;    // 本车速度
+        vehicleState_.velocity = std::sqrt(vehicleState_.vx * vehicleState_.vx + vehicleState_.vy * vehicleState_.vy + vehicleState_.vz * vehicleState_.vz);    // 本车速度
         vehicleState_.heading = vehicleState_.yaw;
 
         px = msg->pose.pose.position.x;
@@ -474,6 +475,28 @@ TrajectoryPoint LQRPIDTrajectoryTracking::QueryNearestPointByPosition(const doub
     return trajectory_points_[index_min];
 }
 
+int LQRPIDTrajectoryTracking::QueryNearestPointByPosition(const double x, const double y, std::vector<TrajectoryPoint> current_trajectory )
+/*'''**************************************************************************************
+- FunctionName: None
+- Function    : None
+- Inputs      : None
+- Outputs     : None
+- Comments    : None
+**************************************************************************************'''*/
+{
+    double d_min = this->PointDistanceSquare(current_trajectory.front(), x, y);
+    int index_min = 0;
+
+    for (int i = 1; i < current_trajectory.size(); ++i) {
+        double d_temp = this->PointDistanceSquare(current_trajectory[i], x, y);
+        if (d_temp < d_min) {
+            d_min = d_temp;
+            index_min = i;
+        }
+    }
+    return index_min;
+}
+
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -553,6 +576,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 // -------------------- 使用规划器重规划路径作为跟踪控制器的参考路径 --------------------
                 else{
                     this->local_reference_trajectory = this->from_planner_reference_trajectory;
+                    int current_index = this->QueryNearestPointByPosition(vehicleState_.x, vehicleState_.y, this->local_reference_trajectory.trajectory_points);
                     // reference_path_points_number = 0;
                     // int planner_path_former_point_of_current_position = 0;
                     // for (size_t i = 0; i < planner_path_x.size() - 1; i++){
@@ -591,12 +615,12 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     for (uint i = 0; i < planner_path_s.size(); i++){
                         _planner_path_s[i] = planner_path_s[i];
                         _planner_path_v[i] = planner_path_v[i];
-                        // cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
+                        cout << "_planner_path_s::::::::::" << _planner_path_s[i] << "  " << _planner_path_v[i] << endl;
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
-                    v_err = target_v - vehicleState_.velocity;
-                    // cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << endl;
+                    v_err = 12 - vehicleState_.velocity;
+                    cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << target_v << ",  current car_s" << car_s << endl;
                     // target_v = 4;
                 }
 
@@ -620,6 +644,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 }
                 if (acceleration_cmd <= 0) {
                     carla_control_cmd.brake = -acceleration_cmd;
+                    // carla_control_cmd.brake = 0;
                     carla_control_cmd.throttle = 0;
                 } else {
                     carla_control_cmd.throttle = acceleration_cmd;
