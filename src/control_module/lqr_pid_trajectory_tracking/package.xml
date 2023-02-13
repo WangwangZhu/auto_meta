@@ -15,6 +15,7 @@
   <depend>std_msgs</depend>
   <depend>chassis_msg</depend>
   <depend>carla_msgs</depend>
+  <depend>tutorial_interfaces</depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
 

@@ -30,6 +30,8 @@
 #include "chassis_msg/msg/wvcu_horizontal_status.hpp"
 #include "chassis_msg/msg/wvcu_longitudinal_status.hpp"
 
+#include "tutorial_interfaces/msg/msg_to_can.hpp"  
+
 #include <math.h>
 #include <tf2/convert.h>
 #include <cppad/cppad.hpp>
@@ -313,6 +315,10 @@ public:
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_gps_vehicle;
     std::unique_ptr<zww::control::PIDController> pid_controller_longitudinal;
     std::unique_ptr<zww::control::LqrController> lqr_controller_lateral;
+
+    tutorial_interfaces::msg::MsgToCan matrix_ad_control_message = tutorial_interfaces::msg::MsgToCan();
+    rclcpp::Publisher<tutorial_interfaces::msg::MsgToCan>::SharedPtr matrix_ad_control_publisher_;
+
 
 
 };

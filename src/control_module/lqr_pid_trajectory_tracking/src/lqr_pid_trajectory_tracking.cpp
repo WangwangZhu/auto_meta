@@ -117,6 +117,8 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     lqr_controller_lateral->LoadControlConf();
     lqr_controller_lateral->Init();
 
+    matrix_ad_control_publisher_ = this->create_publisher<tutorial_interfaces::msg::MsgToCan>("to_can", 10);
+
     RCLCPP_INFO(this->get_logger(), "target_v %f", this->target_v);
     RCLCPP_INFO(this->get_logger(), "vehicle_steering_ratio_double %f", this->steering_ratio);
     RCLCPP_INFO(this->get_logger(), "vehicle_Lf_double %f", this->kinamatic_para_Lf);
@@ -516,6 +518,16 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     // carla_control_cmd.brake = 0;
     // carla_control_cmd.gear = 1;
 
+    matrix_ad_control_message.connect = 1;
+    matrix_ad_control_message.forward = 1;
+    matrix_ad_control_message.back = 0;
+    matrix_ad_control_message.buzzer = 0;
+    matrix_ad_control_message.clock = 0;
+    matrix_ad_control_message.speed = 100;
+    matrix_ad_control_message.acc = 2.5; // 在2.5s内到达指定转速
+    matrix_ad_control_message.dec = 1.5; // 没有速度请求的时候在1.5S内减速到0
+    matrix_ad_control_message.angle = -30;
+
     rclcpp::Time start_lqr_pid;
     rclcpp::Time end_lqr_pid;
     start_lqr_pid = this->now();
@@ -655,6 +667,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     carla_control_cmd.steer = 0;
                 } else {
                     carla_control_cmd.steer = cmd.steer_target;
+                    matrix_ad_control_message.angle = cmd.steer_target;
                 }
                 // carla_control_cmd.steer = 0;
                 carla_control_cmd.gear = 1;
@@ -867,6 +880,9 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
             vehicle_control_target_velocity.velocity = target_v;
             vehicle_control_target_velocity_publisher->publish(vehicle_control_target_velocity);
         }   
+
+        matrix_ad_control_publisher_->publish(matrix_ad_control_message);
+
         end_lqr_pid = this->now();
         iteration_time_length = (end_lqr_pid - start_lqr_pid).nanoseconds();
         lqr_pid_iteration_duration_msg.data = iteration_time_length / 1000000;

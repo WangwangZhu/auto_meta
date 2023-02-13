@@ -1,0 +1,9 @@
+int64 connect     #使能信号
+int64 forward     #前进
+int64 back        #倒车
+int64 buzzer      #蜂鸣器
+int64 clock       #计时器
+int64 speed     #速度（转速）
+float64 acc       #加速率
+float64 dec       #减速率
+int64 angle     #转动角度

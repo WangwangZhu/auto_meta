@@ -95,4 +95,5 @@
     ],
     "git.ignoreLimitWarning": true,
     "cmake.configureOnOpen": false,
+    "cmake.sourceDirectory": "${workspaceFolder}/src/carla_ros_bridge/astuff_sensor_msgs/ibeo_msgs",
 }
