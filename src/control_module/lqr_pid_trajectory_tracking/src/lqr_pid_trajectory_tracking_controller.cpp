@@ -48,7 +48,7 @@ void LqrController::LoadControlConf() {
 }
 
 // 初始化控制器
-void LqrController::Init() {
+void LqrController::Init(const double lqr_controller_u, const double lqr_controller_cost_q_1, const double lqr_controller_cost_q_2, const double lqr_controller_cost_q_3, const double lqr_controller_cost_q_4){
     // Matrix init operations.
     const int matrix_size = basic_state_size_;
     matrix_a_ = Matrix::Zero(basic_state_size_, basic_state_size_);
@@ -88,15 +88,15 @@ void LqrController::Init() {
     matrix_k_ = Matrix::Zero(1, matrix_size);
     // lqr cost function中 输入值u的权重
     matrix_r_ = Matrix::Identity(1, 1);
-    matrix_r_(0, 0) = 10;
+    matrix_r_(0, 0) = lqr_controller_u;
     // lqr cost function中 状态向量x的权重
     matrix_q_ = Matrix::Zero(matrix_size, matrix_size);
 
     // int q_param_size = 4;
-    matrix_q_(0, 0) = 2;    // TODO: lateral_error
-    matrix_q_(1, 1) = 1;    // TODO: lateral_error_rate
-    matrix_q_(2, 2) = 0.1;    // TODO: heading_error
-    matrix_q_(3, 3) = 0.1;    // TODO: heading__error_rate
+    matrix_q_(0, 0) = lqr_controller_cost_q_1;    // TODO: lateral_error
+    matrix_q_(1, 1) = lqr_controller_cost_q_2;    // TODO: lateral_error_rate
+    matrix_q_(2, 2) = lqr_controller_cost_q_3;    // TODO: heading_error
+    matrix_q_(3, 3) = lqr_controller_cost_q_4;    // TODO: heading__error_rate
 
     matrix_q_updated_ = matrix_q_;
 

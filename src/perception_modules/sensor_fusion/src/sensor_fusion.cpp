@@ -22,8 +22,8 @@ double inline max_sensor(double a, double b) { return (a > b) ? a : b; }
 **************************************************************************************'''*/
 SensorFusion::SensorFusion() : Node("sensor_fusion_publisher")
 {
-    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
-    // sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    // sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
 
     sensor_fusion_global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&SensorFusion::sensor_fusion_global_path_callback, this, _1));
 

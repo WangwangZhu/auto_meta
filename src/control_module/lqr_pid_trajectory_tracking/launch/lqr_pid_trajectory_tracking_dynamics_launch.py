@@ -13,7 +13,6 @@ import ament_index_python.packages
 def generate_launch_description():
     
     lqr_pid_parameters_configuration = os.path.join(get_package_share_directory('lqr_pid_trajectory_tracking'), '../../../../src/control_module/lqr_pid_trajectory_tracking/config', 'lqr_pid_parameters_configuration.yaml')
-    print("ddddddddddddddddddddd")
     return LaunchDescription([
         DeclareLaunchArgument(
             'node_prefix',

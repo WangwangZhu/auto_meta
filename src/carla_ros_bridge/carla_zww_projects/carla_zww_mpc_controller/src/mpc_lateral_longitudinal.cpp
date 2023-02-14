@@ -115,8 +115,8 @@ MPCControllerNode::MPCControllerNode()
     // mpc_controller_lateral->LoadControlConf();
     // mpc_controller_lateral->Init();
 
-    // localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&MPCControllerNode::OdomCallback, this, _1));
-    localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&MPCControllerNode::OdomCallback, this, _1)); // nezha
+    localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&MPCControllerNode::OdomCallback, this, _1));
+    // localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&MPCControllerNode::OdomCallback, this, _1)); // nezha
     
     
     lacalization_data_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&MPCControllerNode::IMUCallback, this, _1));

@@ -5,15 +5,15 @@
 2. `key_board_monitor.launch.py` 该文件启动后，软件监控全局键盘输入，这时如果操作键盘的话，尤其是按下 `eq`两个按键时，自动驾驶模式会被意外启动或意外停止。
 
 # 矩阵项目启动流程
+
 ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
 ros2 run integrated_navigation_system ins_d_data_parse
 ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
-ros2 run cpp_pubsub sub_pub 
-
+ros2 run cpp_pubsub sub_pub
 
 ros2 run sensor_fusion sensor_fusion_node
 ros2 run fsm_decision_making fsm_decision_making_node
-ros2 launch lattice_planner lattice_planner_launch.py 
+ros2 launch lattice_planner lattice_planner_launch.py
 
 # 实车代码启动流程：
 
@@ -243,13 +243,28 @@ NeZha: 顺时针为负
 3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
 4. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
 5. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
-6. source ros2_terminal_setup.sh + ros2 launch lattice_planner lattice_planner_launch.py 
+6. source ros2_terminal_setup.sh + ros2 launch lattice_planner lattice_planner_launch.py
 7. source ros2_terminal_setup.sh + ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
 
 # Carla仿真 到 实车测试的改动
 
 1. mpc_parameters_configuration_dynamics_coupled.yaml 中的控制器参数
-2. mpc_parameters_configuration_dynamics_coupled.cpp 中的订阅信号 50 行
-3. sensor_fusion.cpp 中订阅信号 25行
-4. fsm_decision_making.cpp 中定位订阅信号
-5. basic_planner.cpp 中定位订阅信号
+2. sensor_fusion.cpp 中订阅信号 25行
+3. fsm_decision_making.cpp 中定位订阅信号 26行
+4. lattice_planner.cpp 中定位订阅信号 25行
+5. basic_planner.cpp 中定位订阅信号 25行
+6. host_vehicle_visualization.cpp 中定位订阅信号
+7. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
+8. 
+9. 
+10. 
+11. 
+12. 
+13. 
+14. 
+15. 
+16. 
+17. 
+18. 
+19. 
+20.

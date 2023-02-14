@@ -59,7 +59,7 @@ class LqrController {
     ~LqrController();
 
     void LoadControlConf();
-    void Init();
+    void Init(const double lqr_controller_u, const double lqr_controller_cost_q_1, const double lqr_controller_cost_q_2, const double lqr_controller_cost_q_3, const double lqr_controller_cost_q_4);
 
     bool ComputeControlCommand(const VehicleState &localization, const TrajectoryData &planning_published_trajectory, ControlCmd &cmd);
 

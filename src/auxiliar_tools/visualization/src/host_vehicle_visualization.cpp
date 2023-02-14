@@ -47,8 +47,8 @@ public:
     {
         // odom_publisher = this->create_publisher<nav_msgs::msg::Odometry>("odom", 50);
 
-        // sub = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // carla
-        sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // nezha
+        sub = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // carla
+        // sub = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&HostVehicleVisualization::ins_data_receive_callback, this, _1)); // nezha
 
         publisher_timer_ = this->create_wall_timer(20ms, std::bind(&HostVehicleVisualization::publisher_timer_callback, this)); // 定时器， 定时调用
     }
