@@ -97,7 +97,7 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     lqr_controller_lateral->LoadControlConf();
     lqr_controller_lateral->Init(lqr_controller_u, lqr_controller_cost_q_1, lqr_controller_cost_q_2, lqr_controller_cost_q_3, lqr_controller_cost_q_4);
 
-    matrix_ad_control_publisher_ = this->create_publisher<tutorial_interfaces::msg::MsgToCan>("to_can", 10);
+    matrix_ad_control_publisher_ = this->create_publisher<matrix_interfaces::msg::MsgToCan>("matrix_vehicle_control_cmd", 10);
 
     RCLCPP_INFO(this->get_logger(), "target_v %f", this->target_v);
     RCLCPP_INFO(this->get_logger(), "vehicle_steering_ratio_double %f", this->steering_ratio);

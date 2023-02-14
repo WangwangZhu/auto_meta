@@ -19,7 +19,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "tutorial_interfaces/msg/msg_to_can.hpp"  
+#include "matrix_interfaces/msg/msg_to_can.hpp"  
 
 using namespace std::chrono_literals;
 using namespace std;
@@ -32,15 +32,15 @@ public:
   MinimalPublisher()
   : Node("minimal_publisher_test"), count_(0)
   {
-    publisher_ = this->create_publisher<tutorial_interfaces::msg::MsgToCan>("to_can", 10);
+    publisher_ = this->create_publisher<matrix_interfaces::msg::MsgToCan>("matrix_vehicle_control_cmd", 10);
     timer_ = this->create_wall_timer(
-      2000ms, std::bind(&MinimalPublisher::timer_callback, this));
+      50ms, std::bind(&MinimalPublisher::timer_callback, this));
   }
 
 private:
   void timer_callback()
   {
-    auto message = tutorial_interfaces::msg::MsgToCan();
+    auto message = matrix_interfaces::msg::MsgToCan();
     message.connect = 1;
     message.forward = 1;
     message.back = 0;
@@ -58,7 +58,7 @@ private:
     this->count ++;
   }
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<tutorial_interfaces::msg::MsgToCan>::SharedPtr publisher_;
+  rclcpp::Publisher<matrix_interfaces::msg::MsgToCan>::SharedPtr publisher_;
   size_t count_;
   int count = 0;
 

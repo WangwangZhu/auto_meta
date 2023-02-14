@@ -34,7 +34,7 @@ FSMDecisionMaking::FSMDecisionMaking() : Node("fsm_decision_making") // 使用�
     // fsm_decision_making_path_cartesian_publisher = this->create_publisher<visualization_msgs::msg::Marker>("fsm_decision_making_path_cardesian", qos_);
     // fsm_decision_making_path_frenet_publisher = this->create_publisher<nav_msgs::msg::Path>("fsm_decision_making_path_frenet", qos_);
 
-    fsm_behavior_decision_makeing_publisher = this->create_publisher<custom_interfaces::msg::FSMDecisionResults>("fsm_behavior_decision", qos_);
+    fsm_behavior_decision_makeing_publisher = this->create_publisher<behavior_decision_interface::msg::FSMDecisionResults>("fsm_behavior_decision", qos_);
 
 
 

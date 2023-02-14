@@ -28,7 +28,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(chassis_msg REQUIRED)
-find_package(tutorial_interfaces REQUIRED)
+find_package(matrix_interfaces REQUIRED)
 find_package(carla_msgs REQUIRED)
 # message("herererererer")
 find_package(Boost REQUIRED COMPONENTS system chrono regex thread program_options date_time)
@@ -48,7 +48,7 @@ target_include_directories(${PROJECT_NAME}_node PUBLIC
 # message(33333333333)
 target_link_libraries(${PROJECT_NAME}_node ipopt z ssl uv uWS)
 # message((11111111111111))
-ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "chassis_msg" "tutorial_interfaces" "nav_msgs" "visualization_msgs" "sensor_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs" "carla_msgs")# ipopt z ssl uv uWS
+ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "chassis_msg" "matrix_interfaces" "nav_msgs" "visualization_msgs" "sensor_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs" "carla_msgs")# ipopt z ssl uv uWS
 
 
 install(TARGETS ${PROJECT_NAME}_node

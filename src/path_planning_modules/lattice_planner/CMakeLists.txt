@@ -26,14 +26,14 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(custom_interfaces REQUIRED)
+find_package(behavior_decision_interface REQUIRED)
 
 
 add_executable(${PROJECT_NAME}_node src/lattice_planner.cpp src/optimal_trajectory_generator.cpp src/reference_line.cpp)
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "custom_interfaces" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs")# ipopt z ssl uv uWS
+ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "behavior_decision_interface" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs")# ipopt z ssl uv uWS
 
 install(TARGETS ${PROJECT_NAME}_node
   EXPORT export_${PROJECT_NAME}

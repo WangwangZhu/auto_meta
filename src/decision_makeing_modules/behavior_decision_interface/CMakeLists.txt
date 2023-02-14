@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(custom_interfaces)
+project(behavior_decision_interface)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -21,7 +21,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(custom_interfaces)
+# find_package(behavior_decision_interface)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

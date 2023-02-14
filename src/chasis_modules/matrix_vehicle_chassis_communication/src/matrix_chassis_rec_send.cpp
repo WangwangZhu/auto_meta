@@ -19,9 +19,9 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "tutorial_interfaces/msg/msg_from_can.hpp" 
-#include "cpp_pubsub/ICANCmd.h"
-#include "tutorial_interfaces/msg/msg_to_can.hpp" 
+#include "matrix_interfaces/msg/msg_from_can.hpp" 
+#include "matrix_vehicle_chassis_communication/ICANCmd.h"
+#include "matrix_interfaces/msg/msg_to_can.hpp" 
 
 
 using namespace std::chrono_literals;
@@ -53,26 +53,55 @@ int i;
 
 class MinimalPublisher : public rclcpp::Node{
     public:
+        // MinimalPublisher::~MinimalPublisher() {
+        //     delete[] send;
+        // }
         MinimalPublisher() : Node("sub_pub"), count_(0){
-            publisher_ = this->create_publisher<tutorial_interfaces::msg::MsgFromCan>("from_can", 10);
+            publisher_ = this->create_publisher<matrix_interfaces::msg::MsgFromCan>("matrix_vehicle_status", 10);
             timer_ = this->create_wall_timer(4ms, std::bind(&MinimalPublisher::timer_callback_pub, this));
-            subscription_ = this->create_subscription<tutorial_interfaces::msg::MsgToCan>("to_can", 10, std::bind(&MinimalPublisher::topic_callback_sub, this, _1));
+            subscription_ = this->create_subscription<matrix_interfaces::msg::MsgToCan>("matrix_vehicle_control_cmd", 10, std::bind(&MinimalPublisher::topic_callback_sub, this, _1));
+
+            timer_tocan = this->create_wall_timer(20ms, std::bind(&MinimalPublisher::timer_callback_to_can, this));
+
         }
-        rclcpp::Subscription<tutorial_interfaces::msg::MsgToCan>::SharedPtr subscription_;
-        rclcpp::TimerBase::SharedPtr timer_;
-        rclcpp::Publisher<tutorial_interfaces::msg::MsgFromCan>::SharedPtr publisher_;
+        rclcpp::Subscription<matrix_interfaces::msg::MsgToCan>::SharedPtr subscription_;
+        rclcpp::TimerBase::SharedPtr timer_, timer_tocan;
+        rclcpp::Publisher<matrix_interfaces::msg::MsgFromCan>::SharedPtr publisher_;
         size_t count_;
         int count_alerk = 0;
-        int flag1 = 0;//0x183  ---1:recieve  0:no receive
-        int flag2 = 0;//0x283  ---1:recieve  0:no receive
+        int flag1 = 0;             //0x183  ---1:recieve  0:no receive
+        int flag2 = 0;             //0x283  ---1:recieve  0:no receive
+        int flag_tocan = 0;       //1---接收到控制器信息，发送控制帧 0---没有接收到控制器消息，不发送
+        int flag_fromcan = 0;     //1---接收到来自can总线的信息，广播到ROS 0---没有接收到来自can总线的信息，报错
         int test1 = 0;
         int test2 = 0;
 
+        CAN_DataFrame *send = new CAN_DataFrame[1];
+
     private:
+        void timer_callback_to_can(){
+            if(this->flag_tocan == 0) {
+                std::cout<<"没有收到控制器的信息----------------------"<<endl;
+            }else if (this->flag_tocan == 1){
+                std::cout<<"发送一帧控制消息----------------------"<<endl;
+            int times = 1;  //  26000-12h
+            int ch = 0;
+            while ( times ) {
+                //printf("CAN%d Send %d\r\n", ch, times);
+                unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, ch, this->send, 1);
+                CanSendcount[ch] += sndCnt;
+                if ( sndCnt )
+                    times--;
+                
+                } 
+            }
+            this->flag_tocan = 0;
+        }
+
         void timer_callback_pub(){
             std::cout<<"#######################"<<endl;
             if((reclen = CAN_ChannelReceive(dwDeviceHandle, 0, rec_from_can, __countof(rec_from_can), 200)) > 0){
-                auto can_msg = tutorial_interfaces::msg::MsgFromCan();
+                auto can_msg = matrix_interfaces::msg::MsgFromCan();
                 for(int i = __countof(rec_from_can)-1; i >= 0; i--){
                     //0x183
                     if(rec_from_can[i].uID == 0x183){
@@ -113,42 +142,46 @@ class MinimalPublisher : public rclcpp::Node{
 
                 can_msg.drive_temperature = (can_msg.drive_temperature1 | can_msg.drive_temperature2 <<8) * 0.1;
                 if(this->flag1 && this->flag2){
-                    this->count_alerk = 0;               
+                    this->count_alerk = 0; 
+                             
                 }else{
                     if(this->count_alerk >100){
-                        // RCLCPP_INFO(this->get_logger(), "长时间没有接收到完整can信息");            
+                        RCLCPP_INFO(this->get_logger(), "长时间没有接收到完整can信息");            
                     }   
                 }
                 // RCLCPP_INFO_STREAM(this->get_logger(), "111flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
 
+                if(this->flag1 || this->flag2){
+                    //有至少一帧can消息解读再广播信息
+                    publisher_->publish(can_msg);     
+                }
+                
                 this->flag1 = 0;
                 this->flag2 = 0;
                 // RCLCPP_INFO_STREAM(this->get_logger(), "222flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
-                RCLCPP_INFO_STREAM(this->get_logger(), "speed from chassis: '" << can_msg.speed);
-                // RCLCPP_INFO_STREAM(this->get_logger(), "speed from chassis: '" << can_msg.speed << " " << can_msg.angle << " " << can_msg.fault_msg <<"'");
-                // RCLCPP_INFO_STREAM(this->get_logger(), "Publishing2: '" << can_msg.drive_temperature<<"  "<<can_msg.battery_capacity << " " << can_msg.drive_current );
-                // RCLCPP_INFO_STREAM(this->get_logger(), "Publishing3: '" << can_msg.sec << " " << can_msg.minute << " " << can_msg.hour <<"'");
-                publisher_->publish(can_msg);
+                RCLCPP_INFO_STREAM(this->get_logger(), "speed from chassis: " << can_msg.speed);
+                RCLCPP_INFO_STREAM(this->get_logger(), "angle from chassis: " << can_msg.angle);
+
+
+
             }else{
                 RCLCPP_INFO(this->get_logger(), "没有接收到来自can总线的消息");
             }
         }
-        void topic_callback_sub(const tutorial_interfaces::msg::MsgToCan & msg){
+        void topic_callback_sub(const matrix_interfaces::msg::MsgToCan & msg){
             RCLCPP_INFO_STREAM(this->get_logger(), "I heard: '" << msg.speed << "'");
-            CAN_DataFrame *send = new CAN_DataFrame[1];
-            int times = 1;  //  26000-12h
-            int ch = 0;
+            // CAN_DataFrame *send = new CAN_DataFrame[1];
+            // int times = 1;  //  26000-12h
+            // int ch = 0;
             unsigned int speed_can=0, acc_can=0, dec_can=0, se_can=0, con_can=0;
             int angle_can=0;      //goto ext;
-            for ( int j = 0; j < 1; j++ ) {
+            for ( int j = 0; j < 1; j++ ) {      
                 send[j].uID = 0x203;         // ID
                 send[j].nSendType = 1;  // 0-正常发送;1-单次发送;2-自发自收;3-单次自发自收
                 send[j].bRemoteFlag = 0;  // 0-数据帧；1-远程帧
                 send[j].bExternFlag = 0;  // 0-标准帧；1-扩展帧
                 send[j].nDataLen = 8;     // DLC
-                // for ( int i = 0; i < send[j].nDataLen; i++ ) {
-                //    send[j].arryData[i] = msg.connect;
-                // }
+
                 speed_can = (unsigned int)(msg.speed * 985.1);
                 dec_can = (unsigned int)(msg.dec * 10);
                 angle_can = (int)(msg.angle * 100);
@@ -175,15 +208,15 @@ class MinimalPublisher : public rclcpp::Node{
                 send[j].arryData[6] = (angle_can>>8)&0x00ff;
                 send[j].arryData[7] = (se_can)&0x00ff;
             }   
-            while ( times ) {
-                //printf("CAN%d Send %d\r\n", ch, times);
-                unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, ch, send, 1);
-                CanSendcount[ch] += sndCnt;
-                if ( sndCnt )
-                    times--;
-            }
-            delete[] send;
-            printf("CAN%d Send Count:%ld end \r\n", ch, CanSendcount[ch]);
+            // while ( times ) {
+            //     //printf("CAN%d Send %d\r\n", ch, times);
+            //     unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, ch, send, 1);
+            //     CanSendcount[ch] += sndCnt;
+            //     if ( sndCnt )
+            //         times--;
+            // }
+            // delete[] send;
+            // printf("CAN%d Send Count:%ld end \r\n", ch, CanSendcount[ch]);
         }
 };
 

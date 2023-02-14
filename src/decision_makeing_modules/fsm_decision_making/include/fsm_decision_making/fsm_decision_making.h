@@ -27,7 +27,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include "custom_interfaces/msg/fsm_decision_results.hpp"
+#include "behavior_decision_interface/msg/fsm_decision_results.hpp"
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/transform_datatypes.h>
@@ -79,8 +79,8 @@ public:
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr planner_iteration_time_publisher;  // 用于统计 planner 求解时间的广播器
     rclcpp::TimerBase::SharedPtr planner_iteration_timer_;
 
-    rclcpp::Publisher<custom_interfaces::msg::FSMDecisionResults>::SharedPtr fsm_behavior_decision_makeing_publisher;
-    custom_interfaces::msg::FSMDecisionResults behavior_decision_result_msg;
+    rclcpp::Publisher<behavior_decision_interface::msg::FSMDecisionResults>::SharedPtr fsm_behavior_decision_makeing_publisher;
+    behavior_decision_interface::msg::FSMDecisionResults behavior_decision_result_msg;
 
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr sensor_fusion_results_bounding_box_subscription_;
     rclcpp::Subscription<visualization_msgs::msg::MarkerArray>::SharedPtr sensor_fusion_results_label_subscription_;

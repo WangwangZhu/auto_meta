@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(cpp_pubsub)
+project(matrix_vehicle_chassis_communication)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -9,35 +9,30 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 # find_package(std_msgs REQUIRED)
-find_package(tutorial_interfaces REQUIRED)  
+find_package(matrix_interfaces REQUIRED)  
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
 include_directories(include)
 link_directories(${catkin_LIB_DIRS}  lib)
+# link_directories("/home/ad/ros2_ws/src/cpp_pubsub/lib")
 
 add_executable(talker_test src/publisher_test.cpp)
-ament_target_dependencies(talker_test rclcpp tutorial_interfaces)   
+ament_target_dependencies(talker_test rclcpp matrix_interfaces)   
 
-add_executable(talker src/publisher_member_function.cpp)
-ament_target_dependencies(talker rclcpp tutorial_interfaces)  
 
-add_executable(listener src/subscriber_member_function.cpp)
-ament_target_dependencies(listener rclcpp tutorial_interfaces)
+add_executable(matrix_chassis_rec_send src/matrix_chassis_rec_send.cpp)
+ament_target_dependencies(matrix_chassis_rec_send rclcpp matrix_interfaces)
 
-add_executable(sub_pub src/sub_pub.cpp)
-ament_target_dependencies(sub_pub rclcpp tutorial_interfaces)
-
-target_link_libraries(listener libCanCmd.so)
-target_link_libraries(talker libCanCmd.so)
-target_link_libraries(sub_pub libCanCmd.so)
+target_link_libraries(matrix_chassis_rec_send libCanCmd.so)
 
 install(TARGETS
-  sub_pub
-  talker
+matrix_chassis_rec_send
+
   talker_test
-  listener
+
+  # lib/libCanCmd.so
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

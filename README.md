@@ -4,54 +4,6 @@
    如果需要放到其他路径下，需要修改的文件有：底盘通信包，惯导包
 2. `key_board_monitor.launch.py` 该文件启动后，软件监控全局键盘输入，这时如果操作键盘的话，尤其是按下 `eq`两个按键时，自动驾驶模式会被意外启动或意外停止。
 
-# 矩阵项目启动流程
-
-ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
-ros2 run integrated_navigation_system ins_d_data_parse
-ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
-ros2 run cpp_pubsub sub_pub
-
-ros2 run sensor_fusion sensor_fusion_node
-ros2 run fsm_decision_making fsm_decision_making_node
-ros2 launch lattice_planner lattice_planner_launch.py
-
-# 实车代码启动流程：
-
-ros2 run chassis_communication chassis_communication_chasis_to_ros
-
-ros2 run chassis_communication chassis_communication_ros_to_chasis
-
-ros2 run gear_control gear_controller
-
-ros2 run integrated_navigation_system ins_d_data_parse
-
-ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
-
-rqt
-
-ros2 run key_board_monitor key_board_monitor
-
-ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
-
-ros2 launch launch_manager lattice_planner_launch.py
-
-ros2 run fsm_decision_making fsm_decision_making_node
-
-ros2 run sensor_fusion sensor_fusion_node
-
-# 联合仿真代码启动流程（基于ROS galactic neotic)
-
-1. source ros1_terminal_setup.sh + roscore
-2. source ros1_bridge_env_setup.sh + ros2 run ros1_bridge dynamic_bridge --bridge-all-topics
-3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
-4. source ros2_terminal_setup.sh + ros2 run chassis_communication chassis_communication_ros_to_chasis
-5. source ros2_terminal_setup.sh + ros2 run chassis_communication chassis_communication_chasis_to_ros
-6. source ros2_terminal_setup.sh + ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
-7. source ros2_terminal_setup.sh + rqt
-8. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
-9. source ros2_terminal_setup.sh + ros2 launch launch_manager lattice_planner_launch.py
-10. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
-
 # 关于坐标系变换的说明:
 
 mpc中预测模型车辆坐标系:为了便于计算,在mpc中,将全局路径变换到车辆坐标系下,该车辆坐标系的 x 指向车辆前方,y指向车辆左侧
@@ -231,11 +183,6 @@ NeZha: 顺时针为负
 4. source source_env.sh
 5. ros2 launch carla_zww_a_star_planner a_star_planner.launch.py
 
-## 作业要求
-
-1. carla-ros-bridge/src/carla_ros_bridge/carla_zww_projects/carla_zww_a_star_planner/src/Astar_searcher.cpp 中的 TODO部分
-2. 对比分析不同的启发函数的计算耗时，每次运行后在终端内会打印计算时间，需要截图放入文档中上传。
-
 # Carla 联合仿真启动流程（纯仿真）
 
 1. cd /home/zww/carla/Unreal/CarlaUE4/Saved/StagedBuilds/LinuxNoEditor + ./CarlaUE4.sh
@@ -260,13 +207,48 @@ NeZha: 顺时针为负
 8. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序
 9. 
 10. 
-11. 
-12. 
-13. 
-14. 
-15. 
-16. 
-17. 
-18. 
-19. 
-20.
+
+# 矩阵项目启动流程
+
+ros2 launch visualization vehicle_path_visualization_rviz_launch.py
+ros2 run integrated_navigation_system ins_d_data_parse
+ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+ros2 run matrix_vehicle_chassis_communication matrix_chassis_rec_send
+ros2 run sensor_fusion sensor_fusion_node
+ros2 run fsm_decision_making fsm_decision_making_node
+ros2 launch basic_planner basic_planner_launch.py
+
+# 实车代码启动流程(哪吒)：
+
+ros2 run chassis_communication chassis_communication_chasis_to_ros
+
+ros2 run chassis_communication chassis_communication_ros_to_chasis
+
+ros2 run gear_control gear_controller
+
+ros2 run integrated_navigation_system ins_d_data_parse
+
+ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+
+ros2 run key_board_monitor key_board_monitor
+
+ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+
+ros2 launch launch_manager lattice_planner_launch.py
+
+ros2 run fsm_decision_making fsm_decision_making_node
+
+ros2 run sensor_fusion sensor_fusion_node
+
+# 联合仿真代码启动流程（基于ROS galactic neotic Carsim)
+
+1. source ros1_terminal_setup.sh + roscore
+2. source ros1_bridge_env_setup.sh + ros2 run ros1_bridge dynamic_bridge --bridge-all-topics
+3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+4. source ros2_terminal_setup.sh + ros2 run chassis_communication chassis_communication_ros_to_chasis
+5. source ros2_terminal_setup.sh + ros2 run chassis_communication chassis_communication_chasis_to_ros
+6. source ros2_terminal_setup.sh + ros2 launch launch_manager mpc_trajectory_tracking_dynamics_coupled_launch.py
+7. source ros2_terminal_setup.sh + rqt
+8. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
+9. source ros2_terminal_setup.sh + ros2 launch launch_manager lattice_planner_launch.py
+10. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node

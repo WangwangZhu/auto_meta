@@ -30,7 +30,7 @@
 #include "chassis_msg/msg/wvcu_horizontal_status.hpp"
 #include "chassis_msg/msg/wvcu_longitudinal_status.hpp"
 
-#include "tutorial_interfaces/msg/msg_to_can.hpp"  
+#include "matrix_interfaces/msg/msg_to_can.hpp"  
 
 #include <math.h>
 #include <tf2/convert.h>
@@ -134,7 +134,7 @@ public:
     carla_msgs::msg::CarlaEgoVehicleControl carla_control_cmd;
     carla_msgs::msg::CarlaVehicleTargetVelocity vehicle_control_target_velocity;
     std_msgs::msg::Float32 lqr_pid_iteration_duration_msg = std_msgs::msg::Float32();
-    tutorial_interfaces::msg::MsgToCan matrix_ad_control_message = tutorial_interfaces::msg::MsgToCan();
+    matrix_interfaces::msg::MsgToCan matrix_ad_control_message = matrix_interfaces::msg::MsgToCan();
 
 public:
     rclcpp::Publisher<chassis_msg::msg::ADUDriveCmd>::SharedPtr lqr_pid_control_signals_gas_brake_steer_publisher;
@@ -144,7 +144,7 @@ public:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr lqr_pid_output_path_publisher;
     rclcpp::Publisher<carla_msgs::msg::CarlaEgoVehicleControl>::SharedPtr carla_vehicle_control_publisher;
     rclcpp::Publisher<carla_msgs::msg::CarlaVehicleTargetVelocity>::SharedPtr vehicle_control_target_velocity_publisher;
-    rclcpp::Publisher<tutorial_interfaces::msg::MsgToCan>::SharedPtr matrix_ad_control_publisher_;
+    rclcpp::Publisher<matrix_interfaces::msg::MsgToCan>::SharedPtr matrix_ad_control_publisher_;
 
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ins_data_subscription_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr global_path_subscription;
