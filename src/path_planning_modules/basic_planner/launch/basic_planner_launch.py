@@ -9,11 +9,10 @@ from ament_index_python.packages import get_package_share_directory
 import yaml
 import ament_index_python.packages
 
-
 def generate_launch_description():
     
-    mpc_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/auxiliar_tools/launch_manager/config', 'mpc_parameters_configuration_dynamics_coupled.yaml')
-    
+    planner_parameters_configuration = os.path.join(get_package_share_directory('basic_planner'), '../../../../src/path_planning_modules/basic_planner/config', 'basic_planner.yaml')
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'node_prefix',
@@ -21,10 +20,12 @@ def generate_launch_description():
             description='Prefix for node names'
         ),
         Node(
-            package='mpc_trajectory_tracking_dynamics_coupled',
-            executable='mpc_trajectory_tracking_dynamics_coupled_node',
-            name='mpc_trajectory_tracking_dynamics_coupled_node',
-            parameters=[mpc_parameters_configuration],
+            package='basic_planner',
+            executable='basic_planner_node',
+            name='basic_planner_node',
+            parameters=[planner_parameters_configuration],
+            # remappings=None,
+            # arguments=None,
             output='screen',
         )
     ])

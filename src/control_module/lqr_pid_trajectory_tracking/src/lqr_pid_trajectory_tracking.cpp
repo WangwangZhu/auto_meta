@@ -129,7 +129,7 @@ void LQRPIDTrajectoryTracking::palnner_frenet_path_receive_callback(nav_msgs::ms
     for (int i = 0; i < path_length; i++){
         planner_path_s.push_back(msg->poses[i].pose.position.x);
         planner_path_v.push_back(msg->poses[i].pose.position.y);
-        cout << "planner_path_vplanner_path_vplanner_path_v::: " << msg->poses[i].pose.position.y << endl;
+        // cout << "planner_path_vplanner_path_vplanner_path_v::: " << msg->poses[i].pose.position.y << endl;
     }
     is_planner_frenet_path_received = true;
 }
@@ -327,7 +327,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     matrix_ad_control_message.dec = 1.5; // 没有速度请求的时候在1.5S内减速到0
     // matrix_ad_control_message.angle = 0;
 
-    cout << "testing" << endl;
+    // cout << "testing" << endl;
 
     rclcpp::Time start_lqr_pid;
     rclcpp::Time end_lqr_pid;
@@ -341,8 +341,8 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     if (is_vehicle_longitudinal_received){
         if (rclcpp::ok()){
         // if (0){ // 失能跟踪功能，测试控制信号是否起效
-            // if (is_eps_received && is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
-            if (is_global_path_received && is_ins_data_received){
+            if (is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
+            // if (is_global_path_received && is_ins_data_received){
                 global_path_remap_x.clear();
                 global_path_remap_y.clear();
 

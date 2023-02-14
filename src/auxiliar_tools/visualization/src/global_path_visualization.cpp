@@ -192,8 +192,6 @@ void GlobalPathVisualization::load_map()
             global_path_y.push_back(temp_values[3]);
             global_path_s.push_back(temp_values[7]);
 
-            
-
             // if (i % 8 == 0){
             //     global_path_x_down_sample.push_back(temp_values[2]); // ptsx
             //     global_path_y_down_sample.push_back(temp_values[3]); // ptsy
@@ -205,8 +203,8 @@ void GlobalPathVisualization::load_map()
     }
     for (int i = 1; i < global_path_x.size()-20; i++){
         vector<double> line_s_d = cartesian_to_frenet(global_path_x[i], global_path_y[i], global_path_psi[i]/57.29578, global_path_x, global_path_y);
-        // vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + 4/2.0, global_path_s, global_path_x, global_path_y); 
-        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] , global_path_s, global_path_x, global_path_y); 
+        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + 4/2.0, global_path_s, global_path_x, global_path_y); 
+        // vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] , global_path_s, global_path_x, global_path_y); 
         cout << "line_x_y~~~~~~~~~~~~~~~~~~~~~~~~~~: " << line_x_y[0] << ", " << line_x_y[1] << endl;
 
         this_pose_stamped.header.frame_id = "odom";             

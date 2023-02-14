@@ -12,7 +12,7 @@ import ament_index_python.packages
 
 def generate_launch_description():
     
-    planner_parameters_configuration = os.path.join(get_package_share_directory('launch_manager'), '../../../../src/auxiliar_tools/launch_manager/config', 'lattice_planner.yaml')
+    planner_parameters_configuration = os.path.join(get_package_share_directory('lattice_planner'), '../../../../src/path_planning_modules/lattice_planner/config', 'lattice_planner.yaml')
 
     
     return LaunchDescription([

@@ -19,7 +19,7 @@ def generate_launch_description():
 
     urdf = os.path.join(get_package_share_directory('visualization'), 'urdf', 'host_vehicle.urdf')
 
-    global_map_path_config = os.path.join(get_package_share_directory('launch_manager'), 'config', 'map_path.yaml')
+    global_map_path_config = os.path.join(get_package_share_directory('visualization'), 'config', 'map_path.yaml')
 
     rviz_config_dir = os.path.join(get_package_share_directory('visualization'), 'config', 'car_disp.rviz')
 

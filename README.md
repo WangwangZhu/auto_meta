@@ -239,12 +239,14 @@ NeZha: 顺时针为负
 # Carla 联合仿真启动流程（纯仿真）
 
 1. cd /home/zww/carla/Unreal/CarlaUE4/Saved/StagedBuilds/LinuxNoEditor + ./CarlaUE4.sh
-2. source ros2_terminal_setup.sh + ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
-3. source ros2_terminal_setup.sh + ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
-4. source ros2_terminal_setup.sh + ros2 run sensor_fusion sensor_fusion_node
-5. source ros2_terminal_setup.sh + ros2 run fsm_decision_making fsm_decision_making_node
-6. source ros2_terminal_setup.sh + ros2 launch lattice_planner lattice_planner_launch.py
-7. source ros2_terminal_setup.sh + ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+2. ros2 launch carla_zww_bridge_ego_vis carla_bridge_ego_vehilce.launch.py
+3. ros2 launch visualization vehicle_path_visualization_rviz_launch.py
+4. ros2 run sensor_fusion sensor_fusion_node
+5. ros2 run fsm_decision_making fsm_decision_making_node
+6. 规划器
+   1. ros2 launch lattice_planner lattice_planner_launch.py
+   2. ros2 launch basic_planner basic_planner_launch.py
+7. ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
 
 # Carla仿真 到 实车测试的改动
 
@@ -255,7 +257,7 @@ NeZha: 顺时针为负
 5. basic_planner.cpp 中定位订阅信号 25行
 6. host_vehicle_visualization.cpp 中定位订阅信号
 7. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
-8. 
+8. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序
 9. 
 10. 
 11. 
