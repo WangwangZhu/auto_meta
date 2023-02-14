@@ -33,6 +33,7 @@ VehicleControlPublisher::VehicleControlPublisher()
     vehicle_control_iteration_timer_ = this->create_wall_timer(50ms, std::bind(&VehicleControlPublisher::VehicleControlIterationCallback, this));
 
     localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos, std::bind(&VehicleControlPublisher::odomCallback, this, _1));
+    
 
     vehicle_control_publisher = this->create_publisher<carla_msgs::msg::CarlaEgoVehicleControl>("/carla/ego_vehicle/vehicle_control_cmd", qos);
     control_cmd.header.stamp = this->now();

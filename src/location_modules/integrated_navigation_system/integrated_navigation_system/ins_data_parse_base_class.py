@@ -30,8 +30,8 @@ class InsDataCollection(Node):
                     origin_utm_y: 沿着纬度的方向 northern hemisphere between equator and 84°N 向北递增
     *****************************************************************************************************'''
     def __init__(self,
-                 device='/dev/ttyS2',
-                #  device='/dev/ttyUSB0',
+                #  device='/dev/ttyS2',
+                 device='/dev/ttyUSB0',
                  baud_rate=115200,
                  timeout=0.5,
                  data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',

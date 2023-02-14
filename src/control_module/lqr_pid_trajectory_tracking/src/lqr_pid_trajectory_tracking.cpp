@@ -109,7 +109,7 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     // carla_status_subscription = this->create_subscription<carla_msgs::msg::CarlaEgoVehicleStatus>("/carla/ego_vehicle/vehicle_status", 10, std::bind(&LQRPIDTrajectoryTracking::carla_vehicle_status_callback, this, _1));
 
     // 定频调用求解器，时间必须大于lqr_pid单次求解耗时
-    lqr_pid_iteration_timer_ = this->create_wall_timer(10ms, std::bind(&LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback, this));
+    lqr_pid_iteration_timer_ = this->create_wall_timer(20ms, std::bind(&LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback, this));
 
     pid_controller_longitudinal = std::make_unique<zww::control::PIDController>(speed_P, speed_I, speed_D);
 
@@ -324,6 +324,7 @@ void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry
         ins_data_arrive_at_lqr_pid_through_callback = now.seconds(); //  + now.nanoseconds()/1000000000
 
         // RCLCPP_INFO(this->get_logger(),"got imu data at: %f", this->now().seconds()); // this->now().nanoseconds()/1000000000
+        is_vehicle_longitudinal_received = true;
 
         vehicleState_.ax = msg->pose.covariance[0];
         vehicleState_.ay = msg->pose.covariance[4];
@@ -338,7 +339,7 @@ void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry
         //     vehicleState_.angular_velocity = 0;
         // }
 
-        // RCLCPP_INFO(this->get_logger(), "velocity receiveing from ins: %f", this->v_longitudinal);
+        RCLCPP_INFO(this->get_logger(), "velocity receiveing from ins: %f", this->v_longitudinal);
 
         tf2::Quaternion quat_tf;
         tf2::convert(msg->pose.pose.orientation, quat_tf);
@@ -353,6 +354,12 @@ void LQRPIDTrajectoryTracking::ins_data_receive_callback(nav_msgs::msg::Odometry
         vector<double> car_s_d = cartesian_to_frenet(vehicleState_.x, vehicleState_.y, vehicleState_.yaw, global_path_x, global_path_y);
         car_s = car_s_d[0];
         car_d = car_s_d[1];
+
+        px = msg->pose.pose.position.x;
+        py = msg->pose.pose.position.y;
+        psi = vehicleState_.yaw;
+        v_longitudinal = msg->twist.twist.linear.x;
+        v_lateral = msg->twist.twist.linear.y;
     }
 }
 
@@ -523,10 +530,12 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     matrix_ad_control_message.back = 0;
     matrix_ad_control_message.buzzer = 0;
     matrix_ad_control_message.clock = 0;
-    matrix_ad_control_message.speed = 100;
+    matrix_ad_control_message.speed = 1; // m/s
     matrix_ad_control_message.acc = 2.5; // 在2.5s内到达指定转速
     matrix_ad_control_message.dec = 1.5; // 没有速度请求的时候在1.5S内减速到0
-    matrix_ad_control_message.angle = -30;
+    // matrix_ad_control_message.angle = 0;
+
+    cout << "testing" << endl;
 
     rclcpp::Time start_lqr_pid;
     rclcpp::Time end_lqr_pid;
@@ -583,7 +592,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 // -------------------- 使用全局路径作为跟踪控制器的参考路径(这里可以进一步压缩时间的，每次都转换整条路径时间代价太大而且没用) --------------------
                 if (with_planner_flag == 0){
                     this->local_reference_trajectory = this->global_reference_trajectory;
-                    v_err = target_point_.v - vehicleState_.velocity;           // 速度误差
+                    // v_err = target_point_.v - vehicleState_.velocity;           // 速度误差
                 }
                 // -------------------- 使用规划器重规划路径作为跟踪控制器的参考路径 --------------------
                 else{
@@ -631,7 +640,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     }
                     auto coeffs_s_v = polyfit(_planner_path_s, _planner_path_v, 5);
                     target_v = polyeval(coeffs_s_v, car_s);
-                    v_err = _planner_path_v[int(_planner_path_v.size()/2)] - vehicleState_.velocity; // TODO  10是没办法的办法，如果直接用当前位置的目标速度，那车无法产生足够的加速度请求
+                    // v_err = _planner_path_v[int(_planner_path_v.size()/2)] - vehicleState_.velocity; // TODO  10是没办法的办法，如果直接用当前位置的目标速度，那车无法产生足够的加速度请求
                     cout << "current_index ___________ :: " << current_index << endl;
                     cout << "target_VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV: " << _planner_path_v[current_index + 1] << ",  current car_s" << car_s << endl;
                     // target_v = 4;
@@ -645,7 +654,8 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 if (!isReachGoal_) {
                     lqr_controller_lateral->ComputeControlCommand(this->vehicleState_, this->local_reference_trajectory, cmd);
                 }
-                double acceleration_cmd = pid_controller_longitudinal->Control(v_err, 0.01);
+                // double acceleration_cmd = pid_controller_longitudinal->Control(v_err, 0.01);
+                double acceleration_cmd = 0.0;
                 
 
                 carla_control_cmd.header.stamp = this->now();
@@ -667,7 +677,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     carla_control_cmd.steer = 0;
                 } else {
                     carla_control_cmd.steer = cmd.steer_target;
-                    matrix_ad_control_message.angle = cmd.steer_target;
+                    matrix_ad_control_message.angle = cmd.steer_target * 60;
                 }
                 // carla_control_cmd.steer = 0;
                 carla_control_cmd.gear = 1;
@@ -675,10 +685,10 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                 carla_control_cmd.hand_brake = false;
                 carla_control_cmd.manual_gear_shift = false;
                 
-                cout << "v_err: " << v_err << ", acceleration_cmd: " << acceleration_cmd << endl;
+                // cout << "v_err: " << v_err << ", acceleration_cmd: " << acceleration_cmd << endl;
                 cout << "steer control cmd: " << cmd.steer_target << endl;
                 cout << "carla_control_cmd.steer: " << carla_control_cmd.steer << endl;
-                cout << "~~ vehicleState_.v: " << vehicleState_.velocity << ", target_point_.v: " << target_point_.v << ", v_err: " << v_err << endl;
+                // cout << "~~ vehicleState_.v: " << vehicleState_.velocity << ", target_point_.v: " << target_point_.v << ", v_err: " << v_err << endl;
                 cout << "yaw_err: " << yaw_err << endl;
                 
 
@@ -867,19 +877,19 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
             // lqr_pid_output_path_publisher->publish(lqr_pid_output_path);
         }
         
-        if(working_mode == 2){
-            if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
-                lqr_pid_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
-            }
-            else{
-                lqr_pid_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
-            }
-        }
-        if(working_mode == 1){
-            carla_vehicle_control_publisher->publish(carla_control_cmd);
-            vehicle_control_target_velocity.velocity = target_v;
-            vehicle_control_target_velocity_publisher->publish(vehicle_control_target_velocity);
-        }   
+        // if(working_mode == 2){
+        //     if (vehicle_longitudinal_feedback_msg->wvcu_gear_stat == vehicle_control_gear_msg.gear_request){
+        //         lqr_pid_control_signals_gas_brake_steer_publisher->publish(vehicle_control_gas_brake_steer_msg);
+        //     }
+        //     else{
+        //         lqr_pid_control_signals_gear_publisher->publish(vehicle_control_gear_msg);
+        //     }
+        // }
+        // if(working_mode == 1){
+        //     carla_vehicle_control_publisher->publish(carla_control_cmd);
+        //     vehicle_control_target_velocity.velocity = target_v;
+        //     vehicle_control_target_velocity_publisher->publish(vehicle_control_target_velocity);
+        // }   
 
         matrix_ad_control_publisher_->publish(matrix_ad_control_message);
 

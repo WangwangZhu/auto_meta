@@ -119,8 +119,8 @@ class ins_d_data_parse(ins_data_parse_base_class.InsDataCollection):
                     
                     self._odom_msgs_publisher.publish(self._odom_msgs)
                     # self.get_logger().info("ins data send out => velocity(/m/s): " + str(self.gps_time))
-                    # self.get_logger().info("ins data send out => longitudinal velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.x))
-                    # self.get_logger().info("ins data send out => lateral velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.y))
+                    self.get_logger().info("ins data send out => longitudinal velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.x))
+                    self.get_logger().info("ins data send out => lateral velocity(/m/s): " + str(self._odom_msgs.twist.twist.linear.y))
 
                     # self.get_logger().info("ins data send out => longitudinal acc(/m/s^2): " + str(self.accY))
                     # self.get_logger().info("ins data send out => lateral acc(/m/s^2): " + str(self.accX))

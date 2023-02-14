@@ -4,6 +4,17 @@
    如果需要放到其他路径下，需要修改的文件有：底盘通信包，惯导包
 2. `key_board_monitor.launch.py` 该文件启动后，软件监控全局键盘输入，这时如果操作键盘的话，尤其是按下 `eq`两个按键时，自动驾驶模式会被意外启动或意外停止。
 
+# 矩阵项目启动流程
+ros2 launch launch_manager vehicle_path_visualization_rviz_launch.py
+ros2 run integrated_navigation_system ins_d_data_parse
+ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+ros2 run cpp_pubsub sub_pub 
+
+
+ros2 run sensor_fusion sensor_fusion_node
+ros2 run fsm_decision_making fsm_decision_making_node
+ros2 launch lattice_planner lattice_planner_launch.py 
+
 # 实车代码启动流程：
 
 ros2 run chassis_communication chassis_communication_chasis_to_ros

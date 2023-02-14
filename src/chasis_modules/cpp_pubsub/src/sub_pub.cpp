@@ -85,12 +85,12 @@ class MinimalPublisher : public rclcpp::Node{
                         can_msg.battery_capacity = rec_from_can[i].arryData[6];
                         can_msg.drive_temperature1 = rec_from_can[i].arryData[7];
                         this->flag1 = 1;
-                        RCLCPP_INFO(this->get_logger(), "update 0x183");  
+                        // RCLCPP_INFO(this->get_logger(), "update 0x183");  
                         break;    
                     }
                 }
                 if(this->flag1 ==0){
-                    RCLCPP_INFO(this->get_logger(), "no update 0x183");  
+                    // RCLCPP_INFO(this->get_logger(), "no update 0x183");  
                     this->count_alerk ++;
                 }
 
@@ -102,13 +102,13 @@ class MinimalPublisher : public rclcpp::Node{
                         can_msg.minute = rec_from_can[i].arryData[4];
                         can_msg.hour = rec_from_can[i].arryData[5];
                         this->flag2 = 1;
-                        RCLCPP_INFO(this->get_logger(), "update 0x283");   
+                        // RCLCPP_INFO(this->get_logger(), "update 0x283");   
                         break;
                     }
                 }
                 if(this->flag2 == 0){
                     this->count_alerk ++;
-                    RCLCPP_INFO(this->get_logger(), "no update 0x283");   
+                    // RCLCPP_INFO(this->get_logger(), "no update 0x283");   
                 }
 
                 can_msg.drive_temperature = (can_msg.drive_temperature1 | can_msg.drive_temperature2 <<8) * 0.1;
@@ -116,17 +116,18 @@ class MinimalPublisher : public rclcpp::Node{
                     this->count_alerk = 0;               
                 }else{
                     if(this->count_alerk >100){
-                        RCLCPP_INFO(this->get_logger(), "长时间没有接收到完整can信息");            
+                        // RCLCPP_INFO(this->get_logger(), "长时间没有接收到完整can信息");            
                     }   
                 }
-                RCLCPP_INFO_STREAM(this->get_logger(), "111flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
+                // RCLCPP_INFO_STREAM(this->get_logger(), "111flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
 
                 this->flag1 = 0;
                 this->flag2 = 0;
-                RCLCPP_INFO_STREAM(this->get_logger(), "222flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
-                RCLCPP_INFO_STREAM(this->get_logger(), "Publishing1: '" << can_msg.speed << " " << can_msg.angle << " " << can_msg.fault_msg <<"'");
-                RCLCPP_INFO_STREAM(this->get_logger(), "Publishing2: '" << can_msg.drive_temperature<<"  "<<can_msg.battery_capacity << " " << can_msg.drive_current );
-                RCLCPP_INFO_STREAM(this->get_logger(), "Publishing3: '" << can_msg.sec << " " << can_msg.minute << " " << can_msg.hour <<"'");
+                // RCLCPP_INFO_STREAM(this->get_logger(), "222flag1: '" << this->flag1<< "flag2: " << this->flag2 << "'");
+                RCLCPP_INFO_STREAM(this->get_logger(), "speed from chassis: '" << can_msg.speed);
+                // RCLCPP_INFO_STREAM(this->get_logger(), "speed from chassis: '" << can_msg.speed << " " << can_msg.angle << " " << can_msg.fault_msg <<"'");
+                // RCLCPP_INFO_STREAM(this->get_logger(), "Publishing2: '" << can_msg.drive_temperature<<"  "<<can_msg.battery_capacity << " " << can_msg.drive_current );
+                // RCLCPP_INFO_STREAM(this->get_logger(), "Publishing3: '" << can_msg.sec << " " << can_msg.minute << " " << can_msg.hour <<"'");
                 publisher_->publish(can_msg);
             }else{
                 RCLCPP_INFO(this->get_logger(), "没有接收到来自can总线的消息");
@@ -148,7 +149,7 @@ class MinimalPublisher : public rclcpp::Node{
                 // for ( int i = 0; i < send[j].nDataLen; i++ ) {
                 //    send[j].arryData[i] = msg.connect;
                 // }
-                speed_can = (unsigned int)(msg.speed * 17.692);
+                speed_can = (unsigned int)(msg.speed * 985.1);
                 dec_can = (unsigned int)(msg.dec * 10);
                 angle_can = (int)(msg.angle * 100);
                 uint8_t	Data = 0x00;

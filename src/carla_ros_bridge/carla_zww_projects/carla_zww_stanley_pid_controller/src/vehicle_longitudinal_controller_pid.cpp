@@ -36,7 +36,9 @@ VehicleControlPublisher::VehicleControlPublisher()
     cnt = 0;
     qos = 10;
 
-    localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos, std::bind(&VehicleControlPublisher::odomCallback, this, _1));
+    // localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos, std::bind(&VehicleControlPublisher::odomCallback, this, _1));
+    localization_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&VehicleControlPublisher::odomCallback, this, _1)); // nezha
+
 
     vehicle_control_publisher = this->create_publisher<carla_msgs::msg::CarlaEgoVehicleControl>("/carla/ego_vehicle/vehicle_control_cmd", qos);
     control_cmd.header.stamp = this->now();
