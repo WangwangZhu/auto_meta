@@ -80,8 +80,8 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     lqr_pid_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&LQRPIDTrajectoryTracking::palnner_cartesian_path_receive_callback, this, _1));
     vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&LQRPIDTrajectoryTracking::vehicle_status_feedback_callback, this, _1));
 
-    localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
-    // localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
+    // localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
+    localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
 
     lacalization_data_imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_imu_callback, this, _1));
 
@@ -257,7 +257,7 @@ void LQRPIDTrajectoryTracking::global_path_callback(nav_msgs::msg::Path::SharedP
 - Comments    : the x direction of msg is longitudinal
 **************************************************************************************'''*/
 void LQRPIDTrajectoryTracking::localization_data_callback(nav_msgs::msg::Odometry::SharedPtr msg){       
-    if (is_global_path_received && working_mode == 1){        
+    if (is_global_path_received){        
         is_ins_data_received = true;
         is_vehicle_longitudinal_received = true;
         rclcpp::Time now = this->now();
@@ -322,7 +322,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     matrix_ad_control_message.back = 0;
     matrix_ad_control_message.buzzer = 0;
     matrix_ad_control_message.clock = 0;
-    matrix_ad_control_message.speed = 1; // m/s
+    matrix_ad_control_message.speed = 2; // m/s
     matrix_ad_control_message.acc = 2.5; // 在2.5s内到达指定转速
     matrix_ad_control_message.dec = 1.5; // 没有速度请求的时候在1.5S内减速到0
     // matrix_ad_control_message.angle = 0;
@@ -341,8 +341,8 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
     if (is_vehicle_longitudinal_received){
         if (rclcpp::ok()){
         // if (0){ // 失能跟踪功能，测试控制信号是否起效
-            if (is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
-            // if (is_global_path_received && is_ins_data_received){
+            // if (is_global_path_received && is_ins_data_received && is_planner_frenet_path_received && is_planner_cartesian_path_received){
+            if (is_global_path_received && is_ins_data_received){
                 global_path_remap_x.clear();
                 global_path_remap_y.clear();
 
@@ -433,7 +433,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
                     carla_control_cmd.steer = 0;
                 } else {
                     carla_control_cmd.steer = cmd.steer_target;  // Carla Interface 
-                    matrix_ad_control_message.angle = cmd.steer_target * 60; // Matrix Interface
+                    matrix_ad_control_message.angle = cmd.steer_target * 55; // Matrix Interface
                 }
                 // carla_control_cmd.steer = 0;
                 carla_control_cmd.gear = 1;
@@ -464,6 +464,7 @@ void LQRPIDTrajectoryTracking::lqr_pid_tracking_iteration_callback(){
         }
         else if (working_mode == 3){
             matrix_ad_control_publisher_->publish(matrix_ad_control_message);
+            cout << "matrix vehicle running~~~" << endl;
         }  
 
         end_lqr_pid = this->now();

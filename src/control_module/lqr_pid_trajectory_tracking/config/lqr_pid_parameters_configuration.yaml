@@ -3,7 +3,7 @@ lqr_pid_trajectory_tracking_node:
     vehicle_ref_v: 2.0 # m/s // 只有在纯跟踪的时候才有用，和规划器联通后，车辆的w期望速度来自规划器
     vehicle_steering_ratio_double: 22.0 # ok
 
-    lqr_pid_working_mode: 1 # 1: carla simulation 2: nezha vehicle. 3: matrix vehicle
+    lqr_pid_working_mode: 3 # 1: carla simulation 2: nezha vehicle. 3: matrix vehicle
 
     lqr_pid_with_planner_flag: 1   # lqr_pid做全局纯跟踪还是与规划算法上下贯通的标志 为 0 做纯跟踪，为 1 与规划算法上下贯通 #TODO:
 

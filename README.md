@@ -205,18 +205,18 @@ NeZha: 顺时针为负
 6. host_vehicle_visualization.cpp 中定位订阅信号
 7. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
 8. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序
-9. 
+9. lqr_pid_working_mode: 1  配置文件
 10. 
 
 # 矩阵项目启动流程
 
 ros2 launch visualization vehicle_path_visualization_rviz_launch.py
 ros2 run integrated_navigation_system ins_d_data_parse
-ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
-ros2 run matrix_vehicle_chassis_communication matrix_chassis_rec_send
 ros2 run sensor_fusion sensor_fusion_node
 ros2 run fsm_decision_making fsm_decision_making_node
 ros2 launch basic_planner basic_planner_launch.py
+ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+ros2 run matrix_vehicle_chassis_communication matrix_chassis_rec_send
 
 # 实车代码启动流程(哪吒)：
 

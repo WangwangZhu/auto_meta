@@ -84,15 +84,14 @@ class MinimalPublisher : public rclcpp::Node{
                 std::cout<<"没有收到控制器的信息----------------------"<<endl;
             }else if (this->flag_tocan == 1){
                 std::cout<<"发送一帧控制消息----------------------"<<endl;
-            int times = 1;  //  26000-12h
-            int ch = 0;
-            while ( times ) {
-                //printf("CAN%d Send %d\r\n", ch, times);
-                unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, ch, this->send, 1);
-                CanSendcount[ch] += sndCnt;
-                if ( sndCnt )
-                    times--;
-                
+                int times = 1;  //  26000-12h
+                int ch = 0;
+                while ( times ) {
+                    //printf("CAN%d Send %d\r\n", ch, times);
+                    unsigned long sndCnt = CAN_ChannelSend(dwDeviceHandle, ch, this->send, 1);
+                    CanSendcount[ch] += sndCnt;
+                    if ( sndCnt )
+                        times--;
                 } 
             }
             this->flag_tocan = 0;
@@ -173,6 +172,7 @@ class MinimalPublisher : public rclcpp::Node{
             // CAN_DataFrame *send = new CAN_DataFrame[1];
             // int times = 1;  //  26000-12h
             // int ch = 0;
+            this->flag_tocan = 1;
             unsigned int speed_can=0, acc_can=0, dec_can=0, se_can=0, con_can=0;
             int angle_can=0;      //goto ext;
             for ( int j = 0; j < 1; j++ ) {      

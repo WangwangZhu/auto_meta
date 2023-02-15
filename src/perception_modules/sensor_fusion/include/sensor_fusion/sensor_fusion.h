@@ -64,7 +64,8 @@ class SensorFusion : public rclcpp::Node
 public:
     SensorFusion();
     ~SensorFusion();
-    void sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg); // 被定时器定时回调
+    void sensor_fusion_iteration_callback(); // 被定时器定时回调
+    // void sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg); // 被定时器定时回调
     void sensor_fusion_ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); 
     void sensor_fusion_global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
     void sensor_fusion_object_pack( double object_s, 

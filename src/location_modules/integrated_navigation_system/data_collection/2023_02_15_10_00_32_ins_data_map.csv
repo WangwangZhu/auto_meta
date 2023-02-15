@@ -1,0 +1,1 @@
+gps_time,utc_time,heading,pitch,roll,heading_radians,pitch_radians,roll_radians,gyroX,gyroY,gyroZ,accX,accY,accZ,latitude,longitude,altitude,utm_x_position,utm_y_position,local_x,local_y,east_speed,north_speed,vertical_speed,vehicle_lat_speed,vehicle_lon_speed,position_type,GNSS_info1,GNSS_info2
