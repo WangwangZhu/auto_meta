@@ -23,8 +23,8 @@ double inline max_planner(double a, double b) { return (a > b) ? a : b; }
 **************************************************************************************'''*/
 FSMDecisionMaking::FSMDecisionMaking() : Node("fsm_decision_making") // 使用初始化列表来初始化字段
 {
-    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&FSMDecisionMaking::ins_data_receive_callback, this, _1));
-    // ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&FSMDecisionMaking::ins_data_receive_callback, this, _1)); // carla
+    // ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&FSMDecisionMaking::ins_data_receive_callback, this, _1));
+    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&FSMDecisionMaking::ins_data_receive_callback, this, _1)); // carla
 
     global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&FSMDecisionMaking::global_path_callback, this, _1));
     

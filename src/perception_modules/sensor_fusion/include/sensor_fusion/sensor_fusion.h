@@ -42,6 +42,9 @@
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 
+#include <objects_msgs/msg/objects_info_list.hpp>
+#include <objects_msgs/msg/object_info.hpp>
+
 using namespace std::chrono_literals; // 表示时间长度的命名空间
 //调用嵌套空间std::chrono_literals下的函数
 using std::cout;
@@ -64,8 +67,8 @@ class SensorFusion : public rclcpp::Node
 public:
     SensorFusion();
     ~SensorFusion();
-    void sensor_fusion_iteration_callback(); // 被定时器定时回调
-    // void sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg); // 被定时器定时回调
+    void sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg); // 被定时器定时回调
+    void sensor_fusion_iteration_real_callback(objects_msgs::msg::ObjectsInfoList msg);
     void sensor_fusion_ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg); 
     void sensor_fusion_global_path_callback(nav_msgs::msg::Path::SharedPtr msg);
     void sensor_fusion_object_pack( double object_s, 
@@ -97,6 +100,7 @@ public:
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sensor_fusion_global_path_subscription_;
 
     rclcpp::Subscription<derived_object_msgs::msg::ObjectArray>::SharedPtr sensor_fusion_objects_from_carla;
+    rclcpp::Subscription<objects_msgs::msg::ObjectsInfoList>::SharedPtr sensor_fusion_objects_from_sensor;
 
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr sensor_fusion_iteration_time_publisher; // 广播一次算法迭代耗时
 

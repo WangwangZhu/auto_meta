@@ -15,6 +15,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(derived_object_msgs REQUIRED)
+find_package(objects_msgs REQUIRED)
 # message("herererererer")
 find_package(Boost REQUIRED COMPONENTS system chrono regex thread program_options date_time)
 # uncomment the following section in order to fill in
@@ -31,7 +32,7 @@ target_include_directories(${PROJECT_NAME}_node PUBLIC
 
 target_link_libraries(${PROJECT_NAME}_node ipopt z ssl uv uWS)
 
-ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs" "derived_object_msgs")
+ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "nav_msgs" "visualization_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs" "derived_object_msgs" "objects_msgs")
 
 install(TARGETS ${PROJECT_NAME}_node
   DESTINATION lib/${PROJECT_NAME})

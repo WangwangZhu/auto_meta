@@ -80,8 +80,8 @@ LQRPIDTrajectoryTracking::LQRPIDTrajectoryTracking() : Node("lqr_pid_trajectory_
     lqr_pid_planner_cartesian_path_subscription = this->create_subscription<visualization_msgs::msg::Marker>("lattice_planner_path_cardesian", qos_, std::bind(&LQRPIDTrajectoryTracking::palnner_cartesian_path_receive_callback, this, _1));
     vehicle_longitudinal_status_feedback_subscription = this->create_subscription<chassis_msg::msg::WVCULongitudinalStatus>("wvcu_longitudinal_status", qos_,std::bind(&LQRPIDTrajectoryTracking::vehicle_status_feedback_callback, this, _1));
 
-    // localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
-    localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
+    localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
+    // localization_data_subscription = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_callback, this, _1));
 
     lacalization_data_imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/carla/ego_vehicle/imu", 10, std::bind(&LQRPIDTrajectoryTracking::localization_data_imu_callback, this, _1));
 
