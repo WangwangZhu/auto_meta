@@ -45,9 +45,7 @@ add_executable(${PROJECT_NAME}_node
 target_include_directories(${PROJECT_NAME}_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-# message(33333333333)
 target_link_libraries(${PROJECT_NAME}_node ipopt z ssl uv uWS)
-# message((11111111111111))
 ament_target_dependencies(${PROJECT_NAME}_node "std_msgs" "rclcpp" "chassis_msg" "matrix_interfaces" "nav_msgs" "visualization_msgs" "sensor_msgs" "tf2" "tf2_ros" "tf2_geometry_msgs" "carla_msgs")# ipopt z ssl uv uWS
 
 
