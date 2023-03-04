@@ -199,25 +199,42 @@ NeZha: 顺时针为负
 # Carla仿真 到 实车测试的改动
 
 1. mpc_parameters_configuration_dynamics_coupled.yaml 中的控制器参数
-2. sensor_fusion.cpp 中订阅信号 25行
-3. fsm_decision_making.cpp 中定位订阅信号 26行
-4. lattice_planner.cpp 中定位订阅信号 25行
-5. basic_planner.cpp 中定位订阅信号 25行
-6. host_vehicle_visualization.cpp 中定位订阅信号
-7. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
-8. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序
-9. lqr_pid_working_mode: 1  配置文件 lqr_pid_parameters_configuration.yaml
-10. planner_working_mode: 2 配置文件 basic_planner.yaml
+2. visualization 包 中 map_path.yaml 使用注释为矩阵车上用的行
+3. sensor_fusion.cpp 中订阅信号 25行
+4. fsm_decision_making.cpp 中定位订阅信号 26行
+5. lattice_planner.cpp 中定位订阅信号 25行
+6. basic_planner.cpp 中定位订阅信号 25行
+7. host_vehicle_visualization.cpp 中定位订阅信号
+8. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
+9. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序，global_path_visualization.cpp中206， 207行，如果要更新车道数量，修改230行开始的后面几行
+10. lqr_pid_working_mode: 1  配置文件 lqr_pid_parameters_configuration.yaml
+11. planner_working_mode: 2 配置文件 basic_planner.yaml
 
 # 矩阵项目启动流程
 
-ros2 launch visualization vehicle_path_visualization_rviz_launch.py
-ros2 run integrated_navigation_system ins_d_data_parse
-ros2 run sensor_fusion sensor_fusion_node
-ros2 run fsm_decision_making fsm_decision_making_node
-ros2 launch basic_planner basic_planner_launch.py
-ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
-ros2 run matrix_vehicle_chassis_communication matrix_chassis_rec_send
+0. （有开机自启，插拔后需要重新执行）
+   sudo chmod 777 /dev/ttyUSB0
+   sudo chmod 777 /dev/ttyUSB1
+1. 激光雷达与视觉
+   1.1 rslidar_ws工作空间（雷达驱动）
+   ros2 launch rslidar_sdk start.py
+   1.2 DH_cam_driver_ws工作空间（相机驱动）
+   ros2 launch image_pub multi_cam_launch.py
+   1.3 Juzhen_ws工作空间（雷达与相机处理）
+   ros2 launch yolox_deepsort multi_img_proc_launch.py
+   ros2 launch detection_demo lidar_det_gan_2_launch.py
+2. 定位——（hs_loc_ws工作空间）
+   ros2 run data_format_trans imu_driver
+   ros2 run data_format_trans gnss_driver
+   ros2 run data_format_trans to_sjtu_format
+3. 决策-规划-控制——（auto_meta工作空间）
+   ros2 run integrated_navigation_system ins_d_data_parse
+   ros2 launch visualization vehicle_path_visualization_rviz_launch.py
+   ros2 run sensor_fusion sensor_fusion_node
+   ros2 run fsm_decision_making fsm_decision_making_node
+   ros2 launch basic_planner basic_planner_launch.py
+   ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+   ros2 run matrix_vehicle_chassis_communication matrix_chassis_rec_send
 
 # 实车代码启动流程(哪吒)：
 

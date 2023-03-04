@@ -18,8 +18,8 @@ double inline max_planner(double a, double b) { return (a > b) ? a : b; }
 - Comments    : None
 **************************************************************************************'''*/
 LatticePlanner::LatticePlanner() : Node("lattice_planner") {
-    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LatticePlanner::ins_data_receive_callback, this, _1)); // carla
-    // ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&LatticePlanner::ins_data_receive_callback, this, _1));
+    // ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", 10, std::bind(&LatticePlanner::ins_data_receive_callback, this, _1)); // carla
+    ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&LatticePlanner::ins_data_receive_callback, this, _1));
 
     global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&LatticePlanner::global_path_callback, this, _1));
     sensor_fusion_results_bounding_box_subscription_ = this->create_subscription<visualization_msgs::msg::MarkerArray>("sensor_fusion_results_bounding_box", qos_, std::bind(&LatticePlanner::sensor_fusion_results_bounding_box_callback, this, _1));

@@ -203,8 +203,8 @@ void GlobalPathVisualization::load_map()
     }
     for (int i = 1; i < global_path_x.size()-20; i++){
         vector<double> line_s_d = cartesian_to_frenet(global_path_x[i], global_path_y[i], global_path_psi[i]/57.29578, global_path_x, global_path_y);
-        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + 4/2.0, global_path_s, global_path_x, global_path_y); 
-        // vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] , global_path_s, global_path_x, global_path_y); 
+        // vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] + 4/2.0, global_path_s, global_path_x, global_path_y);  // Carla 中
+        vector<double> line_x_y = frenet_to_cartesian(line_s_d[0], line_s_d[1] , global_path_s, global_path_x, global_path_y);  // 实车用
         cout << "line_x_y~~~~~~~~~~~~~~~~~~~~~~~~~~: " << line_x_y[0] << ", " << line_x_y[1] << endl;
 
         this_pose_stamped.header.frame_id = "odom";             

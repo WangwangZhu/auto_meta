@@ -173,7 +173,7 @@ class MinimalPublisher : public rclcpp::Node{
             // int times = 1;  //  26000-12h
             // int ch = 0;
             this->flag_tocan = 1;
-            unsigned int speed_can=0, acc_can=0, dec_can=0, se_can=0, con_can=0;
+            unsigned int speed_can=0, acc_can=50, dec_can=0, se_can=0, con_can=0;
             int angle_can=0;      //goto ext;
             for ( int j = 0; j < 1; j++ ) {      
                 send[j].uID = 0x203;         // ID
@@ -183,6 +183,7 @@ class MinimalPublisher : public rclcpp::Node{
                 send[j].nDataLen = 8;     // DLC
 
                 speed_can = (unsigned int)(msg.speed * 985.1);
+                acc_can = (unsigned int)(msg.acc * 10);
                 dec_can = (unsigned int)(msg.dec * 10);
                 angle_can = (int)(msg.angle * 100);
                 uint8_t	Data = 0x00;

@@ -24,17 +24,17 @@ double inline max_sensor(double a, double b) { return (a > b) ? a : b; }
 **************************************************************************************'''*/
 SensorFusion::SensorFusion() : Node("sensor_fusion_publisher")
 {
-    // sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
-    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("ins_d_of_vehicle_pose", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
+    // sensor_fusion_ins_data_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("/carla/ego_vehicle/odometry", qos_, std::bind(&SensorFusion::sensor_fusion_ins_data_receive_callback, this, _1));
 
     sensor_fusion_global_path_subscription_ = this->create_subscription<nav_msgs::msg::Path>("global_path", qos_, std::bind(&SensorFusion::sensor_fusion_global_path_callback, this, _1));
 
     // sensor_fusion_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&SensorFusion::sensor_fusion_iteration_callback, this));
 
     sensor_fusion_objects_from_carla = this->create_subscription<derived_object_msgs::msg::ObjectArray>("/carla/objects", qos_, std::bind(&SensorFusion::sensor_fusion_iteration_callback, this, _1));
-
+ 
     // TODO：Topic的名字
-    // sensor_fusion_objects_from_sensor = this->create_subscription<objects_msgs::msg::ObjectsInfoList>("/carla/objects", qos_, std::bind(&SensorFusion::sensor_fusion_iteration_real_callback, this, _1));
+    sensor_fusion_objects_from_sensor = this->create_subscription<objects_msgs::msg::ObjectsInfoList>("/sensor0/vehicles_poses", qos_, std::bind(&SensorFusion::sensor_fusion_iteration_real_callback, this, _1));
 
     sensor_fusion_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("sensor_fusion_iteration_duration", qos_);
 
@@ -172,7 +172,7 @@ void SensorFusion::sensor_fusion_object_pack(double object_s,
     sensor_fusion_single_result_bounding_box_msg.header.stamp = this->get_clock()->now();
     sensor_fusion_single_result_bounding_box_msg.type = visualization_msgs::msg::Marker::LINE_LIST;
     sensor_fusion_single_result_bounding_box_msg.action = visualization_msgs::msg::Marker::ADD;
-    sensor_fusion_single_result_bounding_box_msg.lifetime = rclcpp::Duration(0ns);
+    sensor_fusion_single_result_bounding_box_msg.lifetime = rclcpp::Duration(20ms);
     sensor_fusion_single_result_bounding_box_msg.scale.x = object_line_sacle; // 宽度
     sensor_fusion_single_result_bounding_box_msg.scale.y = object_line_sacle; // 宽度
     sensor_fusion_single_result_bounding_box_msg.scale.z = object_line_sacle; // 宽度
@@ -195,7 +195,7 @@ void SensorFusion::sensor_fusion_object_pack(double object_s,
     sensor_fusion_single_result_label_msg.header.stamp = this->get_clock()->now();
     sensor_fusion_single_result_label_msg.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
     sensor_fusion_single_result_label_msg.action = visualization_msgs::msg::Marker::ADD;
-    sensor_fusion_single_result_label_msg.lifetime = rclcpp::Duration(0ns);
+    sensor_fusion_single_result_label_msg.lifetime = rclcpp::Duration(20ms);
     sensor_fusion_single_result_label_msg.color.r = object_color_r; // 颜色
     sensor_fusion_single_result_label_msg.color.g = object_color_g; // 颜色
     sensor_fusion_single_result_label_msg.color.b = object_color_b; // 颜色
@@ -234,6 +234,7 @@ void SensorFusion::sensor_fusion_object_pack(double object_s,
 - Comments    : None
 **************************************************************************************'''*/
 void SensorFusion::sensor_fusion_iteration_callback(derived_object_msgs::msg::ObjectArray::SharedPtr msg)
+// void SensorFusion::sensor_fusion_iteration_callback()
 {
     rclcpp::Time start_sensor_fusion;
     rclcpp::Time end_sensor_fusion;
@@ -314,9 +315,36 @@ void SensorFusion::sensor_fusion_iteration_real_callback(objects_msgs::msg::Obje
 
             for (int i = 0; i < msg.objects.size(); i++){
                 if (distance_two_point(msg.objects[i].center.x, msg.objects[i].center.y, px, py) > 1.0){
+                    
+                    // msg.objects[i].center.x = msg.objects[i].center.x + px;
+                    // msg.objects[i].center.y = msg.objects[i].center.y + py;
+
+                    // double heading_current_temp =  - psi -90 /57.3;
+                    double heading_current_temp =  - psi + 90 / 57.3;
+
+                    double temp_x = cos(heading_current_temp) * msg.objects[i].center.x + sin(heading_current_temp) * msg.objects[i].center.y;
+                    double temp_y = -sin(heading_current_temp) * msg.objects[i].center.x + cos(heading_current_temp) * msg.objects[i].center.y;
+
+                    double temp_x_global = temp_x + px;
+                    double temp_y_global = temp_y + py;
+
+                    // double temp_x_global = temp_x + py;
+                    // double temp_y_global = temp_y + px;
+
+                    // // shift car reference angle to 0 degrees
+                    // double shift_x = ptsx[i] - ref_x;
+                    // double shift_y = ptsy[i] - ref_y;
+
+                    // ptsx[i] = shift_x * cos(0 - ref_yaw) - shift_y * sin(0 - ref_yaw);
+                    // ptsy[i] = shift_x * sin(0 - ref_yaw) + shift_y * cos(0 - ref_yaw);
+
+
+
+                    
                     cout << "sensor objects: 1" << msg.objects[i].center.x << ", " << msg.objects[i].center.y  << ", " << msg.objects[i].center.z << endl;
 
-                    vector<double> car_s_d = cartesian_to_frenet(msg.objects[i].center.x, msg.objects[i].center.y, psi, global_path_x, global_path_y);
+                    // vector<double> car_s_d = cartesian_to_frenet(msg.objects[i].center.x, msg.objects[i].center.y, psi, global_path_x, global_path_y);
+                    vector<double> car_s_d = cartesian_to_frenet(temp_x_global, temp_y_global, psi, global_path_x, global_path_y);
                     car_s = car_s_d[0];
                     car_d = car_s_d[1];
 

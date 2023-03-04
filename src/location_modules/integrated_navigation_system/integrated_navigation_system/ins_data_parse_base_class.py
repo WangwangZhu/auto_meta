@@ -28,6 +28,10 @@ class InsDataCollection(Node):
     - Comments    : 原点定义在 大石头那里,
                     origin_utm_x: 沿着经度方向 Between 120°E and 126°E，向右递增
                     origin_utm_y: 沿着纬度的方向 northern hemisphere between equator and 84°N 向北递增
+                    
+
+                          component_.SetGNSSOrigin(31.0306922452, 121.443487607, 6.6801115666);
+
     *****************************************************************************************************'''
     def __init__(self,
                 #  device='/dev/ttyS2',
@@ -35,10 +39,16 @@ class InsDataCollection(Node):
                  baud_rate=115200,
                  timeout=0.5,
                  data_storage_folder='/' + sys.argv[0].split('/')[1] + '/' + sys.argv[0].split('/')[2] + '/' + 'auto_meta/src/location_modules/integrated_navigation_system/data_collection/',
-                 origin_longitude=121.4415488,
-                 origin_latitude=31.0282838,
-                 origin_utm_x=351256.08,
-                 origin_utm_y=3433779.41,
+            # 起点在机动院大石头
+                #  origin_longitude=121.4415488,
+                #  origin_latitude=31.0282838,
+                # origin_utm_x=351256.08,
+                #  origin_utm_y=3433779.41,
+            # 起点在庙門
+                 origin_longitude=121.443487607, 
+                 origin_latitude=31.0306922452, 
+                 origin_utm_x=351445,
+                 origin_utm_y=3434044,
                  data_map_sub_name = "_ins_data_map.csv",
                  node_name="ins_d_data_parse"):
         super().__init__(node_name)

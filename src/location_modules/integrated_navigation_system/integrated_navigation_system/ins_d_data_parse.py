@@ -125,8 +125,8 @@ class ins_d_data_parse(ins_data_parse_base_class.InsDataCollection):
                     # self.get_logger().info("ins data send out => longitudinal acc(/m/s^2): " + str(self.accY))
                     # self.get_logger().info("ins data send out => lateral acc(/m/s^2): " + str(self.accX))
 
-                    # self.get_logger().info("ins data send out => longitudinal(m) : " + str(self.local_x))
-                    # self.get_logger().info("ins data send out => latitude(m): " + str(self.local_y))
+                    self.get_logger().info("ins data send out => global X (m) : " + str(self.local_x))
+                    self.get_logger().info("ins data send out => global Y (m): " + str(self.local_y))
                     # self.get_logger().info("ins data send out => pitch: " + str(self.pitch_radians))
                     # self.get_logger().info("ins data send out => roll: " + str(self.roll_radians))
                     # self.get_logger().info("ins data send out =>  yaw rate rad/s: " + str(self._odom_msgs.twist.twist.angular.z))
