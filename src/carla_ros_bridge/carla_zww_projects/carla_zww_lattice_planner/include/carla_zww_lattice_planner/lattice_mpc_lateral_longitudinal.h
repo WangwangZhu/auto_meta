@@ -80,7 +80,7 @@ using CppAD::AD;
 using Eigen::VectorXd;
 
 template <typename U, typename V>
-double DistanceXY(const U &u, const V &v) {
+double distance_X_Y(const U &u, const V &v) {
     return std::hypot(u.x - v.x, u.y - v.y);
 }
 
@@ -259,15 +259,15 @@ class LatticePlannerNode : public rclcpp::Node {
     std_msgs::msg::Float32 mpc_iteration_duration_msg = std_msgs::msg::Float32();
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr mpc_iteration_time_publisher;
 
-    void GetWayPoints();
+    void get_way_points();
     Vec_f wx_, wy_;
     Spline2D *csp_obj_;
-    void GenerateGlobalPath();
-    int GetNearestReferenceIndex(const VehicleState &ego_state);    // 根据车辆的当前位置，获取与参考路劲最近点的id
-    void UpdateStaticObstacle();
-    double GetNearestReferenceLength(const VehicleState &ego_state);
-    double GetNearestReferenceLatDist(const VehicleState &ego_state);
-    bool LeftOfLine(const VehicleState &p, const geometry_msgs::msg::PoseStamped &p1, const geometry_msgs::msg::PoseStamped &p2);
+    void generate_global_path();
+    int get_nearest_reference_index(const VehicleState &ego_state);    // 根据车辆的当前位置，获取与参考路劲最近点的id
+    void update_static_obstacle();
+    double get_nearest_reference_length(const VehicleState &ego_state);
+    double get_nearest_reference_lat_dist(const VehicleState &ego_state);
+    bool left_of_line(const VehicleState &p, const geometry_msgs::msg::PoseStamped &p1, const geometry_msgs::msg::PoseStamped &p2);
     // nav_msgs::msg::Path global_plan_;
     // double end_x_, end_y_, end_s_;
     auto createQuaternionMsgFromYaw(double yaw) {
@@ -279,7 +279,7 @@ class LatticePlannerNode : public rclcpp::Node {
     rclcpp::TimerBase::SharedPtr lattice_planner_timer;
     void LatticePlannerCallback();
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr replan_path_publisher_;
-    TrajectoryData GetTrajectoryFromFrenetPath(const FrenetPath &path);
+    TrajectoryData get_trajectory_from_frenet_path(const FrenetPath &path);
     float c_speed_ = 10.0 / 3.6;
     float c_d_ = 0;
     float c_d_d_ = 0.0;

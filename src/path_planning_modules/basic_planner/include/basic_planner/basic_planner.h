@@ -165,7 +165,7 @@ public:
     VectorXd coeffs;
     double cte;
 
-    int current_velocity_behavior  = 0;
+    int current_decision_behavior  = 0;
     int target_lane = 0;
 
     int host_lane;

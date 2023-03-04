@@ -177,7 +177,7 @@ void BasicPlanner::sensor_fusion_results_label_callback(visualization_msgs::msg:
 **************************************************************************************'''*/
 void BasicPlanner::fsm_behavior_decision_makeing_callback(behavior_decision_interface::msg::FSMDecisionResults::SharedPtr msg){
     RCLCPP_INFO(this->get_logger(), "~~~~~~~~~~~~~~~~~~~receiveing behavior decision results: %d", msg->target_behavior);
-    this->current_velocity_behavior = msg->target_behavior;
+    this->current_decision_behavior = msg->target_behavior;
     this->target_lane = msg->target_lane;
 }
 
@@ -302,18 +302,18 @@ void BasicPlanner::planner_tracking_iteration_callback() {
 
             
             // 向左变道
-            if (current_velocity_behavior == 1) {
+            if (current_decision_behavior == 1) {
                 // lane = host_lane - 1;
                 lane = target_lane;
             }
             
             // 向右变道
-            if (current_velocity_behavior == 2) {
+            if (current_decision_behavior == 2) {
                 // lane = host_lane + 1;
                 lane = target_lane;
             }
             // 返回目标车道
-            if (current_velocity_behavior == 6) {
+            if (current_decision_behavior == 6) {
                 if( ((which_lane(car_d) == -1) || (which_lane(car_d) == 1)) && (fabs(psi - ref_yaw) < 10/57.6)){
                     lane = 0;
                 }
@@ -326,18 +326,18 @@ void BasicPlanner::planner_tracking_iteration_callback() {
 
             }
             // 本车道内跟车行驶，参考速度为前车速度
-            if (current_velocity_behavior == 4) {
+            if (current_decision_behavior == 4) {
                 if(ref_vel >= velocity_of_front_vehicle_in_same_lane){
                     ref_vel -= 0.3; // 减速策略，匹配该函数的调用频率，可以算得到减速度大小,这个值要和期望速度成倍数，否则停不下来的
                 }
             }
             
             // 起步
-            if (current_velocity_behavior == 7) {
+            if (current_decision_behavior == 7) {
                 ref_vel += 0.1; // TODO:加速策略，起步策略公用，这里可以更加复杂
             }
 
-            if (current_velocity_behavior == 9) {
+            if (current_decision_behavior == 9) {
                 if (ref_vel > _max_safe_speed){
                     ref_vel -= 0.2; // TODO:加速策略，起步策略公用，这里可以更加复杂
                 }
@@ -347,7 +347,7 @@ void BasicPlanner::planner_tracking_iteration_callback() {
             }
 
             // 停车
-            if (current_velocity_behavior == 8) {
+            if (current_decision_behavior == 8) {
                 ref_vel = 0.00;
             }
 

@@ -27,11 +27,11 @@ class FrenetOptimalTrajectory {
     FrenetOptimalTrajectory();
     ~FrenetOptimalTrajectory();
     float sum_of_power(std::vector<float> value_list);
-    Vec_Path calc_frenet_paths(float c_speed, float c_d, float c_d_d, float c_d_dd, float s0);
+    Vec_Path calc_frenet_paths(float c_speed, float c_d, float c_d_d, float c_d_dd, float s0, int current_decision_behavior, int target_lane, double target_velocity, double target_distance_under_frenet);
     void calc_global_paths(Vec_Path& path_list, Spline2D csp);
     bool check_collision(FrenetPath path, const Vec_Poi ob);
     Vec_Path check_paths(Vec_Path path_list, const Vec_Poi ob);
-    FrenetPath frenet_optimal_planning(Spline2D csp, float s0, float c_speed, float c_d, float c_d_d, float c_d_dd, Vec_Poi ob);
-    FrenetPath frenet_optimal_planning(Spline2D csp, const FrenetInitialConditions& frenet_init_conditions, Vec_Poi ob);
+    FrenetPath frenet_optimal_planning(Spline2D csp, float s0, float c_speed, float c_d, float c_d_d, float c_d_dd, Vec_Poi ob, int current_decision_behavior, int target_lane, double target_velocity, double target_distance_under_frenet);
+    FrenetPath frenet_optimal_planning(Spline2D csp, const FrenetInitialConditions& frenet_init_conditions, Vec_Poi ob, int current_decision_behavior, int target_lane, double target_velocity, double target_distance_under_frenet);
 };
 // }  // namespace zww

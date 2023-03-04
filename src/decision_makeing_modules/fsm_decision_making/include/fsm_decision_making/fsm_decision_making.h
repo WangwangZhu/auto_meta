@@ -170,7 +170,7 @@ public:
     // 7 车辆起步
     // 8 定点停车
     // 9 自由巡航
-    int current_velocity_behavior = 7;
+    int current_decision_behavior = 7;
 
     int preference_lane_id = 0; // TODO: 这个0可以调节车辆的期望车道
     int object_lane = 0;

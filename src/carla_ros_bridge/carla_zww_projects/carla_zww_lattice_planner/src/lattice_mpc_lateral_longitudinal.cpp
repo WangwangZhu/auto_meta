@@ -122,16 +122,16 @@ LatticePlannerNode::LatticePlannerNode()
     // std::cout << "roadmap_path: " << roadmap_path << "  " << target_speed << std::endl;
     loadRoadmap(roadmap_path);
 
-    GetWayPoints();    //在参考路径的基础上进行采点
+    get_way_points();    //在参考路径的基础上进行采点
 
     // 构建相对平滑的Frenet曲线坐标系，一个中间暂时方案
     csp_obj_ = new Spline2D(wx_, wy_);
 
     // 构造全局路径变量
-    GenerateGlobalPath();
+    generate_global_path();
 
     //  Update Obstacle 添加虚拟障碍物
-    UpdateStaticObstacle();
+    update_static_obstacle();
 
 
     // pid_controller_longitudinal = std::make_unique<zww::control::PIDController>(speed_P, speed_I, speed_D);
@@ -247,8 +247,8 @@ void LatticePlannerNode::LatticePlannerCallback()
 {
     if (!firstRecord_) {    //有定位数据开始规划
         // TODO:这里之后可以再被优化，采用更好的Frenet坐标系取点方式。
-        const double ego_s = GetNearestReferenceLength(vehicleState_);
-        const double ego_l = GetNearestReferenceLatDist(vehicleState_);
+        const double ego_s = get_nearest_reference_length(vehicleState_);
+        const double ego_l = get_nearest_reference_lat_dist(vehicleState_);
         const double ego_speed = vehicleState_.velocity;
 
         s0_ = ego_s;
@@ -299,7 +299,7 @@ void LatticePlannerNode::LatticePlannerCallback()
             }
             replan_path_publisher_->publish(local_path);
 
-            const auto trajectory = GetTrajectoryFromFrenetPath(final_path);
+            const auto trajectory = get_trajectory_from_frenet_path(final_path);
             planningPublishedTrajectoryDebug_ = trajectory;
             last_trajectory_ = trajectory;
 
@@ -320,7 +320,7 @@ void LatticePlannerNode::LatticePlannerCallback()
 }
 
 
-int LatticePlannerNode::GetNearestReferenceIndex(const VehicleState &ego_state) 
+int LatticePlannerNode::get_nearest_reference_index(const VehicleState &ego_state) 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -333,7 +333,7 @@ int LatticePlannerNode::GetNearestReferenceIndex(const VehicleState &ego_state)
     size_t min_index = 0;
 
     for (size_t i = 0; i < global_plan_.poses.size(); ++i) {
-        const double distance = DistanceXY(ego_state, global_plan_.poses[i].pose.position);
+        const double distance = distance_X_Y(ego_state, global_plan_.poses[i].pose.position);
         if (distance < min_dist) {
             min_dist = distance;
             min_index = i;
@@ -342,7 +342,7 @@ int LatticePlannerNode::GetNearestReferenceIndex(const VehicleState &ego_state)
     return min_index;
 }
 
-double LatticePlannerNode::GetNearestReferenceLength(const VehicleState &ego_state) 
+double LatticePlannerNode::get_nearest_reference_length(const VehicleState &ego_state) 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -351,10 +351,10 @@ double LatticePlannerNode::GetNearestReferenceLength(const VehicleState &ego_sta
 - Comments    : None
 **************************************************************************************'''*/
 {
-    return global_plan_.poses[GetNearestReferenceIndex(ego_state)].pose.position.z;    // s存在position.z中
+    return global_plan_.poses[get_nearest_reference_index(ego_state)].pose.position.z;    // s存在position.z中
 }
 
-double LatticePlannerNode::GetNearestReferenceLatDist(const VehicleState &ego_state) 
+double LatticePlannerNode::get_nearest_reference_lat_dist(const VehicleState &ego_state) 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -367,13 +367,13 @@ double LatticePlannerNode::GetNearestReferenceLatDist(const VehicleState &ego_st
     size_t min_index = 0;
 
     for (size_t i = 0; i < global_plan_.poses.size() - 1; ++i) {
-        const double distance = DistanceXY(ego_state, global_plan_.poses[i].pose.position);
+        const double distance = distance_X_Y(ego_state, global_plan_.poses[i].pose.position);
         if (distance < min_dist) {
             min_dist = distance;
             min_index = i;
         }
     }
-    const int sign = LeftOfLine(ego_state, global_plan_.poses[min_index], global_plan_.poses[min_index + 1]) ? 1 : -1;
+    const int sign = left_of_line(ego_state, global_plan_.poses[min_index], global_plan_.poses[min_index + 1]) ? 1 : -1;
     return sign * min_dist;
 }
 /*'''**************************************************************************************
@@ -383,7 +383,7 @@ double LatticePlannerNode::GetNearestReferenceLatDist(const VehicleState &ego_st
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-bool LatticePlannerNode::LeftOfLine(const VehicleState &p, const geometry_msgs::msg::PoseStamped &p1, const geometry_msgs::msg::PoseStamped &p2) {
+bool LatticePlannerNode::left_of_line(const VehicleState &p, const geometry_msgs::msg::PoseStamped &p1, const geometry_msgs::msg::PoseStamped &p2) {
     // const double tmpx = (p1.pose.position.x - p2.pose.position.x) / (p1.pose.position.y - p2.pose.position.y) * (p.y - p2.pose.position.y) + p2.pose.position.x;
     // std::cout << "p1.pose.position.x: " << p1.pose.position.x << ", p2.pose.position.x: " << p2.pose.position.x << ", p1.pose.position.y: " << p1.pose.position.y << ", p2.pose.position.y: " << p2.pose.position.y << ", p.y: " << p.y << ", p2.pose.position.y" << p2.pose.position.y << ", p2.pose.position.x" << p2.pose.position.x << std::endl;
     // std::cout << "tmpx: " << tmpx << "p.x: " << p.x << std::endl;
@@ -402,7 +402,7 @@ bool LatticePlannerNode::LeftOfLine(const VehicleState &p, const geometry_msgs::
     }
 }
 
-TrajectoryData LatticePlannerNode::GetTrajectoryFromFrenetPath(const FrenetPath &path) 
+TrajectoryData LatticePlannerNode::get_trajectory_from_frenet_path(const FrenetPath &path) 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -428,7 +428,7 @@ TrajectoryData LatticePlannerNode::GetTrajectoryFromFrenetPath(const FrenetPath 
     return trajectory;
 }
 
-void LatticePlannerNode::UpdateStaticObstacle() 
+void LatticePlannerNode::update_static_obstacle() 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -443,7 +443,7 @@ void LatticePlannerNode::UpdateStaticObstacle()
 }
 
 
-void LatticePlannerNode::GenerateGlobalPath() 
+void LatticePlannerNode::generate_global_path() 
 /*'''**************************************************************************************
 - FunctionName: None
 - Function    : None
@@ -504,7 +504,7 @@ void LatticePlannerNode::GenerateGlobalPath()
     //     global_path.poses.push_back(pt);
     // }
 }
-void LatticePlannerNode::GetWayPoints() {
+void LatticePlannerNode::get_way_points() {
     const int refline_size = planning_published_trajectory.trajectory_points.size();
 
     const auto &trajectory_pt = planning_published_trajectory.trajectory_points;

@@ -40,7 +40,7 @@
 
 
         {
-            "type": "vehicle.tesla.model3",
+            "type": "vehicle.mercedes.coupe",
             "id": "ego_vehicle",
             "sensors": 
             [

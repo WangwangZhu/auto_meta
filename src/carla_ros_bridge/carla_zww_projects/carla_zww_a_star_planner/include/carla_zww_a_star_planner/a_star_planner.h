@@ -75,7 +75,7 @@ using Eigen::Vector3d;
 // }
 
 template <typename U, typename V>
-double DistanceXY(const U& u, const V& v) {
+double distance_X_Y(const U& u, const V& v) {
     return std::hypot(u.x - v.x, u.y - v.y);
 }
 

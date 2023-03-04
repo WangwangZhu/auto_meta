@@ -36,11 +36,8 @@ FSMDecisionMaking::FSMDecisionMaking() : Node("fsm_decision_making") // 使用�
 
     fsm_behavior_decision_makeing_publisher = this->create_publisher<behavior_decision_interface::msg::FSMDecisionResults>("fsm_behavior_decision", qos_);
 
-
-
     planner_iteration_timer_ = this->create_wall_timer(100ms, std::bind(&FSMDecisionMaking::decision_iteration_callback, this));
     planner_iteration_time_publisher = this->create_publisher<std_msgs::msg::Float32>("planner_iteration_duration", qos_); // 用于统计planner求解时间的广播器
-
 }
 
 /*'''**************************************************************************************
@@ -58,10 +55,8 @@ FSMDecisionMaking::~FSMDecisionMaking() {}
 - Outputs     : None
 - Comments    : 这个回调函数发出去的psi的值应该是弧度单位的
 **************************************************************************************'''*/
-void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg)
-{
-    if (is_global_path_received)
-    {
+void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::SharedPtr msg){
+    if (is_global_path_received){
         rclcpp::Time now = this->now();
         ins_data_arrive_at_planner_through_callback = now.seconds();
 
@@ -78,8 +73,7 @@ void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::Share
         v_lateral = msg->twist.twist.linear.y;
         yaw_rate = msg->twist.twist.angular.z;
 
-        if (v_longitudinal < 0.4 / 3.6)
-        {
+        if (v_longitudinal < 0.4 / 3.6){
             v_lateral = 0;
             yaw_rate = 0;
         }
@@ -87,13 +81,11 @@ void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::Share
         ins_frame_arrive_time = msg->header.stamp;
         ins_arrive_at_rs232_buffer = this->ins_frame_arrive_time.seconds();
 
-        if (1)
-        {
+        if (1){
             tf2::Matrix3x3(quat_tf).getRPY(roll_current, pitch_current, heading_current);
             psi = heading_current;
         }
-        else
-        {
+        else{
             roll_current = msg->pose.covariance[3];
             pitch_current = msg->pose.covariance[2];
             heading_current = msg->pose.covariance[1];
@@ -118,8 +110,7 @@ void FSMDecisionMaking::ins_data_receive_callback(nav_msgs::msg::Odometry::Share
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void FSMDecisionMaking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg)
-{
+void FSMDecisionMaking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg){
     // RCLCPP_INFO(this->get_logger(), "receiveing global path %lu", msg->poses.size());
     int path_length = msg->poses.size();
 
@@ -143,8 +134,7 @@ void FSMDecisionMaking::global_path_callback(nav_msgs::msg::Path::SharedPtr msg)
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void FSMDecisionMaking::sensor_fusion_results_bounding_box_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg)
-{
+void FSMDecisionMaking::sensor_fusion_results_bounding_box_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg){
     sensor_fusion_results_bounding_box = *msg;
     is_sensor_fusion_results_bounding_box_reveived = true;
     // RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion bounding box %u", msg->markers[0].header.stamp.nanosec);
@@ -157,8 +147,7 @@ void FSMDecisionMaking::sensor_fusion_results_bounding_box_callback(visualizatio
 - Outputs     : None
 - Comments    : None
 **************************************************************************************'''*/
-void FSMDecisionMaking::sensor_fusion_results_label_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg)
-{
+void FSMDecisionMaking::sensor_fusion_results_label_callback(visualization_msgs::msg::MarkerArray::SharedPtr msg){
     sensor_fusion_results_label = *msg;
     is_sensor_fusion_results_label_received = true;
     // RCLCPP_INFO(this->get_logger(), "receiveing sensor fusion label %u", msg->markers[0].header.stamp.nanosec);
@@ -178,11 +167,11 @@ void FSMDecisionMaking::decision_iteration_callback(){
     double iteration_time_length;
     if (rclcpp::ok()){
         if (is_global_path_received && is_ins_data_received && is_sensor_fusion_results_bounding_box_reveived && is_sensor_fusion_results_label_received){
-            current_velocity_behavior = 9; 
+            // current_decision_behavior = 9; 
             lane = which_lane(car_d);
             rclcpp::Time now = this->now();
             double ins_parse_now = now.seconds();
-            double _max_safe_speed = max_safe_speed;
+            // double _max_safe_speed = max_safe_speed;
             
             // 定位延迟补偿发生在将全局路径转换到车辆坐标系下之前,用来补偿定位信息到达早于被使用而引起的定位误差
             if (working_mode == 1){
@@ -203,7 +192,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
             // cout << "Current Position in Frenet Coordinate, s: " << car_s << ", d: " << car_d << endl;
 
             //TODO: 采取规避动作的极限距离体现了不同激进程度的驾驶风格
-            double _safety_margin = safety_margin + v_longitudinal * 4;
+            double _safety_margin = safety_margin + v_longitudinal * 10;
 
             next_x_vals.clear();
             next_y_vals.clear();
@@ -224,8 +213,10 @@ void FSMDecisionMaking::decision_iteration_callback(){
             bool need_to_slow_down = false;
             bool current_lane_free = false;
 
-            
+            float _temp_host_target_velocity = 100000;
+            float _temp_host_front_distance_minimum = 100000;
 
+            // 获取感知结果
             if (fabs((double)sensor_fusion_results_bounding_box.markers[0].header.stamp.nanosec - (double)sensor_fusion_results_label.markers[0].header.stamp.nanosec) < 1000000){
                 sensor_fusion.clear();
                 bounding_box_label_same_frame_check_flag = true;
@@ -240,14 +231,21 @@ void FSMDecisionMaking::decision_iteration_callback(){
                 }
             }
             if (bounding_box_label_same_frame_check_flag){
+                // 本车道阈值范围内是否有车
+                
                 Object_Around sensor_fusion_single = sensor_fusion[0];
                 for (uint i = 0; i < sensor_fusion.size(); i++){
                     sensor_fusion_single = sensor_fusion[i];
-
+                    
                     if (is_same_lane(sensor_fusion_single.d, car_d)){
                         bool is_in_front_of_us = sensor_fusion_single.s > car_s;
                         
-                        bool is_close_than_safety_margin = (sensor_fusion_single.s - car_s) < _safety_margin;
+                        bool is_close_than_safety_margin = (sensor_fusion_single.s - car_s) < safety_margin;
+
+                        if ((sensor_fusion_single.s - car_s) < _temp_host_front_distance_minimum){
+                            _temp_host_front_distance_minimum = sensor_fusion_single.s - car_s;
+                            _temp_host_target_velocity = sensor_fusion_single.v_longitudinal;
+                        }
 
                         if (is_in_front_of_us && is_close_than_safety_margin){
                             is_too_close = true;
@@ -256,7 +254,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
                         }
                         else{
                             current_lane_free = true;
-                            current_velocity_behavior = 9; 
+                            current_decision_behavior = 9; 
                         }
                     }
                 }
@@ -297,7 +295,7 @@ void FSMDecisionMaking::decision_iteration_callback(){
                 }
                 if (is_too_close) {
                     need_to_slow_down = true; 
-                    current_velocity_behavior = 4; 
+                    current_decision_behavior = 4; 
                 }
                 if (time_to_back_reference_lane) {
                     int num_vehicles_left = 0;
@@ -315,38 +313,60 @@ void FSMDecisionMaking::decision_iteration_callback(){
                     }
                     if (front_ready_back_to_ref && rear_ready_back_to_ref) {
                         is_road_free = true;
-                        current_velocity_behavior = 6;
+                        current_decision_behavior = 6;
                         lane = preference_lane_id;
                     }
                 }
             }
             // cout << "****************************************************************" << endl;
-            // std::cout << "  ~~~~~~~~~~~~~ Host Lane: " << which_lane(car_d) << std::endl;
+            std::cout << "  ~~~~~~~~~~~~~ Host Lane: " << which_lane(car_d) << "current host D coordinate: " << car_d << std::endl;
             // std::cout << "LEFT: " << num_vehicles_left << "  RIGHT: " << num_vehicles_right << std::endl;
             // cout << "****************************************************************" << endl;
             // acutally perform lane change, 
-            // 修改 host lane 的取值可以限制主车变道的可用车道，用于调整是2车道道路还是3车道道路还是4、5车道道路
+            // TODO 修改 host lane 的取值可以限制主车变道的可用车道，用于调整是2车道道路还是3车道道路还是4、5车道道路
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 2个车道，左 -1， 中 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // 先捕获到前车，才会触发变道
-            if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= -1) {
+            if (ready_for_lane_change && is_left_lane_free && ((which_lane(car_d) == 0) || (which_lane(car_d) == 1))) { // 位于中间车道或右车道，允许左变道
                 lane = which_lane(car_d) - 1;
-                current_velocity_behavior = 1;
+                current_decision_behavior = 1;
             }
-            else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 1) {
+            else if (ready_for_lane_change && is_right_lane_free && (which_lane(car_d) == -1)) { // 位于中间车道或者左车道，允许右变道
                 lane = which_lane(car_d) + 1;
-                current_velocity_behavior = 2;
+                current_decision_behavior = 2;
             }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 三个车道，左 -1， 中 0 ，右 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // 先捕获到前车，才会触发变道
+            // if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) >= -1) { // 位于中间车道或右车道，允许左变道
+            //     lane = which_lane(car_d) - 1;
+            //     current_decision_behavior = 1;
+            // }
+            // else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) <= 1) { // 位于中间车道或者左车道，允许右变道
+            //     lane = which_lane(car_d) + 1;
+            //     current_decision_behavior = 2;
+            // }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  单个车道 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // 先捕获到前车，才会触发变道
+            // if (ready_for_lane_change && is_left_lane_free && which_lane(car_d) > 0) { 
+            //     lane = which_lane(car_d) - 1;
+            //     current_decision_behavior = 1;
+            // }
+            // else if (ready_for_lane_change && is_right_lane_free && which_lane(car_d) < 0) {
+            //     lane = which_lane(car_d) + 1;
+            //     current_decision_behavior = 2;
+            // }
 
             // 停车，参考路径前面一定的距离
             if (car_s >= (global_path_s.back() - 50.00)) {
-                current_velocity_behavior = 8;
+                current_decision_behavior = 8;
             }
 
             if (car_s > 0 && fabs(car_d) < 2.0 && (v_longitudinal == 0)){
-                current_velocity_behavior = 7;
+                current_decision_behavior = 7;
             }
-            behavior_decision_result_msg.target_behavior = current_velocity_behavior;
+            behavior_decision_result_msg.target_behavior = current_decision_behavior;
             behavior_decision_result_msg.target_lane = lane;
-            // behavior_decision_result_msg.data = ;
+            behavior_decision_result_msg.target_velocity = _temp_host_target_velocity;
+            behavior_decision_result_msg.target_distance_under_frenet = _temp_host_front_distance_minimum;
 
             RCLCPP_INFO(this->get_logger(), "Current Behavior Decision Results:~~~~ %d", behavior_decision_result_msg.target_behavior);
             fsm_behavior_decision_makeing_publisher->publish(behavior_decision_result_msg);
@@ -368,13 +388,9 @@ void FSMDecisionMaking::decision_iteration_callback(){
 int main(int argc, char **argv)
 {
     // RCLCPP_INFO(LOGGER, "Initialize node");
-
     rclcpp::init(argc, argv);
-
     auto n = std::make_shared<FSMDecisionMaking>(); // n指向一个值初始化的 MpcTrajectoryTrackingPublisher
-
     rclcpp::spin(n); // Create a default single-threaded executor and spin the specified node.
-
     rclcpp::shutdown();
     return 0;
 }

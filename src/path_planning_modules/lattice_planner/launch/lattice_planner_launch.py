@@ -23,7 +23,6 @@ def generate_launch_description():
         ),
         Node(
             package='lattice_planner',
-            # namespace='mpc_trajectory_tracking',
             executable='lattice_planner_node',
             name='lattice_planner_node',
             parameters=[planner_parameters_configuration],

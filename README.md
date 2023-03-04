@@ -190,10 +190,11 @@ NeZha: 顺时针为负
 3. ros2 launch visualization vehicle_path_visualization_rviz_launch.py
 4. ros2 run sensor_fusion sensor_fusion_node
 5. ros2 run fsm_decision_making fsm_decision_making_node
-6. 规划器
+6. set_autopilot.ipynb  中的第一个和第二个代码块，用于配置路上的其他车以自动驾驶模式运行
+7. 规划器
    1. ros2 launch lattice_planner lattice_planner_launch.py
    2. ros2 launch basic_planner basic_planner_launch.py
-7. ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
+8. ros2 launch lqr_pid_trajectory_tracking lqr_pid_trajectory_tracking_dynamics_launch.py
 
 # Carla仿真 到 实车测试的改动
 
@@ -205,8 +206,8 @@ NeZha: 顺时针为负
 6. host_vehicle_visualization.cpp 中定位订阅信号
 7. lqr_pid_trajectory_tracking.cpp 中定位订阅信号 83行
 8. 如果使用的地图是道路中央，或者是车道中央，生成rviz可视化的时候需要调整 visualization中的程序
-9. lqr_pid_working_mode: 1  配置文件
-10. 
+9. lqr_pid_working_mode: 1  配置文件 lqr_pid_parameters_configuration.yaml
+10. planner_working_mode: 2 配置文件 basic_planner.yaml
 
 # 矩阵项目启动流程
 

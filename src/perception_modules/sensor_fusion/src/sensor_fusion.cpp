@@ -253,17 +253,24 @@ void SensorFusion::sensor_fusion_iteration_callback(derived_object_msgs::msg::Ob
                     car_s = car_s_d[0];
                     car_d = car_s_d[1];
 
+                    tf2::Quaternion quat_tf;
+                    tf2::convert(msg->objects[i].pose.orientation, quat_tf);
+                    double roll_current, pitch_current, heading_current;
+                    tf2::Matrix3x3(quat_tf).getRPY(roll_current, pitch_current, heading_current);
+
+                    double _temp_v_longitudinal = sqrt(msg->objects[i].twist.linear.x * msg->objects[i].twist.linear.x + msg->objects[i].twist.linear.y * msg->objects[i].twist.linear.y);
+
                     
                     double object_s = car_s;
                     double object_d = car_d;
-                    double object_length = 4.00; // 纵向
-                    double object_width = 1.9;   // 横向
-                    double object_height = 1.7;
-                    double object_heading = 200;
-                    double object_v_X = 0;
-                    double object_v_Y = 0;
-                    double object_v_yaw_rate = 0;
-                    uint object_id = 101 + i;
+                    double object_length = msg->objects[i].shape.dimensions[0]; // 纵向
+                    double object_width = msg->objects[i].shape.dimensions[1];   // 横向
+                    double object_height = msg->objects[i].shape.dimensions[2];
+                    double object_heading = heading_current * 57.3;
+                    double object_v_X = msg->objects[i].twist.linear.x;
+                    double object_v_Y = msg->objects[i].twist.linear.y;
+                    double object_v_yaw_rate = msg->objects[i].twist.angular.z;
+                    uint object_id = msg->objects[i].id;
                     string object_label = "Car" + std::to_string(object_id);
                     string object_frame_id = "odom";
                     double object_line_sacle = 0.04; // TODO:need to be checked
