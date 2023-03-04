@@ -21,7 +21,7 @@
 #define MAX_ROAD_WIDTH 7.0         // maximum road width [m]
 #define D_ROAD_W 0.5              // road width sampling length [m]
 #define DT 0.2                     // time tick [s]
-#define MAXT 28.0                   // max prediction time [s]
+#define MAXT 8.0                   // max prediction time [s]
 #define MINT 1.0                   // min prediction time [s]
 #define TARGET_SPEED 20.0 / 3.6    // target speed [m/s] // 决定了车子的自由巡航的速度
 #define D_T_S 5.0 / 3.6            // target speed sampling length [m/s]
