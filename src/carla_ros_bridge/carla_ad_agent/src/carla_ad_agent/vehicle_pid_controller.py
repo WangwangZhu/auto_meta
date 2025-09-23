@@ -149,8 +149,13 @@ class PIDLateralController(object):  # pylint: disable=too-few-public-methods
         w_vec = np.array([waypoint.position.x -
                           v_begin.x, waypoint.position.y -
                           v_begin.y, 0.0])
-        _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
-                                 (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+        # Prevent division by zero by checking if either vector has zero magnitude
+        w_norm = np.linalg.norm(w_vec)
+        v_norm = np.linalg.norm(v_vec)
+        if w_norm < 1e-6 or v_norm < 1e-6:
+            _dot = 0.0  # Default to zero angle if either vector is too small
+        else:
+            _dot = math.acos(np.clip(np.dot(w_vec, v_vec) / (w_norm * v_norm), -1.0, 1.0))
 
         _cross = np.cross(v_vec, w_vec)
         if _cross[2] < 0:

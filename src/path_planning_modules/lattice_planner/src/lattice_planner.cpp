@@ -201,11 +201,9 @@ void LatticePlanner::sensor_fusion_results_bounding_box_callback(visualization_m
     is_sensor_fusion_results_bounding_box_reveived = true;
 
     if (is_sensor_fusion_results_label_received && is_global_path_received){
-        sensor_fusion_callback_cnt ++ ;
-        if (sensor_fusion_callback_cnt < 5){
-            sensor_fusion_callback_cnt ++ ;
-        }
-        else if (sensor_fusion_callback_cnt >= 5){
+        sensor_fusion_callback_cnt++;
+        // Remove the redundant increment - counter should only be incremented once per callback
+        if (sensor_fusion_callback_cnt >= 5){
             // sensor_fusion_callback_cnt = 0;
             obstcle_list_.erase(obstcle_list_.begin(), obstcle_list_.begin() + senson_fusion_obstacles_cnt_[0]);
             senson_fusion_obstacles_cnt_.erase(senson_fusion_obstacles_cnt_.begin());
