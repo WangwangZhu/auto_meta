@@ -300,8 +300,8 @@ class InsDataCollection(Node):
         try:
             self.serial_.isOpen()
             # self.serial_.flushInput() # 清理缓冲区内的历史数据
-        except :
-            self.get_logger().fatal("OPEN INS_D FAILED!!!")
+        except Exception as e:
+            self.get_logger().fatal(f"OPEN INS_D FAILED!!! Error: {e}")
             rclpy.shutdown()
         else:
             self.get_logger().info("ins working")
