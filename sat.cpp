@@ -32,7 +32,7 @@ bool ShapeOverlap_SAT(polygon &r1, polygon &r2){
             // Work out min and max 1D points for r2
             float min_r2 = INFINITY, max_r2 = -INFINITY;
             for(int p = 0; p < poly2->p.size(); p++){
-                flaot q = (poly2->p[p].x * axisProj.x + poly2->p[p].y * axisProj.y);
+                float q = (poly2->p[p].x * axisProj.x + poly2->p[p].y * axisProj.y);
                 min_r2 = std::min(min_r2, q);
                 max_r2 = std::max(max_r2, q);
             }
