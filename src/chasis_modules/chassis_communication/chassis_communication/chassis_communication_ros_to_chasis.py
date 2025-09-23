@@ -6,6 +6,7 @@
 *****************************************************************************************************'''
 import sys
 import rclpy
+import threading
 from canlib import kvadblib
 from canlib import Frame
 from canlib import canlib
@@ -30,6 +31,9 @@ class ChassisCommunicationReceive(Node):
         super().__init__('chassis_communication_receive')
         
         self.maximum_velocity_limitation = 50 # 车辆允许最大速度限制
+        
+        # Create a lock for thread-safe access to shared data
+        self.data_lock = threading.Lock()
 
         # 创建 ROS 2 网络上的控制信号消息
         self.adu_drive_cmd_msg = ADUDriveCmd()
@@ -109,22 +113,25 @@ class ChassisCommunicationReceive(Node):
     **************************************************************************************'''
 
     def listener_callback_vehicle_control_signals_gas_brake_steer(self, msg):
-        self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
-        self.adu_drive_cmd_msg.adu_gas_stoke_req = msg.adu_gas_stoke_req
-        self.adu_drive_cmd_msg.adu_str_whl_ang_req = msg.adu_str_whl_ang_req
-        # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
-        # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
+        with self.data_lock:
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
+            self.adu_drive_cmd_msg.adu_gas_stoke_req = msg.adu_gas_stoke_req
+            self.adu_drive_cmd_msg.adu_str_whl_ang_req = msg.adu_str_whl_ang_req
+            # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
+            # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
     
     def listener_callback_vehicle_control_signals_gear(self, msg):
-        self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
-        self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
-        # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
+        with self.data_lock:
+            self.adu_drive_cmd_msg.adu_brk_stoke_req = msg.adu_brk_stoke_req
+            self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
+            # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
 
     def listener_callback_vehicle_control_mode(self, msg):
-        self.adu_drive_cmd_msg.adu_hozl_dsbl = msg.adu_hozl_dsbl
-        self.adu_drive_cmd_msg.adu_lgt_dsbl = msg.adu_lgt_dsbl
-        # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
-        # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
+        with self.data_lock:
+            self.adu_drive_cmd_msg.adu_hozl_dsbl = msg.adu_hozl_dsbl
+            self.adu_drive_cmd_msg.adu_lgt_dsbl = msg.adu_lgt_dsbl
+            # self.adu_drive_cmd_msg.adu_gear_req = msg.adu_gear_req
+            # self.get_logger().info('I heard: "%s"' % msg.steering_mode)
 
     def timer_callback_adu_drive_control(self):
         '''**************************************************************************************
@@ -136,17 +143,18 @@ class ChassisCommunicationReceive(Node):
         **************************************************************************************'''
         self.adu_drive_cmd_frame_msg = self.adu_drive_cmd_frame.bind()
         
-        self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
-        # self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 20
-        self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = self.adu_drive_cmd_msg.adu_gas_stoke_req
-        self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
-        
-        self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
-        self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = self.adu_drive_cmd_msg.adu_lgt_dsbl
-        
-        self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = self.adu_drive_cmd_msg.adu_gear_req
-        
-        self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.phys = self.maximum_velocity_limitation
+        with self.data_lock:
+            self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = self.adu_drive_cmd_msg.adu_brk_stoke_req
+            # self.adu_drive_cmd_frame_msg.ADU_BrkStokeReq.phys = 20
+            self.adu_drive_cmd_frame_msg.ADU_GasStokeReq.phys = self.adu_drive_cmd_msg.adu_gas_stoke_req
+            self.adu_drive_cmd_frame_msg.ADU_StrWhlAngReq.phys = self.adu_drive_cmd_msg.adu_str_whl_ang_req
+            
+            self.adu_drive_cmd_frame_msg.ADU_HozlDsbl.phys = self.adu_drive_cmd_msg.adu_hozl_dsbl
+            self.adu_drive_cmd_frame_msg.ADU_LgtDsbl.phys = self.adu_drive_cmd_msg.adu_lgt_dsbl
+            
+            self.adu_drive_cmd_frame_msg.ADU_GearReq.phys = self.adu_drive_cmd_msg.adu_gear_req
+            
+            self.adu_drive_cmd_frame_msg.ADU_LimGasSpd.phys = self.maximum_velocity_limitation
         
         self.adu_drive_cmd_frame_msg.ADU_DrvCmd_RollCnt.phys = self.rolling_counter_adu_drive_cmd
         

@@ -1,3 +1,16 @@
+#include <cmath>
+#include <vector>
+#include <algorithm>
+#include <limits>
+
+struct vec2d {
+    float x, y;
+};
+
+struct polygon {
+    std::vector<vec2d> p;
+};
+
 bool ShapeOverlap_SAT(polygon &r1, polygon &r2){
     polygon *poly1 = &r1;
     polygon *poly2 = &r2;
@@ -19,6 +32,8 @@ bool ShapeOverlap_SAT(polygon &r1, polygon &r2){
             int b = (a+1) % poly1->p.size();
             vec2d axisProj = {-(poly1->p[b].y - poly1->p[a].y), poly1->p[b].x - poly1->p[a].x };
             float d = sqrtf(axisProj.x * axisProj.x + axisProj.y * axisProj.y);
+            // Avoid division by zero when two points are the same
+            if (d < 1e-10) continue;
             axisProj = {axisProj.x / d, axisProj.y / d};
 
             // work out min and max 1D points for r1
@@ -32,7 +47,7 @@ bool ShapeOverlap_SAT(polygon &r1, polygon &r2){
             // Work out min and max 1D points for r2
             float min_r2 = INFINITY, max_r2 = -INFINITY;
             for(int p = 0; p < poly2->p.size(); p++){
-                flaot q = (poly2->p[p].x * axisProj.x + poly2->p[p].y * axisProj.y);
+                float q = (poly2->p[p].x * axisProj.x + poly2->p[p].y * axisProj.y);
                 min_r2 = std::min(min_r2, q);
                 max_r2 = std::max(max_r2, q);
             }
@@ -43,8 +58,8 @@ bool ShapeOverlap_SAT(polygon &r1, polygon &r2){
                 return false;
             }
         }
-        return true;
     }
+    return true;
 }
 
 if (box.max_x() < min_x() || box.min_x() > max_x() || box.max_y() < min_y() || box.min_y() > max_y()) {

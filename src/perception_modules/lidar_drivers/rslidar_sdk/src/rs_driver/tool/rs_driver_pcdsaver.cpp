@@ -221,7 +221,7 @@ void processCloud(void)
     }
 
     char pcd_path[128];
-    sprintf (pcd_path, "%d.pcd", msg->seq);
+    snprintf(pcd_path, sizeof(pcd_path), "%d.pcd", msg->seq);
     savePcd(pcd_path, *msg);
 
     free_cloud_queue.push(msg);
