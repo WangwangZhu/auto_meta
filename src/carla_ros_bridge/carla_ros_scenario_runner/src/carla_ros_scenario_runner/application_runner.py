@@ -135,7 +135,7 @@ class ApplicationRunner(object):
                 process.expect(u".*\n", timeout=0.1)
                 log_fct(process.after.strip())
                 if not signaled_running:
-                    if str(process.after).find(ready_string) != -1:
+                    if ready_string and (str(process.after).find(ready_string) != -1):
                         status_updated_fct(ApplicationStatus.RUNNING)
                         log_fct("Application is ready.")
                         signaled_running = True

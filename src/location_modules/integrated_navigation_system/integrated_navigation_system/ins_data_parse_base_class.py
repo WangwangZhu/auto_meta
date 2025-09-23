@@ -83,7 +83,7 @@ class InsDataCollection(Node):
         
         self.crs = CRS.from_epsg(4326) # WGS84 的 epsg 代码
         self.crs_sh = CRS.from_epsg(32651) # UTM 中 51N（上海所在带）的 epsg 代码
-        self.transformer_WGS84toUTM = Transformer.from_crs(self.crs, self.crs_sh)
+        self.transformer_WGS84toUTM = Transformer.from_crs(self.crs, self.crs_sh, always_xy=True)
         
         self.epoch_gps = datetime.strptime("1980-01-06 00:00:00.00", self.datetimeformat) # 系统时间是北京时间
         self.epoch_utc = datetime.strptime("1970-01-01 00:00:00.00", self.datetimeformat)
@@ -219,7 +219,7 @@ class InsDataCollection(Node):
         self.longitude = struct.unpack('<q', data[4+50:4+50+8])[0] * 1e-9 # long long(C)(8bytes) ==> long(python)
         self.altitude = struct.unpack('<i', data[4+58:4+58+4])[0] * 1e-3 # int(C)(4bytes) ==> integer(python)
         # 全局路径坐标系 x 轴沿着经度向右， y轴沿着纬度向上
-        self.utm_x_position, self.utm_y_position = self.transformer_WGS84toUTM.transform(self.latitude, self.longitude)
+        self.utm_x_position, self.utm_y_position = self.transformer_WGS84toUTM.transform(self.longitude, self.latitude)
         if self.origin_zone == "51N" and self.isorigin_set == True:
             self.local_x = self.utm_x_position - self.origin_utm_x
             self.local_y = self.utm_y_position - self.origin_utm_y
@@ -298,10 +298,11 @@ class InsDataCollection(Node):
     **************************************************************************************'''    
     def data_parse_collect(self):
         try:
-            self.serial_.isOpen()
+            if not self.serial_.is_open:
+                self.serial_.open()
             # self.serial_.flushInput() # 清理缓冲区内的历史数据
-        except :
-            self.get_logger().fatal("OPEN INS_D FAILED!!!")
+        except serial.SerialException as e:
+            self.get_logger().fatal("OPEN INS_D FAILED!!! {}".format(e))
             rclpy.shutdown()
         else:
             self.get_logger().info("ins working")
